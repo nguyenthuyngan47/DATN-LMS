@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- =========================================================
+         Analytics: Enrollments (lms.student.course)
+         ========================================================= -->
+
+    <record id="view_lms_student_course_search_analytics" model="ir.ui.view">
+        <field name="name">lms.student.course.search.analytics</field>
+        <field name="model">lms.student.course</field>
+        <field name="arch" type="xml">
+            <search string="Phân tích đăng ký học">
+                <field name="student_id"/>
+                <field name="course_id"/>
+                <field name="status"/>
+                <field name="enrollment_date"/>
+                <filter string="Hoàn thành" name="status_completed" domain="[('status', '=', 'completed')]"/>
+                <filter string="Đang học" name="status_learning" domain="[('status', '=', 'learning')]"/>
+                <filter string="Đã duyệt" name="status_approved" domain="[('status', '=', 'approved')]"/>
+                <filter string="Chờ duyệt" name="status_pending" domain="[('status', '=', 'pending')]"/>
+                <group expand="0" string="Nhóm theo">
+                    <filter string="Khóa học" name="group_course" context="{'group_by': 'course_id'}"/>
+                    <filter string="Trạng thái" name="group_status" context="{'group_by': 'status'}"/>
+                    <filter string="Học viên" name="group_student" context="{'group_by': 'student_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_lms_student_course_tree_analytics" model="ir.ui.view">
+        <field name="name">lms.student.course.list.analytics</field>
+        <field name="model">lms.student.course</field>
+        <field name="arch" type="xml">
+            <list string="Đăng ký học">
+                <field name="student_id"/>
+                <field name="course_id"/>
+                <field name="enrollment_date"/>
+                <field name="status"/>
+                <field name="progress" widget="progressbar"/>
+                <field name="final_score"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_lms_student_course_pivot_analytics" model="ir.ui.view">
+        <field name="name">lms.student.course.pivot.analytics</field>
+        <field name="model">lms.student.course</field>
+        <field name="arch" type="xml">
+            <pivot string="Pivot - Đăng ký học">
+                <field name="course_id" type="row"/>
+                <field name="status" type="col"/>
+                <field name="progress" type="measure"/>
+                <field name="final_score" type="measure"/>
+                <field name="id" type="measure" string="Số lượt đăng ký"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_lms_student_course_graph_analytics" model="ir.ui.view">
+        <field name="name">lms.student.course.graph.analytics</field>
+        <field name="model">lms.student.course</field>
+        <field name="arch" type="xml">
+            <graph string="Graph - Đăng ký học" type="bar">
+                <field name="course_id" type="row"/>
+                <field name="id" type="measure" string="Số lượt đăng ký"/>
+                <field name="progress" type="measure"/>
+                <field name="final_score" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_lms_analytics_student_course" model="ir.actions.act_window">
+        <field name="name">Analytics - Đăng ký học</field>
+        <field name="res_model">lms.student.course</field>
+        <field name="view_mode">pivot,graph,list,form</field>
+        <field name="search_view_id" ref="view_lms_student_course_search_analytics"/>
+    </record>
+
+    <!-- =========================================================
+         Analytics: Learning History (lms.learning.history)
+         ========================================================= -->
+
+    <record id="view_lms_learning_history_pivot_analytics" model="ir.ui.view">
+        <field name="name">lms.learning.history.pivot.analytics</field>
+        <field name="model">lms.learning.history</field>
+        <field name="arch" type="xml">
+            <pivot string="Pivot - Lịch sử học tập">
+                <field name="date" interval="day" type="row"/>
+                <field name="course_id" type="row"/>
+                <field name="status" type="col"/>
+                <field name="study_duration" type="measure"/>
+                <field name="analytics_count" type="measure" string="Số lượt học"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_lms_learning_history_graph_analytics" model="ir.ui.view">
+        <field name="name">lms.learning.history.graph.analytics</field>
+        <field name="model">lms.learning.history</field>
+        <field name="arch" type="xml">
+            <graph string="Graph - Lịch sử học tập" type="line">
+                <field name="date" interval="day" type="row"/>
+                <field name="study_duration" type="measure"/>
+                <field name="analytics_count" type="measure" string="Số lượt học"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_lms_analytics_learning_history" model="ir.actions.act_window">
+        <field name="name">Analytics - Lịch sử học tập</field>
+        <field name="res_model">lms.learning.history</field>
+        <field name="view_mode">pivot,graph,list,form</field>
+        <field name="search_view_id" ref="view_lms_learning_history_search"/>
+    </record>
+
+</odoo>
+

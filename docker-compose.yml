@@ -1,0 +1,101 @@
+# Dữ liệu thật nằm trong các Docker volume bên dưới (Postgres + filestore Odoo).
+# Luôn dùng:  docker compose down
+# KHÔNG dùng: docker compose down -v   (cờ -v xóa volume => mất toàn bộ DB như cài mới)
+services:
+  db:
+    image: postgres:15
+    container_name: odoo_db_8069
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=odoo
+      - POSTGRES_PASSWORD=odoo
+    ports:
+      - "5432:5432"
+    volumes:
+      - odoo_db_8069_data:/var/lib/postgresql/data
+    networks:
+      - odoo-network
+    healthcheck:
+      # Dùng -d postgres: user odoo mặc định hay kết nối DB trùng tên user → tránh FATAL "database odoo does not exist"
+      test: ["CMD-SHELL", "pg_isready -U odoo -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  odoo:
+    build:
+      context: .
+      dockerfile: Dockerfile.odoo
+    image: lms-odoo:18.0
+    container_name: odoo_app_8069
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    ports:
+      - "8069:8069"
+    environment:
+      - HOST=db
+      - USER=odoo
+      - PASSWORD=odoo
+      - ODOO_RC=/etc/odoo/odoo.conf
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      # Đồng bộ CSV: master (hook + cron). 0 = tắt hết.
+      - LMS_CSV_SYNC_ENABLED=${LMS_CSV_SYNC_ENABLED:-1}
+      # Hook registry: mặc định 0 (nhanh). Cron vẫn sync khi SYNC_ENABLED=1.
+      - LMS_CSV_ON_START=${LMS_CSV_ON_START:-0}
+    env_file:
+      - .env
+    volumes:
+      # Thư mục dữ liệu Odoo
+      - odoo_web_8069_data:/var/lib/odoo
+      
+      # Log directory
+      - odoo_8069_logs:/var/log/odoo
+
+      # Module tùy chỉnh
+      - ./addons:/mnt/extra-addons
+      - ./lms:/mnt/extra-addons/lms
+      # .env trên máy → đúng chỗ code tìm trong container (parent của thư mục lms = /mnt/extra-addons)
+      # env_file: .env chỉ inject biến vào process, KHÔNG tạo file → load_dotenv cần mount này
+      - ./.env:/mnt/extra-addons/.env:ro
+      # Google service account key (read-only) cho Google Calendar API
+      - ./lmsodoo-32c3fbb07398.json:/run/secrets/google-service-account.json:ro
+      # Không dùng :ro ở data: mount lồng export/ bên dưới cần tạo mountpoint (Docker sẽ mkdir trên parent).
+      - ./data:/mnt/extra-addons/data
+      # CSV bootstrap (post_init): trùng đường mặc định /mnt/extra-addons/data/export
+      - ./scripts/export:/mnt/extra-addons/data/export:ro
+
+      # Cấu hình riêng
+      - ./config/odoo.conf:/etc/odoo/odoo.conf
+    networks:
+      - odoo-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # Không dùng --dev mặc định (reload/qweb chậm khởi động + request). Dev: thêm --dev=reload,qweb,werkzeug,xml
+    command: ["odoo", "--config=/etc/odoo/odoo.conf"]
+
+  # Giao diện web quản lý PostgreSQL: http://localhost:8080
+  # Đăng nhập: Hệ thống = PostgreSQL, Máy chủ = db, Tài khoản = odoo, Mật khẩu = odoo, CSDL = postgres hoặc tên DB Odoo (vd. lms)
+  adminer:
+    image: adminer:latest
+    container_name: adminer_8069
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    networks:
+      - odoo-network
+
+networks:
+  odoo-network:
+    driver: bridge
+
+volumes:
+  odoo_db_8069_data:
+  odoo_web_8069_data:
+  odoo_8069_logs:
+

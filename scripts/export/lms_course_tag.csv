@@ -1,0 +1,201 @@
+id,name,color
+1,Data,0
+2,Data-centric programming languages,3
+3,Data-flow analysis,6
+4,Data-oriented programming,9
+5,Data-structured programming languages,0
+6,Data (computing),3
+7,Data Age games,6
+8,Data Becker games,9
+9,Data Design Interactive games,0
+10,Data East arcade games,3
+11,Data East games,6
+12,Data East pinball machines,9
+13,Data East video games,0
+14,Data Encryption Standard,3
+15,Data General,6
+16,Data General computers,9
+17,Data General laptops,0
+18,Data Gunj Bakhsh Zone,3
+19,Data Gunj Buksh Town,6
+20,Data Records singles,9
+21,Data access technologies,0
+22,Data activism,3
+23,Data analysis,6
+24,Data analysis software,9
+25,Data and information organizations,0
+26,Data and information visualization,3
+27,Data and information visualization experts,6
+28,Data and information visualization software,9
+29,Data anonymization techniques,0
+30,Data bank link templates,3
+31,Data breaches,6
+32,Data breaches by decade,9
+33,Data breaches by year,0
+34,Data breaches in the United States,3
+35,Data brokers,6
+36,Data center technology,9
+37,Data centers,0
+38,Data centres,3
+39,Data centres in the United Kingdom,6
+40,Data coding framework,9
+41,Data collection,0
+42,Data collection in research,3
+43,Data collection satellites,6
+44,Data companies,9
+45,Data compression,0
+46,Data compression researchers,3
+47,Data compression software,6
+48,Data compression transforms,9
+49,Data deficient plants,0
+50,Data deficient species,3
+51,Data differencing,6
+52,Data engineering,9
+53,Data engineers,0
+54,Data erasure,3
+55,Data erasure software,6
+56,Data exchange formats,9
+57,Data formats,0
+58,Data integration,3
+59,Data interchange standards,6
+60,Data journalism,9
+61,Data journalists,0
+62,Data laws,3
+63,Data laws of Africa,6
+64,Data laws of Asia,9
+65,Data laws of Europe,0
+66,Data laws of Oceania,3
+67,Data laws of the Americas,6
+68,Data laws of the United Kingdom,9
+69,Data management,0
+70,Data management software,3
+71,Data mapping,6
+72,Data miners,9
+73,Data mining,0
+74,Data mining algorithms,3
+75,Data mining and machine learning software,6
+76,Data missing,9
+77,Data missing from April 2020,0
+78,Data missing from April 2021,3
+79,Data missing from April 2022,6
+80,Data missing from April 2023,9
+81,Data missing from April 2024,0
+82,Data missing from April 2025,3
+83,Data missing from August 2020,6
+84,Data missing from August 2021,9
+85,Data missing from August 2022,0
+86,Data missing from August 2023,3
+87,Data missing from August 2024,6
+88,Data missing from August 2025,9
+89,Data missing from December 2016,0
+90,Data missing from December 2020,3
+91,Data missing from December 2021,6
+92,Data missing from December 2022,9
+93,Data missing from December 2023,0
+94,Data missing from December 2024,3
+95,Data missing from December 2025,6
+96,Data missing from February 2020,9
+97,Data missing from February 2022,0
+98,Data missing from February 2023,3
+99,Data missing from February 2024,6
+100,Data missing from February 2025,9
+101,Data missing from February 2026,0
+102,Data missing from January 2021,3
+103,Data missing from January 2022,6
+104,Data missing from January 2023,9
+105,Data missing from January 2025,0
+106,Data missing from January 2026,3
+107,Data missing from July 2019,6
+108,Data missing from July 2020,9
+109,Data missing from July 2021,0
+110,Data missing from July 2022,3
+111,Data missing from July 2023,6
+112,Data missing from July 2024,9
+113,Data missing from July 2025,0
+114,Data missing from June 2020,3
+115,Data missing from June 2021,6
+116,Data missing from June 2022,9
+117,Data missing from June 2023,0
+118,Data missing from June 2024,3
+119,Data missing from June 2025,6
+120,Data missing from March 2020,9
+121,Data missing from March 2021,0
+122,Data missing from March 2022,3
+123,Data missing from March 2023,6
+124,Data missing from March 2024,9
+125,Data missing from March 2025,0
+126,Data missing from March 2026,3
+127,Data missing from May 2020,6
+128,Data missing from May 2021,9
+129,Data missing from May 2022,0
+130,Data missing from May 2023,3
+131,Data missing from May 2024,6
+132,Data missing from May 2025,9
+133,Data missing from November 2020,0
+134,Data missing from November 2022,3
+135,Data missing from November 2023,6
+136,Data missing from November 2024,9
+137,Data missing from November 2025,0
+138,Data missing from October 2018,3
+139,Data missing from October 2020,6
+140,Data missing from October 2021,9
+141,Data missing from October 2022,0
+142,Data missing from October 2023,3
+143,Data missing from October 2024,6
+144,Data missing from October 2025,9
+145,Data missing from September 2020,0
+146,Data missing from September 2021,3
+147,Data missing from September 2022,6
+148,Data missing from September 2023,9
+149,Data missing from September 2024,0
+150,Data missing from September 2025,3
+151,Data modeling,6
+152,Data modeling diagrams,9
+153,Data modeling languages,0
+154,Data modeling tools,3
+155,Data modelling languages,6
+156,Data organizations,9
+157,Data partitioning,0
+158,Data processing,3
+159,Data protection,6
+160,Data protection authorities,9
+161,Data publication,0
+162,Data publishing,3
+163,Data quality,6
+164,Data quality companies,9
+165,Data recovery,0
+166,Data recovery companies,3
+167,Data recovery software,6
+168,Data retention,9
+169,Data retrieval templates,0
+170,Data science,3
+171,Data scientists,6
+172,Data security,9
+173,Data serialization formats,0
+174,Data storage,3
+175,Data storage conferences,6
+176,Data storage servers,9
+177,Data structures,0
+178,Data structures by computing platform,3
+179,Data structures libraries and frameworks,6
+180,Data synchronization,9
+181,Data synchronization software,0
+182,Data templates,3
+183,Data templates by country,6
+184,Data transmission,9
+185,Data types,0
+186,Data unit,3
+187,Data visualization,6
+188,Data warehousing,9
+189,Data warehousing products,0
+190,Data with undue precision,3
+191,Database,6
+192,Database-related lists,9
+193,Database-related software for Linux,0
+194,DatabaseOlympics ID different from Wikidata,3
+195,DatabaseOlympics ID not in Wikidata,6
+196,Database APIs,9
+197,Database access protocols,0
+198,Database administration tools,3
+199,Database algorithms,6
+200,Database caching,9

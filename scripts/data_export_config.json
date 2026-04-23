@@ -1,0 +1,245 @@
+{
+  "_comment": "Mỗi bảng 200 bản ghi. Tạo DB: python crawl_lms_data.py rồi export_data_to_csv.py",
+  "connection": {
+    "type": "sqlite",
+    "database": "lms_export_demo.db"
+  },
+  "export": {
+    "output_dir": "export",
+    "chunk_size": 10000,
+    "csv_encoding": "utf-8",
+    "date_format": "%Y-%m-%d",
+    "reject_empty_output": true
+  },
+  "datasets": [
+    {
+      "name": "lms_course_category",
+      "source": "database",
+      "table": "lms_course_category",
+      "columns": ["id", "name", "sequence", "description"],
+      "filters": {},
+      "order_by": "id ASC",
+      "validation": {
+        "required_columns": ["id", "name"],
+        "drop_duplicates_subset": ["id"]
+      }
+    },
+    {
+      "name": "lms_course_level",
+      "source": "database",
+      "table": "lms_course_level",
+      "columns": ["id", "name", "sequence", "description"],
+      "filters": {},
+      "order_by": "id ASC",
+      "validation": {
+        "required_columns": ["id", "name"],
+        "drop_duplicates_subset": ["id"]
+      }
+    },
+    {
+      "name": "lms_course_tag",
+      "source": "database",
+      "table": "lms_course_tag",
+      "columns": ["id", "name", "color"],
+      "filters": {},
+      "order_by": "id ASC",
+      "validation": {
+        "required_columns": ["id", "name"],
+        "drop_duplicates_subset": ["id"]
+      }
+    },
+    {
+      "name": "lms_course",
+      "source": "database",
+      "table": "lms_course",
+      "columns": [
+        "id",
+        "name",
+        "description",
+        "image_1920_placeholder",
+        "category_id",
+        "level_id",
+        "instructor_id",
+        "duration_hours",
+        "prerequisite_summary",
+        "total_lessons",
+        "enrolled_students_count",
+        "average_rating",
+        "state",
+        "is_active"
+      ],
+      "filters": {},
+      "order_by": "id ASC",
+      "validation": {
+        "required_columns": ["id", "name", "category_id", "level_id"],
+        "drop_duplicates_subset": ["id"]
+      }
+    },
+    {
+      "name": "lms_course_tag_rel",
+      "source": "database",
+      "table": "lms_course_tag_rel",
+      "columns": ["id", "course_id", "tag_id"],
+      "filters": {},
+      "order_by": "id ASC",
+      "validation": {
+        "required_columns": ["id", "course_id", "tag_id"],
+        "drop_duplicates_subset": ["id"]
+      }
+    },
+    {
+      "name": "lms_course_prerequisite_rel",
+      "source": "database",
+      "table": "lms_course_prerequisite_rel",
+      "columns": ["id", "course_id", "prerequisite_id"],
+      "filters": {},
+      "order_by": "id ASC",
+      "validation": {
+        "required_columns": ["id", "course_id"],
+        "drop_duplicates_subset": ["id"]
+      }
+    },
+    {
+      "name": "lms_lesson",
+      "source": "database",
+      "table": "lms_lesson",
+      "columns": [
+        "id",
+        "name",
+        "sequence",
+        "description",
+        "course_id",
+        "video_url",
+        "video_attachment_placeholder",
+        "pdf_attachment_placeholder",
+        "pdf_filename",
+        "duration_minutes"
+      ],
+      "filters": {},
+      "order_by": "id ASC",
+      "validation": {
+        "required_columns": ["id", "name", "course_id"],
+        "drop_duplicates_subset": ["id"]
+      }
+    },
+    {
+      "name": "lms_student",
+      "source": "database",
+      "table": "lms_student",
+      "columns": [
+        "id",
+        "name",
+        "email",
+        "phone",
+        "image_1920_placeholder",
+        "current_level",
+        "learning_goals",
+        "desired_skills",
+        "user_id",
+        "total_courses",
+        "completed_courses",
+        "average_score",
+        "total_study_time",
+        "last_activity_date",
+        "is_active",
+        "inactive_days"
+      ],
+      "filters": {},
+      "order_by": "id ASC",
+      "validation": {
+        "required_columns": ["id", "name", "email"],
+        "drop_duplicates_subset": ["id"]
+      }
+    },
+    {
+      "name": "lms_student_course",
+      "source": "database",
+      "table": "lms_student_course",
+      "columns": [
+        "id",
+        "student_id",
+        "course_id",
+        "enrollment_date",
+        "start_date",
+        "completion_date",
+        "status",
+        "progress",
+        "final_score"
+      ],
+      "filters": {},
+      "order_by": "id ASC",
+      "validation": {
+        "required_columns": ["id", "student_id", "course_id"],
+        "drop_duplicates_subset": ["id"]
+      }
+    },
+    {
+      "name": "lms_learning_history",
+      "source": "database",
+      "table": "lms_learning_history",
+      "columns": [
+        "id",
+        "student_id",
+        "student_course_id",
+        "course_id",
+        "lesson_id",
+        "instructor_id",
+        "date",
+        "study_duration",
+        "status",
+        "name",
+        "is_at_risk",
+        "notes"
+      ],
+      "filters": {},
+      "order_by": "id ASC",
+      "validation": {
+        "required_columns": ["id", "student_id", "student_course_id", "lesson_id"],
+        "drop_duplicates_subset": ["id"]
+      }
+    },
+    {
+      "name": "lms_roadmap",
+      "source": "database",
+      "table": "lms_roadmap",
+      "columns": [
+        "id",
+        "student_id",
+        "valid_from",
+        "valid_to",
+        "state",
+        "reviewed_by",
+        "ai_recommendation_reason",
+        "recommendation_method"
+      ],
+      "filters": {},
+      "order_by": "id ASC",
+      "validation": {
+        "required_columns": ["id", "student_id", "state"],
+        "drop_duplicates_subset": ["id"]
+      }
+    },
+    {
+      "name": "lms_roadmap_course",
+      "source": "database",
+      "table": "lms_roadmap_course",
+      "columns": [
+        "id",
+        "roadmap_id",
+        "course_id",
+        "sequence",
+        "priority",
+        "timeframe",
+        "status",
+        "recommendation_reason",
+        "similarity_score"
+      ],
+      "filters": {},
+      "order_by": "id ASC",
+      "validation": {
+        "required_columns": ["id", "roadmap_id", "course_id"],
+        "drop_duplicates_subset": ["id"]
+      }
+    }
+  ]
+}

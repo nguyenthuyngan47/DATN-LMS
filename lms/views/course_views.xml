@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Course Category -->
+    <record id="view_lms_course_category_tree" model="ir.ui.view">
+        <field name="name">lms.course.category.list</field>
+        <field name="model">lms.course.category</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="description"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_lms_course_category_form" model="ir.ui.view">
+        <field name="name">lms.course.category.form</field>
+        <field name="model">lms.course.category</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="sequence"/>
+                    </group>
+                    <field name="description"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Course Level -->
+    <record id="view_lms_course_level_tree" model="ir.ui.view">
+        <field name="name">lms.course.level.list</field>
+        <field name="model">lms.course.level</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_lms_course_search" model="ir.ui.view">
+        <field name="name">lms.course.search</field>
+        <field name="model">lms.course</field>
+        <field name="arch" type="xml">
+            <search string="Tìm kiếm khóa học">
+                <field name="name" string="Tên khóa học"/>
+                <field name="category_id"/>
+                <field name="level_id"/>
+                <field name="instructor_id"/>
+                <field name="tag_ids"/>
+                <filter string="Đã xuất bản" name="published" domain="[('state', '=', 'published')]"/>
+                <filter string="Nháp" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Đang hoạt động" name="active" domain="[('is_active', '=', True)]"/>
+                <separator/>
+                <filter
+                    string="Khóa học của tôi"
+                    name="my_courses"
+                    domain="[('instructor_id', '=', uid)]"
+                    groups="lms.group_lms_instructor"
+                />
+                <group expand="0" string="Nhóm theo">
+                    <filter string="Danh mục" name="group_category" context="{'group_by': 'category_id'}"/>
+                    <filter string="Cấp độ" name="group_level" context="{'group_by': 'level_id'}"/>
+                    <filter string="Trạng thái" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Giảng viên" name="group_instructor" context="{'group_by': 'instructor_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Course -->
+    <record id="view_lms_course_tree" model="ir.ui.view">
+        <field name="name">lms.course.list</field>
+        <field name="model">lms.course</field>
+        <field name="arch" type="xml">
+            <list string="Courses" decoration-info="state=='published'" decoration-muted="state=='archived'">
+                <field name="name"/>
+                <field name="instructor_id"/>
+                <field name="category_id"/>
+                <field name="level_id"/>
+                <field name="state"/>
+                <field name="start_date"/>
+                <field name="end_date"/>
+                <field name="enrolled_students_count"/>
+                <field name="average_rating"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_lms_course_form" model="ir.ui.view">
+        <field name="name">lms.course.form</field>
+        <field name="model">lms.course</field>
+        <field name="arch" type="xml">
+            <form string="Khóa học">
+                <header>
+                    <!-- <button name="action_publish" string="Xuất bản" type="object" class="btn-primary" modifiers="{'invisible': [('state', '!=', 'draft')]}"/> -->
+                    <button
+                        name="action_register_courses"
+                        string="Đăng ký khóa học"
+                        type="object"
+                        class="btn-primary"
+                        invisible="state != 'published' or not show_register_button"
+                    />
+                    <button
+                        name="action_cancel_course_registration"
+                        string="Hủy đăng ký"
+                        type="object"
+                        class="btn-secondary"
+                        invisible="state != 'published' or not show_cancel_button"
+                    />
+                </header>
+                <sheet>
+                    <field name="is_student_course_readonly" invisible="1"/>
+                    <field name="show_register_button" invisible="1"/>
+                    <field name="show_cancel_button" invisible="1"/>
+                    <field name="show_learning_content_tabs" invisible="1"/>
+                    <div class="oe_button_box" name="button_box">
+                        <button
+                            name="%(action_lms_student_by_course)d"
+                            type="action"
+                            class="oe_stat_button"
+                            icon="fa-users"
+                            context="{'course_id': id, 'from_course_students': 1, 'form_view_initial_mode': 'edit'}"
+                        >
+                            <field name="enrolled_students_count" widget="statinfo" string="Học viên"/>
+                        </button>
+                    </div>
+                    <widget name="web_ribbon" title="Published" bg_color="text-bg-success" invisible="state != 'published'"/>
+                    <group>
+                        <group>
+                            <field name="name" readonly="is_student_course_readonly"/>
+                            <field name="state" readonly="is_student_course_readonly"/>
+                            <field name="is_active" readonly="is_student_course_readonly"/>
+                            <field name="price" string="Chi phí(VND)" readonly="is_student_course_readonly"/>
+                            <field name="contact_payment" readonly="is_student_course_readonly" placeholder="Số điện thoại, Zalo, Facebook, Email…"/>
+                        </group>
+                        <group>
+                            <field name="category_id" readonly="is_student_course_readonly"/>
+                            <field name="level_id" readonly="is_student_course_readonly"/>
+                            <field name="instructor_id" readonly="is_student_course_readonly" domain="[('groups_id', 'in', [%(lms.group_lms_instructor)d]), ('share', '=', False), ('active', '=', True)]"/>
+                            <field name="duration_hours" readonly="is_student_course_readonly"/>
+                            <field name="total_lessons" readonly="is_student_course_readonly"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Mô tả" name="description">
+                            <field name="description" readonly="is_student_course_readonly"/>
+                        </page>
+                        <page string="Khóa học tiên quyết" name="prerequisites">
+                            <field name="prerequisite_ids" widget="many2many_tags" readonly="is_student_course_readonly"/>
+                        </page>
+                        <page string="Nhãn" name="tags" invisible="not show_learning_content_tabs">
+                            <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}" readonly="is_student_course_readonly"/>
+                        </page>
+                        <page string="Bài học" name="lessons" invisible="not show_learning_content_tabs">
+                            <field name="lesson_ids" nolabel="1" readonly="is_student_course_readonly">
+                                <list>
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="start_datetime"/>
+                                    <field name="end_datetime"/>
+                                    <field name="duration_minutes"/>
+                                    <field name="state"/>
+                                    <field name="is_published"/>
+                                </list>
+                                <form>
+                                    <sheet>
+                                        <group>
+                                            <group>
+                                                <field name="name" readonly="parent.is_student_course_readonly"/>
+                                                <field name="sequence" readonly="parent.is_student_course_readonly"/>
+                                                <field name="duration_minutes" readonly="parent.is_student_course_readonly"/>
+                                                <field name="start_datetime" readonly="parent.is_student_course_readonly"/>
+                                                <field name="end_datetime" readonly="parent.is_student_course_readonly"/>
+                                                <field name="meeting_url" readonly="parent.is_student_course_readonly"/>
+                                                <field name="state" readonly="parent.is_student_course_readonly"/>
+                                                <field name="is_published" readonly="parent.is_student_course_readonly"/>
+                                                <field name="calendar_event_id" readonly="1"/>
+                                                <field name="calendar_sync_status" readonly="1"/>
+                                            </group>
+                                        </group>
+                                        <group>
+                                            <field name="description" readonly="parent.is_student_course_readonly"/>
+                                        </group>
+                                        <group string="Tài liệu">
+                                            <field name="video_url" readonly="parent.is_student_course_readonly"/>
+                                            <field name="video_attachment" filename="video_filename" readonly="parent.is_student_course_readonly"/>
+                                            <field name="pdf_attachment" filename="pdf_filename" readonly="parent.is_student_course_readonly"/>
+                                        </group>
+                                        <group string="Calendar Sync">
+                                            <field name="calendar_sync_error" readonly="1" invisible="calendar_sync_status != 'error'"/>
+                                        </group>
+                                    </sheet>
+                                </form>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_lms_course_kanban" model="ir.ui.view">
+        <field name="name">lms.course.kanban</field>
+        <field name="model">lms.course</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="category_id" class="o_kanban_dashboard">
+                <field name="name"/>
+                <field name="image_1920"/>
+                <field name="category_id"/>
+                <field name="level_id"/>
+                <field name="duration_hours"/>
+                <field name="enrolled_students_count"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="oe_kanban_content">
+                                <div class="o_kanban_image">
+                                    <img t-att-src="kanban_image('lms.course', 'image_1920', record.id.raw_value)" alt="Course"/>
+                                </div>
+                                <div class="oe_kanban_details">
+                                    <strong><field name="name"/></strong>
+                                    <div><field name="category_id"/> - <field name="level_id"/></div>
+                                    <div>Thời lượng: <field name="duration_hours"/> giờ</div>
+                                    <div>Học viên: <field name="enrolled_students_count"/></div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="action_lms_course" model="ir.actions.act_window">
+        <field name="name">Khóa học</field>
+        <field name="res_model">lms.course</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="search_view_id" ref="view_lms_course_search"/>
+        <field name="context">{'search_default_my_courses': 1}</field>
+    </record>
+
+    <record id="action_lms_course_register" model="ir.actions.server">
+        <field name="name">Đăng ký khóa học</field>
+        <field name="model_id" ref="model_lms_course"/>
+        <field name="binding_model_id" ref="model_lms_course"/>
+        <field name="binding_view_types">list,form</field>
+        <field name="state">code</field>
+        <field name="code">action = records.action_register_courses()</field>
+    </record>
+
+    <record id="action_lms_course_category" model="ir.actions.act_window">
+        <field name="name">Danh mục khóa học</field>
+        <field name="res_model">lms.course.category</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_lms_course_level_form" model="ir.ui.view">
+        <field name="name">lms.course.level.form</field>
+        <field name="model">lms.course.level</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="sequence"/>
+                    </group>
+                    <field name="description"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_lms_course_level" model="ir.actions.act_window">
+        <field name="name">Cấp độ khóa học</field>
+        <field name="res_model">lms.course.level</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_lms_course_tag_tree" model="ir.ui.view">
+        <field name="name">lms.course.tag.list</field>
+        <field name="model">lms.course.tag</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="color" widget="color_picker"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_lms_course_tag" model="ir.actions.act_window">
+        <field name="name">Nhãn khóa học</field>
+        <field name="res_model">lms.course.tag</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Student lesson calendar -->
+    <record id="view_lms_lesson_student_calendar" model="ir.ui.view">
+        <field name="name">lms.lesson.student.calendar</field>
+        <field name="model">lms.lesson</field>
+        <field name="arch" type="xml">
+            <calendar
+                string="Lịch học"
+                date_start="start_datetime"
+                date_stop="end_datetime"
+                color="calendar_color"
+                event_open_popup="1"
+                quick_create="0"
+                create="0"
+                edit="0"
+                delete="0"
+            >
+                <field name="name"/>
+                <field name="calendar_color"/>
+                <field name="course_id"/>
+                <field name="state"/>
+                <field name="meeting_url"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="view_lms_lesson_student_form" model="ir.ui.view">
+        <field name="name">lms.lesson.student.form</field>
+        <field name="model">lms.lesson</field>
+        <field name="arch" type="xml">
+            <form string="Bài học" create="0" edit="0" delete="0">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" readonly="1"/>
+                            <field name="sequence" readonly="1"/>
+                            <field name="duration_minutes" readonly="1"/>
+                            <field name="start_datetime" readonly="1"/>
+                            <field name="end_datetime" readonly="1"/>
+                            <field name="meeting_url" readonly="1"/>
+                            <field name="state" readonly="1"/>
+                            <field name="is_published" readonly="1"/>
+                            <field name="calendar_event_id" readonly="1"/>
+                            <field name="calendar_sync_status" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="description" readonly="1"/>
+                    </group>
+                    <group string="Tài liệu">
+                        <field name="video_url" readonly="1"/>
+                        <field name="video_attachment" filename="video_filename" readonly="1"/>
+                        <field name="pdf_attachment" filename="pdf_filename" readonly="1"/>
+                    </group>
+                    <group string="Calendar Sync">
+                        <field name="google_event_id" readonly="1"/>
+                        <field name="google_event_html_link" readonly="1"/>
+                        <field name="calendar_sync_error" readonly="1" invisible="calendar_sync_status != 'error'"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_lms_student_lesson_calendar" model="ir.actions.act_window">
+        <field name="name">Lịch học</field>
+        <field name="res_model">lms.lesson</field>
+        <field name="view_mode">calendar,form</field>
+        <field name="view_id" ref="view_lms_lesson_student_calendar"/>
+        <field name="domain">
+            [
+                ('course_id.student_course_ids.student_id.user_id', '=', uid),
+                ('state', '!=', 'draft')
+            ]
+        </field>
+        <field name="context">
+            {
+                'form_view_ref': 'lms.view_lms_lesson_student_form',
+                'form_view_initial_mode': 'readonly',
+                'create': 0,
+                'edit': 0,
+                'delete': 0
+            }
+        </field>
+        <field name="groups_id" eval="[(4, ref('lms.group_lms_user'))]"/>
+    </record>
+
+    <record id="action_lms_instructor_lesson_calendar" model="ir.actions.act_window">
+        <field name="name">Lịch dạy</field>
+        <field name="res_model">lms.lesson</field>
+        <field name="view_mode">calendar,form</field>
+        <field name="view_id" ref="view_lms_lesson_student_calendar"/>
+        <field name="domain">
+            [
+                ('course_id.instructor_id', '=', uid),
+                ('state', '!=', 'draft')
+            ]
+        </field>
+        <field name="context">
+            {
+                'form_view_ref': 'lms.view_lms_lesson_student_form',
+                'form_view_initial_mode': 'readonly',
+                'create': 0,
+                'edit': 0,
+                'delete': 0
+            }
+        </field>
+        <field name="groups_id" eval="[(4, ref('lms.group_lms_instructor'))]"/>
+    </record>
+</odoo>

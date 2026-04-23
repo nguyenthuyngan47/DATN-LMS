@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_lms_roadmap_tree" model="ir.ui.view">
+        <field name="name">lms.roadmap.list</field>
+        <field name="model">lms.roadmap</field>
+        <field name="arch" type="xml">
+            <list string="Roadmap" decoration-info="state=='suggested'" decoration-success="state=='approved'" decoration-muted="state=='rejected'">
+                <field name="name"/>
+                <field name="student_id"/>
+                <field name="total_courses"/>
+                <field name="recommendation_method"/>
+                <field name="state"/>
+                <field name="create_date"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_lms_roadmap_form" model="ir.ui.view">
+        <field name="name">lms.roadmap.form</field>
+        <field name="model">lms.roadmap</field>
+        <field name="arch" type="xml">
+            <form string="Roadmap đề xuất">
+                <header>
+                    <button name="action_approve" string="Phê duyệt" type="object" class="btn-primary" modifiers="{'invisible': [('state', 'in', ['approved', 'locked', 'rejected'])]}"/>
+                    <button name="action_lock" string="Khóa" type="object" modifiers="{'invisible': [('state', 'in', ['locked', 'rejected'])]}"/>
+                    <button name="action_reject" string="Từ chối" type="object" modifiers="{'invisible': [('state', 'in', ['rejected', 'locked'])]}"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Đã phê duyệt" bg_color="text-bg-success" invisible="state != 'approved'"/>
+                    <widget name="web_ribbon" title="Đã khóa" bg_color="text-bg-warning" invisible="state != 'locked'"/>
+                    <widget name="web_ribbon" title="Từ chối" bg_color="text-bg-danger" invisible="state != 'rejected'"/>
+                    <div class="oe_title">
+                        <label for="name" string="Roadmap"/>
+                        <h1><field name="name" readonly="1" placeholder="Roadmap..."/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="student_id"/>
+                            <field name="state"/>
+                            <field name="recommendation_method"/>
+                        </group>
+                        <group>
+                            <field name="create_date"/>
+                            <field name="valid_from"/>
+                            <field name="valid_to"/>
+                            <field name="reviewed_by"/>
+                            <field name="review_date"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="ai_recommendation_reason" placeholder="Lý do đề xuất từ AI..." nolabel="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Khóa học đề xuất" name="courses">
+                            <field name="course_line_ids" nolabel="1">
+                                <list>
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="course_id"/>
+                                    <field name="priority"/>
+                                    <field name="timeframe"/>
+                                    <field name="status"/>
+                                    <field name="similarity_score" widget="progressbar"/>
+                                </list>
+                                <form>
+                                    <sheet>
+                                        <group>
+                                            <group>
+                                                <field name="course_id"/>
+                                                <field name="sequence"/>
+                                                <field name="priority"/>
+                                                <field name="timeframe"/>
+                                                <field name="status"/>
+                                            </group>
+                                        </group>
+                                        <group>
+                                            <field name="recommendation_reason" placeholder="Lý do đề xuất..."/>
+                                            <field name="similarity_score"/>
+                                        </group>
+                                        <group>
+                                            <field name="supplementary_materials" placeholder="Tài liệu bổ trợ..."/>
+                                            <field name="reminder_date"/>
+                                        </group>
+                                    </sheet>
+                                </form>
+                            </field>
+                        </page>
+                        <page string="Thống kê" name="statistics">
+                            <group>
+                                <group string="Tổng quan">
+                                    <field name="total_courses"/>
+                                    <field name="short_term_courses"/>
+                                    <field name="medium_term_courses"/>
+                                    <field name="long_term_courses"/>
+                                </group>
+                                <group string="Tiến độ">
+                                    <field name="completed_courses_count"/>
+                                    <field name="in_progress_courses_count"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Xem xét" name="review" modifiers="{'invisible': [('reviewed_by', '=', False)]}">
+                            <group>
+                                <field name="reviewed_by"/>
+                                <field name="review_date"/>
+                                <field name="review_notes" placeholder="Ghi chú xem xét..."/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_lms_roadmap_kanban" model="ir.ui.view">
+        <field name="name">lms.roadmap.kanban</field>
+        <field name="model">lms.roadmap</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" class="o_kanban_dashboard">
+                <field name="name"/>
+                <field name="student_id"/>
+                <field name="total_courses"/>
+                <field name="state"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="oe_kanban_details">
+                                <strong><field name="name"/></strong>
+                                <div><field name="student_id"/></div>
+                                <div>Số khóa học: <field name="total_courses"/></div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="action_lms_roadmap" model="ir.actions.act_window">
+        <field name="name">Roadmap đề xuất</field>
+        <field name="res_model">lms.roadmap</field>
+        <field name="view_mode">kanban,list,form</field>
+    </record>
+
+    <!-- Wizard để tạo roadmap -->
+    <record id="view_lms_roadmap_wizard_form" model="ir.ui.view">
+        <field name="name">lms.roadmap.wizard.form</field>
+        <field name="model">lms.roadmap.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Tạo Roadmap">
+                <sheet>
+                    <group>
+                        <field name="student_id" readonly="1"/>
+                        <field name="method" widget="radio" options="{'horizontal': true}"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Tạo Roadmap" name="action_generate" type="object" class="btn-primary"/>
+                    <button string="Hủy" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_lms_roadmap_wizard" model="ir.actions.act_window">
+        <field name="name">Tạo Roadmap</field>
+        <field name="res_model">lms.roadmap.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

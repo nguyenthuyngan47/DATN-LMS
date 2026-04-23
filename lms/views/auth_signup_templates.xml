@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Odoo 18: login/name inputs live in t-call="auth_signup.fields", not in this view's
+         XML tree, so //input[@name='login'] cannot be matched. Anchor on csrf in the signup form. -->
+    <template id="lms_auth_signup_hidden_field" inherit_id="auth_signup.signup">
+        <xpath expr="//form[hasclass('oe_signup_form')]/input[@name='csrf_token']" position="after">
+            <input type="hidden" name="lms_register" t-att-value="lms_register or ''"/>
+        </xpath>
+    </template>
+
+    <!-- Chỉ form đăng ký gọi auth_signup.fields; ẩn khi không phải luồng giảng viên. -->
+    <template id="lms_auth_signup_lecturer_document" inherit_id="auth_signup.fields">
+        <xpath expr="//div[hasclass('field-name')]" position="after">
+            <div class="mb-3 field-lms-lecturer-document" t-if="lms_register == 'lecturer'">
+                <label class="form-label" for="lms_lecturer_document">Link Document</label>
+                <textarea id="lms_lecturer_document" name="lms_lecturer_document" rows="4"
+                    class="form-control form-control-sm"
+                    placeholder="Link gg drive chứng chỉ hành nghề, CV, lịch sử công việc,..."><t t-esc="lms_lecturer_document or ''"/></textarea>
+            </div>
+        </xpath>
+    </template>
+</odoo>

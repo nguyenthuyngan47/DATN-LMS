@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- Category cho LMS -->
+        <record id="module_category_lms" model="ir.module.category">
+            <field name="name">LMS</field>
+            <field name="description">Learning Management System</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <!-- LMS Administrator Group -->
+        <record id="group_lms_manager" model="res.groups">
+            <field name="name">LMS Administrator</field>
+            <field name="category_id" ref="module_category_lms"/>
+            <field name="comment">Full administrative access to all LMS features: students, courses, roadmaps, AI analysis</field>
+        </record>
+
+        <!-- Student Group -->
+        <record id="group_lms_user" model="res.groups">
+            <field name="name">Student</field>
+            <field name="category_id" ref="module_category_lms"/>
+            <field name="comment">Student: view and manage own courses, learning history, and roadmaps</field>
+        </record>
+
+        <!-- Academic Advisor Group -->
+        <!-- Instructor Group -->
+        <record id="group_lms_instructor" model="res.groups">
+            <field name="name">Instructor</field>
+            <field name="category_id" ref="module_category_lms"/>
+            <field name="comment">Instructor: create and manage course content (courses and lessons). No student monitoring access</field>
+        </record>
+    </data>
+</odoo>

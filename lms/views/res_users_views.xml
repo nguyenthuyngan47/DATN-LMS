@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Settings → Users (base.action_res_users) dùng base.view_users_form -->
+    <record id="view_users_form_lms_signup" model="ir.ui.view">
+        <field name="name">res.users.form.lms.signup</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook[1]" position="inside">
+                <page string="LMS" name="lms_signup_info" invisible="not lms_signup_channel">
+                    <group string="Đăng ký LMS" name="lms_signup_group">
+                        <field name="lms_signup_channel"/>
+                        <field name="certificate_link"
+                            invisible="lms_signup_channel != 'lecturer'"
+                            placeholder="Link chứng chỉ hành nghề, CV, lịch sử công việc,..."/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

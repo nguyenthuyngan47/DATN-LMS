@@ -1,0 +1,201 @@
+id,name,sequence,description,course_id,video_url,video_attachment_placeholder,pdf_attachment_placeholder,pdf_filename,duration_minutes
+1,Learning Python,10,"<p>Authors: Mark Lutz, David Ascher | First published: 1999</p>",1,https://archive.org/details/placeholder0,,,openlibrary__works_OL2784125W.pdf,15
+2,Python,10,<p>Authors: Mark Lutz | First published: 1998</p>,2,,,,openlibrary__works_OL2784127W.pdf,16
+3,Think Python,10,"<p>Authors: Allen B. Downey, Allen Downey | First published: 2009</p>",3,https://archive.org/details/placeholder2,,,openlibrary__works_OL16976951W.pdf,17
+4,Introduction to Python for Science and Engineering,10,<p>Authors: David J. Pine | First published: 2018</p>,4,,,,openlibrary__works_OL21349037W.pdf,18
+5,Python for bioinformatics,10,<p>Authors: Sebastian Bassi | First published: 2009</p>,5,https://archive.org/details/placeholder4,,,openlibrary__works_OL17795703W.pdf,19
+6,Programming Python,10,<p>Authors: Mark Lutz | First published: 1996</p>,6,,,,openlibrary__works_OL2784126W.pdf,20
+7,Mining the Social Web,10,<p>Authors: Matthew A. Russell | First published: 2011</p>,7,https://archive.org/details/placeholder6,,,openlibrary__works_OL15667639W.pdf,21
+8,Head First Python,10,<p>Authors: Paul Barry | First published: 2010</p>,8,,,,openlibrary__works_OL15664278W.pdf,22
+9,Think Stats,10,<p>Authors: Allen B. Downey | First published: 2011</p>,9,https://archive.org/details/placeholder8,,,openlibrary__works_OL16223034W.pdf,23
+10,Python For Data Analysis,10,<p>Authors: Wes McKinney | First published: 2012</p>,10,,,,openlibrary__works_OL17422847W.pdf,24
+11,Automate the Boring Stuff with Python,10,<p>Authors: Al Sweigart | First published: 2015</p>,11,https://archive.org/details/placeholder10,,,openlibrary__works_OL17192141W.pdf,25
+12,Python in a Nutshell,10,"<p>Authors: Alex Martelli, Anna Ravenscroft, Steve Holden | First published: 2002</p>",12,,,,openlibrary__works_OL6045694W.pdf,26
+13,Making music with computers,10,<p>Authors: Bill Manaris | First published: 2013</p>,13,https://archive.org/details/placeholder12,,,openlibrary__works_OL23330617W.pdf,27
+14,Python Cookbook,10,"<p>Authors: Alex Martelli, David Ascher, David M. Beazley | First published: 2002</p>",14,,,,openlibrary__works_OL14873289W.pdf,28
+15,Fluent Python,10,<p>Authors: Luciano Ramalho | First published: 2015</p>,15,https://archive.org/details/placeholder14,,,openlibrary__works_OL19932156W.pdf,29
+16,Tour of Data Science,10,<p>Authors: Nailong Zhang | First published: 2020</p>,16,,,,openlibrary__works_OL21703042W.pdf,30
+17,Natural Language Processing With Python,10,"<p>Authors: Edward Loper, Steven Bird, Ewan Klein | First published: 2009</p>",17,https://archive.org/details/placeholder16,,,openlibrary__works_OL14940051W.pdf,31
+18,Twisted Network Programming Essentials,10,"<p>Authors: Abe Fettig, Jessica McKellar | First published: 2005</p>",18,,,,openlibrary__works_OL8167555W.pdf,32
+19,Python for Everyone,10,"<p>Authors: Cay S. Horstmann, Rance D. Necaise | First published: 2013</p>",19,https://archive.org/details/placeholder18,,,openlibrary__works_OL19548251W.pdf,33
+20,Introduction to Modeling and Simulation with MATLAB® and Python,10,"<p>Authors: Steven I. Gordon, Brian Guilfoos | First published: 2017</p>",20,,,,openlibrary__works_OL25187574W.pdf,34
+21,Survival Analysis with Python,10,<p>Authors: Avishek Nag | First published: 2021</p>,21,https://archive.org/details/placeholder20,,,openlibrary__works_OL25347363W.pdf,35
+22,Introduction to Python Programming,10,"<p>Authors: Gowrishankar S, Veena A | First published: 2018</p>",22,,,,openlibrary__works_OL25217001W.pdf,36
+23,Pandas for Everyone,10,<p>Authors: Daniel Chen | First published: 2017</p>,23,https://archive.org/details/placeholder22,,,openlibrary__works_OL25777002W.pdf,37
+24,Think Complexity: Complexity Science and Computational Modeling,10,<p>Authors: Allen B. Downey | First published: 2012</p>,24,,,,openlibrary__works_OL19542561W.pdf,38
+25,Mastering Python Design Patterns,10,<p>Authors: Sakis Kasampalis | First published: 2015</p>,25,https://archive.org/details/placeholder24,,,openlibrary__works_OL19547142W.pdf,39
+26,Head First Programming,10,"<p>Authors: Paul Barry, David Griffiths | First published: 2009</p>",26,,,,openlibrary__works_OL15557593W.pdf,40
+27,Web Scraping with Python,10,<p>Authors: Ryan Mitchell | First published: 2015</p>,27,https://archive.org/details/placeholder26,,,openlibrary__works_OL17308344W.pdf,41
+28,The book of Python,10,"<p>Authors: John A. Goebel, Adil Hasan, Francesco Tehrani | First published: 2006</p>",28,,,,openlibrary__works_OL5841511W.pdf,42
+29,Data wrangling with Python,10,<p>Authors: Jacqueline Kazil | First published: 2016</p>,29,https://archive.org/details/placeholder28,,,openlibrary__works_OL20028472W.pdf,43
+30,Bite-Size Python,10,<p>Authors: April Speight | First published: 2020</p>,30,,,,openlibrary__works_OL21245028W.pdf,44
+31,Think Bayes,10,<p>Authors: Allen B. Downey | First published: 2013</p>,31,https://archive.org/details/placeholder30,,,openlibrary__works_OL17581315W.pdf,45
+32,Introducing Python,10,<p>Authors: Bill Lubanovic | First published: 2013</p>,32,,,,openlibrary__works_OL17400331W.pdf,46
+33,Python machine learning,10,<p>Authors: Sebastian Raschka | First published: 2015</p>,33,https://archive.org/details/placeholder32,,,openlibrary__works_OL19667740W.pdf,47
+34,Python for Experimental Psychologists,10,<p>Authors: Edwin S. Dalmaijer | First published: 2016</p>,34,,,,openlibrary__works_OL20916659W.pdf,48
+35,Introduction to Computational Models with Python,10,<p>Authors: Jose M. Garrido | First published: 2015</p>,35,https://archive.org/details/placeholder34,,,openlibrary__works_OL25159348W.pdf,49
+36,Python 3 Text Processing with NLTK 3 Cookbook,10,<p>Authors: Jacob Perkins | First published: 2014</p>,36,,,,openlibrary__works_OL27686368W.pdf,50
+37,Python Data Analysis,10,<p>Authors: Ivan Idris | First published: 2014</p>,37,https://archive.org/details/placeholder36,,,openlibrary__works_OL27686580W.pdf,51
+38,NumPy Cookbook,10,<p>Authors: Ivan Idris | First published: 2012</p>,38,,,,openlibrary__works_OL19891648W.pdf,52
+39,Exploratory Programming for the Arts and Humanities,10,<p>Authors: Nick Montfort | First published: 2016</p>,39,https://archive.org/details/placeholder38,,,openlibrary__works_OL21122478W.pdf,53
+40,Pygame - Initiez-vous au développement de jeux vidéo en Python,10,<p>Authors: Benoît Prieur | First published: 2019</p>,40,,,,openlibrary__works_OL20115118W.pdf,54
+41,Introduction To Computation And Programming Using Python,10,<p>Authors: John Guttag | First published: 2013</p>,41,https://archive.org/details/placeholder40,,,openlibrary__works_OL17575152W.pdf,55
+42,Bioinformatics programming using Python,10,<p>Authors: Mitchell L. Model | First published: 2009</p>,42,,,,openlibrary__works_OL15983380W.pdf,56
+43,Learning Ipython For Interactive Computing And Data Visualization,10,<p>Authors: Cyrille Rossant | First published: 2013</p>,43,https://archive.org/details/placeholder42,,,openlibrary__works_OL17583400W.pdf,57
+44,Flask Web Development,10,<p>Authors: Miguel Grinberg | First published: 2014</p>,44,,,,openlibrary__works_OL17389190W.pdf,58
+45,Test-Driven Development with Python,10,<p>Authors: Harry J.W. Percival | First published: 2014</p>,45,https://archive.org/details/placeholder44,,,openlibrary__works_OL17929690W.pdf,59
+46,Learning Cython Programming - Second Edition,10,<p>Authors: Philip Herron | First published: 2016</p>,46,,,,openlibrary__works_OL24207514W.pdf,60
+47,Learning Predictive Analytics with Python,10,<p>Authors: Ashish Kumar | First published: 2016</p>,47,https://archive.org/details/placeholder46,,,openlibrary__works_OL27686630W.pdf,61
+48,Learning Python Design Patterns - Second Edition,10,<p>Authors: Chetan Giridhar | First published: 2016</p>,48,,,,openlibrary__works_OL28620000W.pdf,62
+49,Let Us Python,10,<p>Authors: Yashavant Kanetkar | First published: 2019</p>,49,https://archive.org/details/placeholder48,,,openlibrary__works_OL27484186W.pdf,63
+50,Python Data Science Cookbook,10,<p>Authors: Gopi Subramanian | First published: 2015</p>,50,,,,openlibrary__works_OL32399821W.pdf,64
+51,Python Web Scraping Cookbook,10,<p>Authors: Michael Heydt | First published: 2018</p>,51,https://archive.org/details/placeholder50,,,openlibrary__works_OL19543033W.pdf,65
+52,Pandas Cookbook,10,<p>Authors: Theodore Petrou | First published: 2017</p>,52,,,,openlibrary__works_OL19543192W.pdf,66
+53,Mastering Python Scientific Computing,10,<p>Authors: Hemant Kumar Mehta | First published: 2015</p>,53,https://archive.org/details/placeholder52,,,openlibrary__works_OL19546862W.pdf,67
+54,Cython: A Guide for Python Programmers,10,<p>Authors: Kurt W. Smith | First published: 2015</p>,54,,,,openlibrary__works_OL19547202W.pdf,68
+55,MyLab Programming with Pearson eText -- Access Code Card -- for Starting Out with Python,10,<p>Authors: Tony Gaddis | First published: 2014</p>,55,https://archive.org/details/placeholder54,,,openlibrary__works_OL20196100W.pdf,69
+56,Learning Scientific Programming with Python,10,<p>Authors: Christian Hill | First published: 2015</p>,56,,,,openlibrary__works_OL20028518W.pdf,70
+57,Gentle Introduction to Effective Computing in Quantitative Research,10,"<p>Authors: Harry J. Paarsch, Konstantin Golyaev | First published: 2016</p>",57,https://archive.org/details/placeholder56,,,openlibrary__works_OL21122468W.pdf,71
+58,Data visualization with Python and JavaScript,10,<p>Authors: Kyran Dale | First published: 2016</p>,58,,,,openlibrary__works_OL20030955W.pdf,72
+59,Python Data Science Handbook,10,<p>Authors: Jake VanderPlas | First published: 2016</p>,59,https://archive.org/details/placeholder58,,,openlibrary__works_OL19545956W.pdf,73
+60,Practical Django Projects,10,<p>Authors: James Bennett | First published: 2008</p>,60,,,,openlibrary__works_OL15748423W.pdf,74
+61,Introduction to Machine Learning with Python,10,"<p>Authors: Andreas C. Mueller, Sarah Guido | First published: 2016</p>",61,https://archive.org/details/placeholder60,,,openlibrary__works_OL17357597W.pdf,75
+62,Python Basics,10,<p>First published: 2019</p>,62,,,,openlibrary__works_OL20094082W.pdf,76
+63,Building Python Programs,10,"<p>Authors: Stuart Reges, Marty Stepp, Allison Obourn | First published: 2018</p>",63,https://archive.org/details/placeholder62,,,openlibrary__works_OL20924096W.pdf,77
+64,Django RESTful Web Services: The easiest way to build Python RESTful APIs and web services with Django,10,<p>Authors: Gaston C. Hillar | First published: 2018</p>,64,,,,openlibrary__works_OL19542926W.pdf,78
+65,Ḳinah tseḥorah,10,<p>Authors: Yaácov Ravid | First published: 2009</p>,65,https://archive.org/details/placeholder64,,,openlibrary__works_OL18620629W.pdf,79
+66,Limbajul de programare Python 3 pentru non-programatori,10,<p>Authors: Nicolae Sfetcu | First published: 2025</p>,66,,,,openlibrary__works_OL44494365W.pdf,80
+67,Practical Python,10,<p>Authors: Magnus Lie Hetland | First published: 2002</p>,67,https://archive.org/details/placeholder66,,,openlibrary__works_OL8977658W.pdf,81
+68,Learning Internet of Things,10,<p>Authors: Peter Waher | First published: 2015</p>,68,,,,openlibrary__works_OL36678616W.pdf,82
+69,Starting Out with Python,10,<p>Authors: Tony Gaddis | First published: 2020</p>,69,https://archive.org/details/placeholder68,,,openlibrary__works_OL37477101W.pdf,83
+70,Python Recipes Handbook,10,<p>Authors: Joey Bernard | First published: 2016</p>,70,,,,openlibrary__works_OL37482978W.pdf,84
+71,Complex Network Analysis in Python,10,<p>Authors: Dmitry Zinoviev | First published: 2018</p>,71,https://archive.org/details/placeholder70,,,openlibrary__works_OL37484299W.pdf,85
+72,Easiest way to learn Python,10,<p>Authors: Phoenix Jatrix | First published: 2024</p>,72,,,,openlibrary__works_OL37518850W.pdf,86
+73,Python pratico,10,<p>Authors: Paolo Aliverti | First published: 2022</p>,73,https://archive.org/details/placeholder72,,,openlibrary__works_OL38070693W.pdf,87
+74,Learning data mining with Python,10,<p>Authors: Robert Layton | First published: 2015</p>,74,,,,openlibrary__works_OL26193647W.pdf,88
+75,Learning Scrapy,10,<p>Authors: Dimitrios Kouzis-Loukas | First published: 2016</p>,75,https://archive.org/details/placeholder74,,,openlibrary__works_OL27686743W.pdf,89
+76,Python hunting,10,<p>Authors: Marley Adair | First published: 2016</p>,76,,,,openlibrary__works_OL27030585W.pdf,90
+77,Python dla wszystkich,10,<p>Authors: Charles R. Severance | First published: 2020</p>,77,https://archive.org/details/placeholder76,,,openlibrary__works_OL24148259W.pdf,91
+78,Python Made Simple,10,<p>Authors: Rydhm Beri | First published: 2019</p>,78,,,,openlibrary__works_OL27474152W.pdf,92
+79,Practical Approach for Machine Learning and Deep Learning Algorithms,10,"<p>Authors: Abhishek Kumar Pandey, Pramod Singh Rathore, S. Balamurugan | First published: 2019</p>",79,https://archive.org/details/placeholder78,,,openlibrary__works_OL27484185W.pdf,93
+80,Game Programming,10,<p>Authors: Andy Harris | First published: 2007</p>,80,,,,openlibrary__works_OL4110557W.pdf,94
+81,Data Visualization with Python: Create an impact with meaningful data insights using interactive and engaging visuals,10,"<p>Authors: Mario Döbler, Tim Größmann | First published: 2019</p>",81,https://archive.org/details/placeholder80,,,openlibrary__works_OL19541948W.pdf,95
+82,Machine Learning with Python Cookbook: Practical Solutions from Preprocessing to Deep Learning,10,<p>Authors: Chris Albon | First published: 2018</p>,82,,,,openlibrary__works_OL19542254W.pdf,96
+83,TensorFlow 1.x Deep Learning Cookbook: Over 90 unique recipes to solve artificial-intelligence driven problems with Python,10,"<p>Authors: Antonio Gulli, Amita Kapoor | First published: 2017</p>",83,https://archive.org/details/placeholder82,,,openlibrary__works_OL19542381W.pdf,97
+84,Beginning Programming with Python For Dummies,10,<p>Authors: John Paul Mueller | First published: 2018</p>,84,,,,openlibrary__works_OL19543224W.pdf,98
+85,"Python Programming: An Introduction to Computer Science, 3rd Ed.",10,<p>Authors: John Zelle | First published: 2016</p>,85,https://archive.org/details/placeholder84,,,openlibrary__works_OL19543337W.pdf,99
+86,Learning pandas - Second Edition: High performance data manipulation and analysis using Python,10,<p>Authors: Michael Heydt | First published: 2017</p>,86,,,,openlibrary__works_OL19543370W.pdf,100
+87,OpenCV with Python Blueprints,10,<p>Authors: Michael Beyeler | First published: 2015</p>,87,https://archive.org/details/placeholder86,,,openlibrary__works_OL19546671W.pdf,101
+88,Python Data Analysis Cookbook,10,<p>Authors: Ivan Idris | First published: 2016</p>,88,,,,openlibrary__works_OL19546723W.pdf,102
+89,Spark for Python Developers: A concise guide to implementing Spark big data analytics for Python developers and building a real-time and insightful trend tracker data-intensive app,10,<p>Authors: Amit Nandi | First published: 2015</p>,89,https://archive.org/details/placeholder88,,,openlibrary__works_OL19546757W.pdf,103
+90,Mastering Python: Master the art of writing beautiful and powerful Python by using all of the features that Python 3.5 offers,10,<p>Authors: Rick van Hattem | First published: 2016</p>,90,,,,openlibrary__works_OL19546765W.pdf,104
+91,Mastering Machine Learning with Python in Six Steps: A Practical Implementation Guide to Predictive Data Analytics Using Python,10,<p>Authors: Manohar Swamynathan | First published: 2017</p>,91,https://archive.org/details/placeholder90,,,openlibrary__works_OL19545722W.pdf,15
+92,Machine Learning for the Web,10,<p>Authors: Andrea Isoni | First published: 2016</p>,92,,,,openlibrary__works_OL19545806W.pdf,16
+93,OpenCV: Computer Vision Projects with Python,10,"<p>Authors: Joseph Howse, Prateek Joshi, Michael Beyeler | First published: 2016</p>",93,https://archive.org/details/placeholder92,,,openlibrary__works_OL19545840W.pdf,17
+94,"Lightweight Django: Using REST, WebSockets, and Backbone",10,"<p>Authors: Julia Elman, Mark Lavin | First published: 2014</p>",94,,,,openlibrary__works_OL19547387W.pdf,18
+95,"Python Programming Blueprints: Build nine projects by leveraging powerful frameworks such as Flask, Nameko, and Django",10,"<p>Authors: Daniel Furtado, Marcus Pennington | First published: 2017</p>",95,https://archive.org/details/placeholder94,,,openlibrary__works_OL19542701W.pdf,19
+96,"Functional Python Programming: Discover the power of functional programming, generator functions, lazy evaluation, the built-in itertools library, and monads, 2nd Edition",10,<p>Authors: Steven F. Lott | First published: 2018</p>,96,,,,openlibrary__works_OL19542953W.pdf,20
+97,Data Science and Analytics with Python (Chapman & Hall/CRC Data Mining and Knowledge Discovery Series),10,<p>Authors: Jesus Rogel-Salazar | First published: 2017</p>,97,https://archive.org/details/placeholder96,,,openlibrary__works_OL19542972W.pdf,21
+98,Exploring Python,10,"<p>Authors: Markus Nix, Martin Grimme | First published: 2005</p>",98,,,,openlibrary__works_OL19849158W.pdf,22
+99,Ядро геометричного моделювання Open CASCADE Technology для Python-програмістів,10,<p>Authors: Volodymyr Kopei | First published: 2017</p>,99,https://archive.org/details/placeholder98,,,openlibrary__works_OL19086047W.pdf,23
+100,Data Science,10,"<p>Authors: Chantal D. Larose, Daniel T. Larose | First published: 2019</p>",100,,,,openlibrary__works_OL20659898W.pdf,24
+101,Revel for Starting Out With Python -- Access Card,10,<p>Authors: Tony Gaddis | First published: 2019</p>,101,https://archive.org/details/placeholder100,,,openlibrary__works_OL21262596W.pdf,25
+102,Python Digital Forensics Cookbook: Effective Python recipes for digital investigations,10,"<p>Authors: Preston Miller, Chapin Bryce | First published: 2017</p>",102,,,,openlibrary__works_OL19543552W.pdf,26
+103,Hands-On Data Science and Python Machine Learning,10,<p>Authors: Frank Kane | First published: 2017</p>,103,https://archive.org/details/placeholder102,,,openlibrary__works_OL19543706W.pdf,27
+104,Daniel Arbuckle's Mastering Python,10,<p>Authors: Daniel Arbuckle | First published: 2017</p>,104,,,,openlibrary__works_OL19543748W.pdf,28
+105,Artificial Intelligence with Python: A Comprehensive Guide to Building Intelligent Apps for Python Beginners and Developers,10,<p>Authors: Prateek Joshi | First published: 2017</p>,105,https://archive.org/details/placeholder104,,,openlibrary__works_OL19545457W.pdf,29
+106,Django: Web Development with Python,10,"<p>Authors: Samuel Dauzon, Aidas Bendoraitis, Arun Ravindran | First published: 2016</p>",106,,,,openlibrary__works_OL19545996W.pdf,30
+107,Getting Started with Python Data Analysis,10,"<p>Authors: Phuong Vo.T.H, Martin Czygan | First published: 2015</p>",107,https://archive.org/details/placeholder106,,,openlibrary__works_OL20771642W.pdf,31
+108,Calculus Unraveled,10,<p>Authors: Mike X Cohen | First published: 2025</p>,108,,,,openlibrary__works_OL43058636W.pdf,32
+109,Modern Statistics,10,<p>Authors: Mike X Cohen | First published: 2023</p>,109,https://archive.org/details/placeholder108,,,openlibrary__works_OL43058808W.pdf,33
+110,Introduction to Computing,10,<p>Authors: David Evans | First published: 2011</p>,110,,,,openlibrary__works_OL17795244W.pdf,34
+111,Мова програмування Python для інженерів і науковців,10,<p>Authors: Volodymyr Kopei | First published: 2019</p>,111,https://archive.org/details/placeholder110,,,openlibrary__works_OL19087942W.pdf,35
+112,Getting Started with Raspberry Pi,10,"<p>Authors: Shawn P. Wallace, Matt Richardson | First published: 2012</p>",112,,,,openlibrary__works_OL16803901W.pdf,36
+113,Aprendiendo a programar en Python con mi computador,10,"<p>Authors: Sergio Rojas, Héctor Fernández, Juan Carlos Ruiz | First published: 2016</p>",113,https://archive.org/details/placeholder112,,,openlibrary__works_OL17854515W.pdf,37
+114,Python para todos,10,<p>Authors: Raúl González Duque | First published: 2010</p>,114,,,,openlibrary__works_OL17842206W.pdf,38
+115,Python Guide Documentation,10,<p>Authors: Kenneth Reitz | First published: 2018</p>,115,https://archive.org/details/placeholder114,,,openlibrary__works_OL17842208W.pdf,39
+116,Python for Scientists,10,<p>Authors: John M. Stewart | First published: 2014</p>,116,,,,openlibrary__works_OL17515418W.pdf,40
+117,Learn Programming,10,<p>Authors: Antti Salonen | First published: 2018</p>,117,https://archive.org/details/placeholder116,,,openlibrary__works_OL17930014W.pdf,41
+118,Introducción a la programación con Python,10,"<p>Authors: Andrés Marzal Varó, Isabel Gracia Luengo | First published: 2009</p>",118,,,,openlibrary__works_OL17794712W.pdf,42
+119,Introducción a la programación con Python 3,10,"<p>Authors: Andrés Marzal Varó, Isabel Gracia Luengo, Pedro García Sevilla | First published: 2014</p>",119,https://archive.org/details/placeholder118,,,openlibrary__works_OL17794722W.pdf,43
+120,Curso,10,<p>Authors: Eugenia Bahit | First published: 2012</p>,120,,,,openlibrary__works_OL17874094W.pdf,44
+121,Learning Perl,10,"<p>Authors: Randal L. Schwartz, Tom Phoenix, brian d foy | First published: 1993</p>",121,https://archive.org/details/placeholder120,,,openlibrary__works_OL1701007W.pdf,45
+122,JavaScript,10,<p>Authors: David Flanagan | First published: 1996</p>,122,,,,openlibrary__works_OL1643770W.pdf,46
+123,Professional JavaScript for Web developers,10,<p>Authors: Nicholas C. Zakas | First published: 2005</p>,123,https://archive.org/details/placeholder122,,,openlibrary__works_OL5841457W.pdf,47
+124,The Art of Seo,10,"<p>Authors: Eric Enge, Stephan Spencer, Jessie Stricchiola | First published: 2009</p>",124,,,,openlibrary__works_OL15910386W.pdf,48
+125,Eloquent Javascript,10,<p>Authors: Marijn Haverbeke | First published: 2009</p>,125,https://archive.org/details/placeholder124,,,openlibrary__works_OL15444205W.pdf,49
+126,Dynamic HTML,10,<p>Authors: Danny Goodman | First published: 1998</p>,126,,,,openlibrary__works_OL15859253W.pdf,50
+127,"Learning PHP, MySQL & JavaScript",10,<p>Authors: Robin Nixon | First published: 2009</p>,127,https://archive.org/details/placeholder126,,,openlibrary__works_OL9559525W.pdf,51
+128,PHP,10,"<p>Authors: Rasmus Lerdorf, James Guérin | First published: 2000</p>",128,,,,openlibrary__works_OL5854647W.pdf,52
+129,Perl Cookbook,10,"<p>Authors: Tom Christiansen, Nathan Torkington, Tom Christiansen | First published: 1998</p>",129,https://archive.org/details/placeholder128,,,openlibrary__works_OL15167379W.pdf,53
+130,JavaScript for dummies,10,<p>Authors: Emily A. Vander Veer | First published: 1996</p>,130,,,,openlibrary__works_OL2765872W.pdf,54
+131,VBScript in a nutshell,10,"<p>Authors: Paul Lomax, Ron Petrusha, Matt Childs | First published: 2000</p>",131,https://archive.org/details/placeholder130,,,openlibrary__works_OL3365884W.pdf,55
+132,You Don't Know JS Yet,10,<p>Authors: Kyle Simpson | First published: 2019</p>,132,,,,openlibrary__works_OL27032590W.pdf,56
+133,JavaScript and jQuery,10,<p>Authors: Jon Duckett | First published: 2014</p>,133,https://archive.org/details/placeholder132,,,openlibrary__works_OL17341092W.pdf,57
+134,Ajax Hacks,10,<p>Authors: Bruce W. Perry | First published: 2006</p>,134,,,,openlibrary__works_OL2447712W.pdf,58
+135,Smart Computing with Opensource Platforms,10,"<p>Authors: Amartya Mukherjee, Nilanjan Dey | First published: 2019</p>",135,https://archive.org/details/placeholder134,,,openlibrary__works_OL25217275W.pdf,59
+136,JavaScript Absolute Beginner's Guide,10,<p>Authors: Kirupa Chinnathambi | First published: 2016</p>,136,,,,openlibrary__works_OL19543260W.pdf,60
+137,"Building Android apps with HTML, CSS, and JavaScript",10,<p>Authors: Jonathan Stark | First published: 2010</p>,137,https://archive.org/details/placeholder136,,,openlibrary__works_OL16600799W.pdf,61
+138,"Beginning PHP5, Apache, and MySQL Web development",10,<p>Authors: Elizabeth Naramore | First published: 2005</p>,138,,,,openlibrary__works_OL17884433W.pdf,62
+139,Revival,10,<p>Authors: Paul W. Ross | First published: 2018</p>,139,https://archive.org/details/placeholder138,,,openlibrary__works_OL25205938W.pdf,63
+140,Learning web design,10,<p>Authors: Jennifer Niederst Robbins | First published: 2007</p>,140,,,,openlibrary__works_OL19882567W.pdf,64
+141,"Beginning HTML, XHTML, CSS, and JavaScript",10,<p>Authors: Jon Duckett | First published: 2010</p>,141,https://archive.org/details/placeholder140,,,openlibrary__works_OL15191421W.pdf,65
+142,Flex & bison,10,<p>Authors: John R. Levine | First published: 2009</p>,142,,,,openlibrary__works_OL16961859W.pdf,66
+143,Ruby best practices,10,<p>Authors: Gregory T. Brown | First published: 2009</p>,143,https://archive.org/details/placeholder142,,,openlibrary__works_OL16931636W.pdf,67
+144,JavaScript Cookbook,10,<p>Authors: Shelley Powers | First published: 2010</p>,144,,,,openlibrary__works_OL16941971W.pdf,68
+145,Advanced PHP programming,10,<p>Authors: George Schlossnagle | First published: 2004</p>,145,https://archive.org/details/placeholder144,,,openlibrary__works_OL8273720W.pdf,69
+146,Making use of PHP,10,<p>Authors: Ashok Appu | First published: 2002</p>,146,,,,openlibrary__works_OL6026157W.pdf,70
+147,Custom CGI Scripting with Perl,10,<p>Authors: Kevin Hanegan | First published: 2001</p>,147,https://archive.org/details/placeholder146,,,openlibrary__works_OL8156047W.pdf,71
+148,Setting up LAMP,10,<p>Authors: Eric Rosebrock | First published: 2004</p>,148,,,,openlibrary__works_OL5741519W.pdf,72
+149,Mastering JSP,10,<p>Authors: Todd Cook | First published: 2002</p>,149,https://archive.org/details/placeholder148,,,openlibrary__works_OL8546496W.pdf,73
+150,Making use of JSP,10,<p>Authors: Madhushree Ganguli | First published: 2002</p>,150,,,,openlibrary__works_OL5965630W.pdf,74
+151,Adobe AIR 1.5 Cookbook,10,"<p>Authors: David Tucker, Marco Casario, Koen De Weggheleire | First published: 2008</p>",151,https://archive.org/details/placeholder150,,,openlibrary__works_OL13647754W.pdf,75
+152,Dreamweaver CS6,10,<p>Authors: David Sawyer McFarland | First published: 2012</p>,152,,,,openlibrary__works_OL17080392W.pdf,76
+153,Interactive Data Visualization For The Web,10,<p>Authors: Scott Murray | First published: 2013</p>,153,https://archive.org/details/placeholder152,,,openlibrary__works_OL17581291W.pdf,77
+154,High Performance JavaScript,10,<p>Authors: Nicholas C. Zakas | First published: 2010</p>,154,,,,openlibrary__works_OL16807218W.pdf,78
+155,jQuery,10,<p>Authors: David Flanagan | First published: 2010</p>,155,https://archive.org/details/placeholder154,,,openlibrary__works_OL16807227W.pdf,79
+156,Hadoop Operations,10,<p>Authors: Eric Sammer | First published: 2012</p>,156,,,,openlibrary__works_OL17560934W.pdf,80
+157,Enterprise Rails,10,<p>Authors: Dan Chak | First published: 2008</p>,157,https://archive.org/details/placeholder156,,,openlibrary__works_OL16939422W.pdf,81
+158,Developing BackboneJs Applications,10,<p>Authors: Addy Osmani | First published: 2012</p>,158,,,,openlibrary__works_OL17519515W.pdf,82
+159,AI4U,10,<p>Authors: Arthur T. Murray | First published: 2002</p>,159,https://archive.org/details/placeholder158,,,openlibrary__works_OL8149416W.pdf,83
+160,JSP,10,<p>Authors: Phil Hanna | First published: 2001</p>,160,,,,openlibrary__works_OL5746871W.pdf,84
+161,PHP Certification Study Guide,10,<p>Authors: Zend Technologies | First published: 2004</p>,161,https://archive.org/details/placeholder160,,,openlibrary__works_OL8273756W.pdf,85
+162,Professional Refactoring in Visual Basic,10,<p>Authors: Danijel Arsenovski | First published: 2008</p>,162,,,,openlibrary__works_OL9371957W.pdf,86
+163,JavaScript developer's resource,10,"<p>Authors: Kamran Husain, Jason Levitt | First published: 1996</p>",163,https://archive.org/details/placeholder162,,,openlibrary__works_OL2643122W.pdf,87
+164,Appcelerator Titanium,10,<p>Authors: John Anderson | First published: 2013</p>,164,,,,openlibrary__works_OL19548381W.pdf,88
+165,HTML5 iPhone Web Application Development,10,<p>Authors: Alvin Crespo | First published: 2013</p>,165,https://archive.org/details/placeholder164,,,openlibrary__works_OL19548098W.pdf,89
+166,JavaScript For Kids For Dummies,10,"<p>Authors: Chris Minnick, Eva Holland | First published: 2015</p>",166,,,,openlibrary__works_OL20771823W.pdf,90
+167,Mobile design and development,10,<p>Authors: Brian Fling | First published: 2009</p>,167,https://archive.org/details/placeholder166,,,openlibrary__works_OL15415849W.pdf,91
+168,Python for Unix and Linux System Administration,10,<p>Authors: Noah Gift | First published: 2008</p>,168,,,,openlibrary__works_OL15563910W.pdf,92
+169,Mastering Perl/Tk,10,"<p>Authors: Stephen O. Lidie, Nancy Walsh | First published: 2002</p>",169,https://archive.org/details/placeholder168,,,openlibrary__works_OL18775189W.pdf,93
+170,Supercharged JavaScript graphics,10,<p>Authors: Raffaele Cecco | First published: 2011</p>,170,,,,openlibrary__works_OL16532882W.pdf,94
+171,Javascript Web Applications,10,<p>Authors: Alex MacCaw | First published: 2011</p>,171,https://archive.org/details/placeholder170,,,openlibrary__works_OL16610045W.pdf,95
+172,Learning the IOS 4 SDK for JavaScript Programmers,10,<p>Authors: Danny Goodman | First published: 2010</p>,172,,,,openlibrary__works_OL17561029W.pdf,96
+173,Closure,10,<p>Authors: Michael Bolin | First published: 2010</p>,173,https://archive.org/details/placeholder172,,,openlibrary__works_OL16990457W.pdf,97
+174,Mobile Javascript Application Development,10,<p>Authors: Adrian Kosmaczewski | First published: 2012</p>,174,,,,openlibrary__works_OL17447143W.pdf,98
+175,Speaking JavaScript,10,<p>Authors: Axel Rauschmayer | First published: 2014</p>,175,https://archive.org/details/placeholder174,,,openlibrary__works_OL17538569W.pdf,99
+176,Sams teach yourself JavaScript 1.3 in 24 hours,10,<p>Authors: Michael G. Moncur | First published: 1999</p>,176,,,,openlibrary__works_OL53613W.pdf,100
+177,Programming the Network with Perl,10,<p>Authors: Paul Barry | First published: 2002</p>,177,https://archive.org/details/placeholder176,,,openlibrary__works_OL3555527W.pdf,101
+178,Head first JavaScript,10,<p>Authors: Michael Morrison | First published: 2007</p>,178,,,,openlibrary__works_OL16931728W.pdf,102
+179,Doing Web development,10,<p>Authors: Deborah Kurata | First published: 2001</p>,179,https://archive.org/details/placeholder178,,,openlibrary__works_OL2172108W.pdf,103
+180,Introduction to Interactive Programming on the Internet,10,<p>Authors: Craig D. Knuckles | First published: 2000</p>,180,,,,openlibrary__works_OL8226550W.pdf,104
+181,How to do everything with PHP & MySQL,10,<p>Authors: Vikram Vaswani | First published: 2005</p>,181,https://archive.org/details/placeholder180,,,openlibrary__works_OL5798983W.pdf,15
+182,Programming the Perl DBI,10,<p>Authors: Alligator Descartes | First published: 2000</p>,182,,,,openlibrary__works_OL7795946W.pdf,16
+183,Sams Teach Yourself CGI in 24 Hours,10,<p>Authors: Richard Colburn | First published: 2002</p>,183,https://archive.org/details/placeholder182,,,openlibrary__works_OL8273390W.pdf,17
+184,PHP by example,10,<p>Authors: Toby Butzon | First published: 2001</p>,184,,,,openlibrary__works_OL8578601W.pdf,18
+185,MCAD/MCSD Training Guide (70-315),10,<p>Authors: Amit Kalani | First published: 2002</p>,185,https://archive.org/details/placeholder184,,,openlibrary__works_OL8578632W.pdf,19
+186,"Practical JavaScript, DOM Scripting and Ajax Projects",10,<p>Authors: Frank Zammetti | First published: 2007</p>,186,,,,openlibrary__works_OL8977863W.pdf,20
+187,"Sams Teach Yourself PHP, MySQL and Apache All-in-One",10,<p>Authors: Julie C. Meloni | First published: 2003</p>,187,https://archive.org/details/placeholder186,,,openlibrary__works_OL5738925W.pdf,21
+188,Server Scripts With Visual Javascript (Hands-on Web Development),10,<p>Authors: Dan Rahmel | First published: 1998</p>,188,,,,openlibrary__works_OL135198W.pdf,22
+189,Professional Visual Basic 2008,10,<p>Authors: Bill Evjen | First published: 2008</p>,189,https://archive.org/details/placeholder188,,,openlibrary__works_OL15069450W.pdf,23
+190,Responsive Web Design with HTML5 and CSS3 - Second Edition,10,<p>Authors: Ben Frain | First published: 2017</p>,190,,,,openlibrary__works_OL27690582W.pdf,24
+191,Java programming with CORBA,10,"<p>Authors: Vogel, Andreas | First published: 1997</p>",191,https://archive.org/details/placeholder190,,,openlibrary__works_OL2754361W.pdf,25
+192,Head First Android Development,10,"<p>Authors: Dawn Griffiths, David Griffiths | First published: 2017</p>",192,,,,openlibrary__works_OL19543178W.pdf,26
+193,Learning AngularJS,10,<p>Authors: Brad Dayley | First published: 2014</p>,193,https://archive.org/details/placeholder192,,,openlibrary__works_OL19546893W.pdf,27
+194,AngularJS UI Development,10,"<p>Authors: Amit Gharat, Matthias Nehlsen | First published: 2014</p>",194,,,,openlibrary__works_OL19547030W.pdf,28
+195,Ext JS 4 first look,10,<p>Authors: Loiane Groner | First published: 2012</p>,195,https://archive.org/details/placeholder194,,,openlibrary__works_OL19849213W.pdf,29
+196,Adobe edge animate,10,<p>Authors: Chris Grover | First published: 2012</p>,196,,,,openlibrary__works_OL21179410W.pdf,30
+197,Pro JSP 2,10,"<p>Authors: Simon Brown, Sam Dalton, Daniel Jepp | First published: 2005</p>",197,https://archive.org/details/placeholder196,,,openlibrary__works_OL19897460W.pdf,31
+198,PHP 5 in Practice,10,<p>Authors: Elliott White III | First published: 2007</p>,198,,,,openlibrary__works_OL15187269W.pdf,32
+199,Getting Started with BeagleBone,10,<p>Authors: Matt Richardson | First published: 2012</p>,199,https://archive.org/details/placeholder198,,,openlibrary__works_OL17581298W.pdf,33
+200,Extending Jquery,10,<p>Authors: Keith Wood | First published: 2013</p>,200,,,,openlibrary__works_OL17582818W.pdf,34

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="lms_login_register_links" inherit_id="web.login" name="LMS: Đăng ký giảng viên / học viên">
+        <xpath expr="//div[contains(@class, 'oe_login_buttons')]" position="after">
+            <div class="text-center small mt-3 lms-login-register-links">
+                <span>Đăng ký </span>
+                <a href="/lms/dang-ky/giang-vien" class="text-decoration-underline" style="text-decoration: underline;">giảng viên</a>
+                <span> hoặc </span>
+                <a href="/lms/dang-ky/hoc-sinh" class="text-decoration-underline" style="text-decoration: underline;">học viên</a>
+            </div>
+        </xpath>
+    </template>
+</odoo>

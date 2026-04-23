@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="param_lms_face_gate_min_face_ratio" model="ir.config_parameter">
+            <field name="key">lms_face_gate.min_face_ratio</field>
+            <field name="value">0.12</field>
+        </record>
+    </data>
+</odoo>

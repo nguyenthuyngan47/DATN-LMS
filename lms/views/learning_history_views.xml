@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_lms_learning_history_search" model="ir.ui.view">
+        <field name="name">lms.learning.history.search</field>
+        <field name="model">lms.learning.history</field>
+        <field name="arch" type="xml">
+            <search string="Tìm kiếm lịch học">
+                <field name="name"/>
+                <field name="student_id"/>
+                <field name="course_id"/>
+                <field name="lesson_id"/>
+                <field name="instructor_id"/>
+                <field name="status"/>
+                <filter string="Đã hoàn thành" name="status_completed" domain="[('status', '=', 'completed')]"/>
+                <group expand="0" string="Nhóm theo">
+                    <filter string="Khóa học" name="group_course" context="{'group_by': 'course_id'}"/>
+                    <filter string="Giảng viên" name="group_instructor" context="{'group_by': 'instructor_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_lms_learning_history_tree" model="ir.ui.view">
+        <field name="name">lms.learning.history.list</field>
+        <field name="model">lms.learning.history</field>
+        <field name="arch" type="xml">
+            <list string="Lịch sử học tập" decoration-warning="is_at_risk==True">
+                <field name="date"/>
+                <field name="student_id"/>
+                <field name="course_id"/>
+                <field name="lesson_id"/>
+                <field name="instructor_id"/>
+                <field name="study_duration"/>
+                <field name="status"/>
+                <field name="is_at_risk" invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_lms_learning_history_form" model="ir.ui.view">
+        <field name="name">lms.learning.history.form</field>
+        <field name="model">lms.learning.history</field>
+        <field name="arch" type="xml">
+            <form string="Lịch sử học tập">
+                <header>
+                    <button name="action_mark_completed" string="Đánh dấu hoàn thành" type="object" class="btn-primary" modifiers="{'invisible': [('status', '=', 'completed')]}"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="student_id"/>
+                            <field name="course_id"/>
+                            <field name="instructor_id" readonly="1"/>
+                            <field name="lesson_id"/>
+                            <field name="date"/>
+                        </group>
+                        <group>
+                            <field name="status"/>
+                            <field name="study_duration"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="name" readonly="1"/>
+                        <field name="notes" placeholder="Ghi chú..."/>
+                    </group>
+                    <group>
+                        <field name="is_at_risk" invisible="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_lms_learning_history" model="ir.actions.act_window">
+        <field name="name">Lịch sử học tập</field>
+        <field name="res_model">lms.learning.history</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_lms_learning_history_calendar" model="ir.ui.view">
+        <field name="name">lms.learning.history.calendar</field>
+        <field name="model">lms.learning.history</field>
+        <field name="arch" type="xml">
+            <calendar
+                string="Thời khóa biểu"
+                date_start="date"
+                mode="month"
+            >
+                <field name="name"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="action_lms_learning_timetable" model="ir.actions.act_window">
+        <field name="name">Thời khóa biểu</field>
+        <field name="res_model">lms.learning.history</field>
+        <field name="view_mode">calendar,list,form</field>
+        <field name="search_view_id" ref="view_lms_learning_history_search"/>
+    </record>
+
+    <record id="action_lms_learning_timetable_by_course" model="ir.actions.act_window">
+        <field name="name">TKB theo khóa học</field>
+        <field name="res_model">lms.learning.history</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_lms_learning_history_search"/>
+        <field name="context">{'group_by': 'course_id'}</field>
+    </record>
+</odoo>

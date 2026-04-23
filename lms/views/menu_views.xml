@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Học viên -->
+    <menuitem id="menu_lms_students" name="Học viên" action="action_lms_student" sequence="10" web_icon="lms,static/description/icon.png"/>
+
+    <!-- Khóa học -->
+    <!-- Khi click "Khóa học" mở danh sách khóa học -->
+    <menuitem id="menu_lms_courses" name="Khóa học" sequence="20" action="action_lms_course" web_icon="lms,static/description/icon.png"/>
+    <menuitem id="menu_lms_courses_list" name="Danh sách khóa học" parent="menu_lms_courses" action="action_lms_course" sequence="10"/>
+    <menuitem
+        id="menu_lms_lession"
+        name="Lịch học"
+        parent="menu_lms_courses"
+        action="action_lms_student_lesson_calendar"
+        sequence="15"
+        groups="lms.group_lms_user"
+    />
+    <menuitem
+        id="menu_lms_teaching_schedule"
+        name="Lịch dạy"
+        parent="menu_lms_courses"
+        action="action_lms_instructor_lesson_calendar"
+        sequence="16"
+        groups="lms.group_lms_instructor"
+    />
+    <menuitem id="menu_lms_course_categories" name="Danh mục" parent="menu_lms_courses" action="action_lms_course_category" sequence="20"/>
+    <menuitem id="menu_lms_course_levels" name="Cấp độ" parent="menu_lms_courses" action="action_lms_course_level" sequence="30"/>
+    <menuitem id="menu_lms_course_tags" name="Nhãn" parent="menu_lms_courses" action="action_lms_course_tag" sequence="40"/>
+
+    <!-- Học tập -->
+    <!-- Khi click "Học tập" mở trang lịch sử học tập -->
+    <menuitem id="menu_lms_learning" name="Học tập" sequence="30" action="action_lms_learning_history" web_icon="lms,static/description/icon.png"/>
+    <menuitem id="menu_lms_learning_history" name="Lịch sử học tập" parent="menu_lms_learning" action="action_lms_learning_history" sequence="10"/>
+    <menuitem id="menu_lms_learning_timetable" name="Thời khóa biểu (Calendar)" parent="menu_lms_learning" action="action_lms_learning_timetable" sequence="20"/>
+    <menuitem id="menu_lms_learning_timetable_by_course" name="TKB theo khóa học" parent="menu_lms_learning" action="action_lms_learning_timetable_by_course" sequence="30"/>
+    <menuitem id="menu_lms_roadmap" name="Roadmap đề xuất" parent="menu_lms_learning" action="action_lms_roadmap" sequence="20"/>
+
+    <!-- Giảng viên: menu cấp cao -->
+    <menuitem id="menu_lms_lecturers" name="Giảng viên" action="action_lms_lecturer" sequence="15" web_icon="lms,static/description/icon.png"/>
+
+    <!-- Analytics -->
+    <menuitem id="menu_lms_analytics_root" name="Analytics" sequence="40" web_icon="lms,static/description/icon.png"/>
+    <menuitem id="menu_lms_analytics_enrollments" name="Đăng ký học (Pivot/Graph)" parent="menu_lms_analytics_root" action="action_lms_analytics_student_course" sequence="10"/>
+    <menuitem id="menu_lms_analytics_learning_history" name="Lịch sử học tập (Pivot/Graph)" parent="menu_lms_analytics_root" action="action_lms_analytics_learning_history" sequence="20"/>
+
+    <!-- Cấu hình -->
+    <menuitem id="menu_lms_config" name="Cấu hình" sequence="99"/>
+</odoo>
+
+

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_lms_lecturer_list" model="ir.ui.view">
+        <field name="name">lms.lecturer.list</field>
+        <field name="model">lms.lecturer</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="id"/>
+                <field name="full_name"/>
+                <field name="email"/>
+                <field name="phone_number"/>
+                <field name="department"/>
+                <field name="faculty"/>
+                <field name="academic_degree"/>
+                <field name="years_of_experience"/>
+                <field name="status" string="Trạng thái"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_lms_lecturer_form" model="ir.ui.view">
+        <field name="name">lms.lecturer.form</field>
+        <field name="model">lms.lecturer</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="lecturer_id" readonly="1"/>
+                            <field name="full_name"/>
+                            <field name="role" readonly="1"/>
+                            <field name="status" readonly="1"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="username" readonly="1"/>
+                            <field name="email"/>
+                            <field name="phone_number"/>
+                            <field name="last_login" readonly="1"/>
+                            <field name="last_active_at" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Thông tin cá nhân">
+                            <group>
+                                <group>
+                                    <field name="gender"/>
+                                    <field name="date_of_birth"/>
+                                    <field name="address"/>
+                                </group>
+                                <group>
+                                    <field name="department"/>
+                                    <field name="specialization"/>
+                                    <field name="academic_degree"/>
+                                    <field name="years_of_experience"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Thông tin chuyên môn">
+                            <group>
+                                <group>
+                                    <field name="faculty"/>
+                                    <field name="subject_expertise"/>
+                                </group>
+                                <group>
+                                    <field name="certifications"/>
+                                    <field name="teaching_level"/>
+                                    <field name="teaching_type"/>
+                                </group>
+                            </group>
+                        </page>
+                        <!-- <page string="Nghiệp vụ LMS">
+                            <group>
+                                <field name="course_assigned">
+                                    <list>
+                                        <field name="name"/>
+                                        <field name="category_id"/>
+                                        <field name="level_id"/>
+                                        <field name="enrolled_students_count"/>
+                                    </list>
+                                </field>
+                                <field name="class_assigned" widget="many2many_tags"/>
+                                <field name="student_managed" widget="many2many_tags"/>
+                                <field name="lesson_created" widget="many2many_tags"/>
+                                <field name="teaching_schedule" widget="many2many_tags"/>
+                            </group>
+                            <group>
+                                <field name="assignment_created" readonly="1"/>
+                                <field name="exam_created" readonly="1"/>
+                            </group>
+                        </page>
+                        <page string="Chỉ số hoạt động">
+                            <group>
+                                <field name="total_courses" readonly="1"/>
+                                <field name="total_students" readonly="1"/>
+                                <field name="total_lessons_uploaded" readonly="1"/>
+                                <field name="total_assignments" readonly="1"/>
+                                <field name="average_course_rating" readonly="1"/>
+                                <field name="login_frequency" readonly="1"/>
+                                <field name="created_at" readonly="1"/>
+                                <field name="updated_at" readonly="1"/>
+                            </group>
+                        </page> -->
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_lms_lecturer" model="ir.actions.act_window">
+        <field name="name">Giảng viên</field>
+        <field name="res_model">lms.lecturer</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>
