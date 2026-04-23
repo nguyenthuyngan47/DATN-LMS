@@ -27,7 +27,7 @@
         <field name="res_model">lms.student.ai.chat</field>
         <field name="view_mode">form</field>
         <field name="view_id" ref="view_lms_student_ai_chat_form"/>
-        <field name="target">new</field>
+        <field name="target">current</field>
         <field name="groups_id" eval="[(4, ref('lms.group_lms_user'))]"/>
     </record>
 </odoo>
