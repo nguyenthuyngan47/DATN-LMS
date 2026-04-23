@@ -49,6 +49,7 @@ access_lms_roadmap_wizard_manager,lms.roadmap.wizard.manager,model_lms_roadmap_w
 access_lms_roadmap_wizard_lms_manager,lms.roadmap.wizard.lms.manager,model_lms_roadmap_wizard,lms.group_lms_manager,1,1,1,1
 access_lms_roadmap_wizard_lms_user,lms.roadmap.wizard.lms.user,model_lms_roadmap_wizard,lms.group_lms_user,1,1,1,1
 access_lms_roadmap_wizard_instructor,lms.roadmap.wizard.instructor,model_lms_roadmap_wizard,lms.group_lms_instructor,1,1,1,1
+access_lms_student_ai_chat_lms_user,lms.student.ai.chat.lms.user,model_lms_student_ai_chat,lms.group_lms_user,1,1,1,1
 access_lms_lecturer_system,lms.lecturer.system,model_lms_lecturer,base.group_system,1,1,1,1
 access_lms_lecturer_lms_manager,lms.lecturer.lms.manager,model_lms_lecturer,lms.group_lms_manager,1,1,1,1
 access_lms_lecturer_instructor,lms.lecturer.instructor,model_lms_lecturer,lms.group_lms_instructor,1,1,0,0

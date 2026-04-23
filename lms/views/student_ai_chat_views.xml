@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_lms_student_ai_chat_form" model="ir.ui.view">
+        <field name="name">lms.student.ai.chat.form</field>
+        <field name="model">lms.student.ai.chat</field>
+        <field name="arch" type="xml">
+            <form string="Tư vấn roadmap cho học viên" create="0" edit="0" delete="0">
+                <sheet>
+                    <group>
+                        <field name="title" readonly="1"/>
+                        <field name="student_id" readonly="1"/>
+                    </group>
+                    <group string="Trò chuyện với AI (sắp triển khai)">
+                        <field name="user_message" placeholder="Ví dụ: Em muốn roadmap học Python backend trong 3 tháng..."/>
+                        <field name="ai_response_placeholder" widget="html" readonly="1"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Đóng" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_lms_student_ai_chat" model="ir.actions.act_window">
+        <field name="name">Tư vấn roadmap cho học viên</field>
+        <field name="res_model">lms.student.ai.chat</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_lms_student_ai_chat_form"/>
+        <field name="target">new</field>
+        <field name="groups_id" eval="[(4, ref('lms.group_lms_user'))]"/>
+    </record>
+</odoo>

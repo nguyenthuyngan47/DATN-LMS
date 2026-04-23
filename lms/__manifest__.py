@@ -18,6 +18,7 @@
         'security/ir.model.access.csv',
         'security/lms_security.xml',
         'views/student_views.xml',
+        'views/student_ai_chat_views.xml',
         'views/course_views.xml',
         'views/lecturer_views.xml',
         'views/learning_history_views.xml',

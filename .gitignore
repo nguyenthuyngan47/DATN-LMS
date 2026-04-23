@@ -1,10 +1,37 @@
-# Environment and secrets
-.env
-**/.env
+# Ignore empty module folders
+base_pack/
+crm_sfa/
+inquiry/
+name_card_management/
+addons/base_pack/
+addons/crm_sfa/
+addons/inquiry/
+addons/name_card_management/
 
-# Python cache/bytecode
+# Python
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
+.Python
 
-# Local data artifacts
-*.db
+# Odoo
+*.log
+*.pot
+*.po
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker / runtime
+data/
+logs/
+.env
+lmsodoo-32c3fbb07398.json

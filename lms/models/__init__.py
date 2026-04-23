@@ -10,6 +10,7 @@ from . import learning_history
 from . import lms_data_integrity
 from . import roadmap
 from . import roadmap_wizard
+from . import student_ai_chat
 from . import ai_analysis
 from . import res_config_settings
 from . import res_users

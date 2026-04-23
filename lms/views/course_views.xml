@@ -77,6 +77,16 @@
         <field name="model">lms.course</field>
         <field name="arch" type="xml">
             <list string="Courses" decoration-info="state=='published'" decoration-muted="state=='archived'">
+                <header>
+                    <button
+                        name="%(action_lms_student_ai_chat)d"
+                        string="Tư vấn roadmap cho học viên"
+                        type="action"
+                        class="btn-secondary"
+                        display="always"
+                        groups="lms.group_lms_user"
+                    />
+                </header>
                 <field name="name"/>
                 <field name="instructor_id"/>
                 <field name="category_id"/>
