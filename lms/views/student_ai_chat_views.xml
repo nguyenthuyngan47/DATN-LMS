@@ -9,10 +9,55 @@
                     <group>
                         <field name="title" readonly="1"/>
                         <field name="student_id" readonly="1"/>
+                        <field name="question_target" readonly="1"/>
+                        <field name="session_state" readonly="1"/>
+                        <field name="has_available_courses" invisible="1"/>
+                        <field name="unavailable_reason" invisible="1"/>
+                        <field name="debug_last_ai_request" invisible="1"/>
+                        <field name="debug_last_ai_response" invisible="1"/>
                     </group>
-                    <group string="Trò chuyện với AI (sắp triển khai)">
-                        <field name="user_message" placeholder="Ví dụ: Em muốn roadmap học Python backend trong 3 tháng..."/>
-                        <field name="ai_response_placeholder" widget="html" readonly="1"/>
+                    <group string="Thiết lập phiên tư vấn">
+                        <div
+                            class="o_form_label text-warning"
+                            invisible="has_available_courses"
+                        >
+                            Hiện hệ thống chưa có khóa học nào, chưa thể dùng chức năng tư vấn roadmap.
+                        </div>
+                        <div
+                            class="o_form_label text-info"
+                            invisible="not has_available_courses"
+                        >
+                            Cho phép AI đọc dữ liệu cá nhân sẽ cải thiện chất lượng phân tích và đưa ra roadmap phù hợp hơn.
+                        </div>
+                        <field name="allow_personal_data"/>
+                        <button
+                            name="action_start_session"
+                            string="Bắt đầu tư vấn"
+                            type="object"
+                            class="btn-primary"
+                            invisible="session_state != 'draft'"
+                        />
+                    </group>
+                    <group string="Trò chuyện">
+                        <field name="conversation_html" widget="html" readonly="1"/>
+                        <field
+                            name="user_message"
+                            placeholder="Nhập câu trả lời của bạn rồi nhấn Gửi..."
+                            invisible="session_state != 'chatting' or is_chat_locked"
+                        />
+                        <button
+                            name="action_send_message"
+                            string="Gửi (Enter)"
+                            type="object"
+                            class="btn-primary"
+                            invisible="session_state != 'chatting' or is_chat_locked"
+                        />
+                        <div
+                            class="o_form_label text-muted"
+                            invisible="not is_chat_locked"
+                        >
+                            Phiên tư vấn đã hoàn tất, chat đã được khóa.
+                        </div>
                     </group>
                 </sheet>
                 <footer>

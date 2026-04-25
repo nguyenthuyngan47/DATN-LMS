@@ -30,6 +30,11 @@
         'views/auth_signup_templates.xml',
         'views/res_users_views.xml',
     ],
+    'assets': {
+        'web.assets_backend': [
+            'lms/static/src/js/ai_roadmap_chat_bridge.js',
+        ],
+    },
     'demo': [],
     'installable': True,
     'application': True,
