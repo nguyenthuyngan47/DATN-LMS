@@ -70,6 +70,18 @@ class LmsStudentAiChat(models.TransientModel):
     def _get_available_courses_count(self):
         return self.env['lms.course'].sudo().search_count([])
 
+    def _reopen_chat_form_action(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Tư vấn roadmap cho học viên'),
+            'res_model': 'lms.student.ai.chat',
+            'view_mode': 'form',
+            'view_id': self.env.ref('lms.view_lms_student_ai_chat_form').id,
+            'res_id': self.id,
+            'target': 'current',
+        }
+
     def _compute_is_chat_locked(self):
         for rec in self:
             rec.is_chat_locked = rec.session_state == 'done'
@@ -113,13 +125,13 @@ class LmsStudentAiChat(models.TransientModel):
                 if role == 'assistant':
                     lines.append(
                         '<div style="margin:8px 0;text-align:left;">'
-                        '<span style="display:inline-block;max-width:80%;background:#e9f3ff;'
+                        '<span style="display:inline-block;max-width:80%%;background:#e9f3ff;'
                         'padding:8px 12px;border-radius:14px;color:#1f2937;">%s</span></div>' % content
                     )
                 else:
                     lines.append(
                         '<div style="margin:8px 0;text-align:right;">'
-                        '<span style="display:inline-block;max-width:80%;background:#dcfce7;'
+                        '<span style="display:inline-block;max-width:80%%;background:#dcfce7;'
                         'padding:8px 12px;border-radius:14px;color:#14532d;">%s</span></div>' % content
                     )
             lines.append('</div>')
@@ -371,7 +383,7 @@ class LmsStudentAiChat(models.TransientModel):
         )
         self._set_useful_pairs([])
         self._set_conversation([{'role': 'assistant', 'content': first_question.strip()}])
-        return {'type': 'ir.actions.client', 'tag': 'reload'}
+        return self._reopen_chat_form_action()
 
     def action_send_message(self):
         self.ensure_one()
@@ -398,9 +410,9 @@ class LmsStudentAiChat(models.TransientModel):
             conv.append({'role': 'assistant', 'content': final_text})
             self.write({'session_state': 'done', 'user_message': False})
             self._set_conversation(conv)
-            return {'type': 'ir.actions.client', 'tag': 'reload'}
+            return self._reopen_chat_form_action()
         next_question = eval_result['next_question'] or 'Bạn có thể chia sẻ thêm mục tiêu học tập cụ thể của mình?'
         conv.append({'role': 'assistant', 'content': next_question})
         self.write({'asked_count': self.asked_count + 1, 'user_message': False})
         self._set_conversation(conv)
-        return {'type': 'ir.actions.client', 'tag': 'reload'}
+        return self._reopen_chat_form_action()

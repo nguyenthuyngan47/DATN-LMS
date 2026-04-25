@@ -4,7 +4,7 @@
         <field name="name">lms.student.ai.chat.form</field>
         <field name="model">lms.student.ai.chat</field>
         <field name="arch" type="xml">
-            <form string="Tư vấn roadmap cho học viên" create="0" edit="0" delete="0">
+            <form string="Tư vấn roadmap cho học viên" create="0" edit="1" delete="0">
                 <sheet>
                     <group>
                         <field name="title" readonly="1"/>
@@ -38,11 +38,12 @@
                             invisible="session_state != 'draft'"
                         />
                     </group>
-                    <group string="Trò chuyện">
-                        <field name="conversation_html" widget="html" readonly="1"/>
+                    <group string="Trò chuyện" col="1">
+                        <field name="conversation_html" widget="html" readonly="1" nolabel="1"/>
                         <field
                             name="user_message"
-                            placeholder="Nhập câu trả lời của bạn rồi nhấn Gửi..."
+                            placeholder="Nhập câu trả lời của bạn tại đây rồi nhấn Gửi (Enter)..."
+                            nolabel="1"
                             invisible="session_state != 'chatting' or is_chat_locked"
                         />
                         <button
