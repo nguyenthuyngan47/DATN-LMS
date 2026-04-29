@@ -13,6 +13,16 @@
                         <field name="session_state" readonly="1"/>
                         <field name="has_available_courses" invisible="1"/>
                         <field name="unavailable_reason" invisible="1"/>
+                        <field name="roadmap_options_json" invisible="1"/>
+                        <field name="selected_roadmap_index" invisible="1"/>
+                        <field name="has_roadmap_options" invisible="1"/>
+                        <field name="has_roadmap_selected" invisible="1"/>
+                        <field name="roadmap_option_1_available" invisible="1"/>
+                        <field name="roadmap_option_2_available" invisible="1"/>
+                        <field name="roadmap_option_3_available" invisible="1"/>
+                        <field name="roadmap_option_1_label" invisible="1"/>
+                        <field name="roadmap_option_2_label" invisible="1"/>
+                        <field name="roadmap_option_3_label" invisible="1"/>
                         <field name="debug_last_ai_request" invisible="1"/>
                         <field name="debug_last_ai_response" invisible="1"/>
                     </group>
@@ -59,6 +69,37 @@
                         >
                             Phiên tư vấn đã hoàn tất, chat đã được khóa.
                         </div>
+                        <group
+                            string="Danh sách roadmap để chọn"
+                            invisible="session_state != 'done' or not has_roadmap_options"
+                            col="1"
+                        >
+                            <field name="roadmap_options_html" widget="html" readonly="1" nolabel="1"/>
+                            <button
+                                name="action_select_roadmap_1"
+                                string="Chọn roadmap 1"
+                                type="object"
+                                class="btn-primary"
+                                invisible="not roadmap_option_1_available or has_roadmap_selected"
+                            />
+                            <button
+                                name="action_select_roadmap_2"
+                                string="Chọn roadmap 2"
+                                type="object"
+                                class="btn-primary"
+                                invisible="not roadmap_option_2_available or has_roadmap_selected"
+                            />
+                            <button
+                                name="action_select_roadmap_3"
+                                string="Chọn roadmap 3"
+                                type="object"
+                                class="btn-primary"
+                                invisible="not roadmap_option_3_available or has_roadmap_selected"
+                            />
+                            <div class="o_form_label text-success" invisible="not has_roadmap_selected">
+                                Bạn đã chọn roadmap cho phiên này. Hệ thống đã xử lý đăng ký khóa học theo lựa chọn.
+                            </div>
+                        </group>
                     </group>
                 </sheet>
                 <footer>
