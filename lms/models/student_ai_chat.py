@@ -245,6 +245,13 @@ class LmsStudentAiChat(models.TransientModel):
             )
         return '\n'.join(lines)
 
+    def _build_allowed_course_names_text(self):
+        courses = self.env['lms.course'].sudo().search([])
+        names = [c.name for c in courses if c.name]
+        if not names:
+            return '- (trống)'
+        return '\n'.join(['- %s' % name for name in names])
+
     def _ai_chat(self, messages, *, temperature=0.6, max_tokens=900):
         self._debug_ai_console('REQUEST', messages, temperature=temperature, max_tokens=max_tokens)
         self._set_browser_debug(request_payload={'messages': messages, 'temperature': temperature, 'max_tokens': max_tokens})
@@ -351,17 +358,31 @@ class LmsStudentAiChat(models.TransientModel):
         )
         personal_data = self._build_personal_data_text() if self.allow_personal_data else 'Không dùng dữ liệu cá nhân.'
         course_text = self._build_course_catalog_text()
+        allowed_course_names = self._build_allowed_course_names_text()
+        course_count = self._get_available_courses_count()
         prompt = (
             'Hãy đề xuất roadmap học tập bằng tiếng Việt, rõ ràng và thực tế.\n'
             'Yêu cầu đầu ra:\n'
             '- Chỉ trả về text thường, không markdown phức tạp, không JSON.\n'
-            '- Đưa ra 2 đến 3 roadmap theo các phương án A/B/C để học viên có thể lựa chọn.\n'
+            '- Đưa ra 2 đến 3 roadmap theo các phương án A/B/C để học viên có thể lựa chọn (chỉ khi danh mục khóa học đủ phong phú).\n'
+            '- Mỗi phương án phải tập trung vào một "trục/chiến lược" khác nhau (ví dụ: nền tảng chắc chắn, tăng tốc theo kỹ năng trọng tâm, học theo dự án thực chiến...), KHÔNG được chỉ đổi tên khóa học.\n'
             '- Mỗi phương án phải có: mục tiêu, các giai đoạn học, khóa học gợi ý theo thứ tự, và lý do ngắn gọn.\n'
+            '- Yêu cầu bắt buộc để đảm bảo khác biệt:\n'
+            '  + Thứ tự các giai đoạn phải khác nhau giữa các phương án.\n'
+            '  + Ít nhất 1-2 khóa học chính (ở giai đoạn đầu hoặc giữa) phải khác nhau giữa các phương án.\n'
+            '  + Mỗi phương án có ít nhất 1 câu mô tả "Khác biệt chính so với các phương án còn lại: ...".\n'
             '- Cuối mỗi phương án, thêm một dòng "Phù hợp khi: ..." để nêu đối tượng phù hợp.\n'
+            '- Nếu dữ liệu học viên + danh mục khóa học KHÔNG đủ để tạo sự khác biệt rõ ràng giữa các phương án, chỉ trả 1-2 phương án (không cố nhồi cho đủ A/B/C).\n'
+            '- QUY TẮC CỨNG: Chỉ được phép đề xuất khóa học có trong danh sách hợp lệ bên dưới. Tuyệt đối không bịa thêm tên khóa học mới.\n'
+            '- Nếu chỉ có 1 khóa học trong hệ thống thì chỉ đề xuất roadmap dựa trên đúng khóa học đó, không tạo nhiều phương án giả khác nhau.\n'
+            '- Nếu không thể đề xuất đủ khóa học vì danh mục còn ít, hãy nói rõ "Hiện danh mục khóa học còn hạn chế" thay vì bịa khóa học.\n'
             '- Tối ưu dựa trên dữ liệu học viên + danh mục khóa học.\n\n'
+            'Tổng số khóa học hiện có: %s\n'
+            'Danh sách tên khóa học hợp lệ (chỉ dùng các tên này):\n%s\n\n'
             'Thông tin học viên:\n%s\n\n'
             'Các trả lời hữu ích:\n%s\n\n'
-            'Danh mục khóa học hiện có:\n%s\n' % (personal_data, qa_text, course_text)
+            'Danh mục khóa học hiện có:\n%s\n'
+            % (course_count, allowed_course_names, personal_data, qa_text, course_text)
         )
         return self._ai_chat(
             [{'role': 'system', 'content': 'Bạn là chuyên gia tư vấn lộ trình học tập. Luôn trả lời tiếng Việt.'}, {'role': 'user', 'content': prompt}],
