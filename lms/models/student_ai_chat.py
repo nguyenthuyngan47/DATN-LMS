@@ -70,6 +70,14 @@ class LmsStudentAiChat(models.TransientModel):
     def _get_available_courses_count(self):
         return self.env['lms.course'].sudo().search_count([])
 
+    @staticmethod
+    def _format_vnd(amount):
+        try:
+            value = int(amount or 0)
+        except (TypeError, ValueError):
+            value = 0
+        return f'{value:,}'.replace(',', '.') + 'VND'
+
     def _reopen_chat_form_action(self):
         self.ensure_one()
         return {
@@ -239,7 +247,7 @@ class LmsStudentAiChat(models.TransientModel):
                     c.category_id.name or 'N/A',
                     c.level_id.name or 'N/A',
                     c.duration_hours or 0,
-                    c.price or 0,
+                    self._format_vnd(c.price),
                     prereq_names,
                 )
             )
@@ -376,6 +384,11 @@ class LmsStudentAiChat(models.TransientModel):
             '- QUY TẮC CỨNG: Chỉ được phép đề xuất khóa học có trong danh sách hợp lệ bên dưới. Tuyệt đối không bịa thêm tên khóa học mới.\n'
             '- Nếu chỉ có 1 khóa học trong hệ thống thì chỉ đề xuất roadmap dựa trên đúng khóa học đó, không tạo nhiều phương án giả khác nhau.\n'
             '- Nếu không thể đề xuất đủ khóa học vì danh mục còn ít, hãy nói rõ "Hiện danh mục khóa học còn hạn chế" thay vì bịa khóa học.\n'
+            '- QUY TẮC CHI PHÍ (bắt buộc):\n'
+            '  + Trong phần khóa học gợi ý, sau mỗi tên khóa học phải ghi giá theo mẫu: Tên khóa học (100.000VND).\n'
+            '  + Nếu khóa học có giá 0 thì ghi: (Miễn phí).\n'
+            '  + Ở cuối MỖI roadmap phải có dòng: "Tổng chi phí roadmap: X.VND". Nếu tất cả khóa học trong roadmap là miễn phí thì không cần ghi tổng chi phí\n'
+            '  + Tổng chi phí roadmap phải bằng tổng các khóa học đã liệt kê trong roadmap đó.\n'
             '- Tối ưu dựa trên dữ liệu học viên + danh mục khóa học.\n\n'
             'Tổng số khóa học hiện có: %s\n'
             'Danh sách tên khóa học hợp lệ (chỉ dùng các tên này):\n%s\n\n'
