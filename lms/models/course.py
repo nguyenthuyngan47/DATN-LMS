@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from dateutil.relativedelta import relativedelta
+import os
+from urllib.parse import urlparse
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
@@ -386,8 +388,65 @@ class Lesson(models.Model):
     # Tài liệu học
     video_url = fields.Char(string='Link video')
     video_attachment = fields.Binary(string='File video', attachment=True)
+    video_filename = fields.Char(string='Tên file video')
     pdf_attachment = fields.Binary(string='File PDF', attachment=True)
     pdf_filename = fields.Char(string='Tên file PDF')
+    video_preview_html = fields.Html(
+        string='Xem video',
+        compute='_compute_video_preview_html',
+        sanitize=False,
+    )
+    video_upload_hint_html = fields.Html(
+        string='Gợi ý upload video',
+        compute='_compute_video_upload_hint_html',
+        sanitize=False,
+    )
+    video_upload_hint = fields.Char(
+        string='Khuyến nghị video',
+        compute='_compute_video_upload_hint',
+    )
+
+    @staticmethod
+    def _get_max_video_upload_mb():
+        raw = (os.environ.get('LMS_MAX_VIDEO_UPLOAD_MB') or '').strip()
+        if not raw:
+            return 500
+        try:
+            value = int(raw)
+        except ValueError:
+            return 500
+        return max(1, value)
+
+    @classmethod
+    def _base64_size_bytes(cls, b64_value):
+        if not b64_value:
+            return 0
+        if isinstance(b64_value, bytes):
+            b64_value = b64_value.decode('utf-8', errors='ignore')
+        text = ''.join(str(b64_value).split())
+        if not text:
+            return 0
+        padding = 0
+        if text.endswith('=='):
+            padding = 2
+        elif text.endswith('='):
+            padding = 1
+        return (len(text) * 3 // 4) - padding
+
+    @api.constrains('video_attachment')
+    def _check_video_attachment_size(self):
+        max_mb = self._get_max_video_upload_mb()
+        max_bytes = max_mb * 1024 * 1024
+        for lesson in self:
+            size_bytes = self._base64_size_bytes(lesson.video_attachment)
+            if size_bytes > max_bytes:
+                raise ValidationError(
+                    _(
+                        'File video vượt quá dung lượng cho phép (%sMB). '
+                        'Vui lòng nén video hoặc chọn file nhỏ hơn.'
+                    )
+                    % max_mb
+                )
 
     # Thời lượng
     duration_minutes = fields.Integer(string='Thời lượng (phút)')
@@ -443,6 +502,106 @@ class Lesson(models.Model):
         }
         for lesson in self:
             lesson.calendar_color = color_map.get(lesson.state, 0)
+
+    @staticmethod
+    def _guess_video_mime(name_or_url):
+        value = (name_or_url or '').lower()
+        if value.endswith('.mp4') or '.mp4?' in value:
+            return 'video/mp4'
+        if value.endswith('.webm') or '.webm?' in value:
+            return 'video/webm'
+        if value.endswith('.ogg') or value.endswith('.ogv') or '.ogg?' in value or '.ogv?' in value:
+            return 'video/ogg'
+        if value.endswith('.mov') or '.mov?' in value:
+            return 'video/quicktime'
+        if value.endswith('.m4v') or '.m4v?' in value:
+            return 'video/x-m4v'
+        if value.endswith('.mkv') or '.mkv?' in value:
+            return 'video/x-matroska'
+        return 'video/mp4'
+
+    @api.depends('video_url', 'video_attachment', 'video_filename')
+    def _compute_video_preview_html(self):
+        for lesson in self:
+            html = '<p class="text-muted"><i>Chưa có video để xem trực tiếp.</i></p>'
+            url = (lesson.video_url or '').strip()
+            if url:
+                lower = url.lower()
+                if 'youtube.com/watch' in lower:
+                    video_id = url.split('v=')[-1].split('&')[0]
+                    html = (
+                        '<div style="max-width:900px;">'
+                        '<iframe width="100%%" height="420" src="https://www.youtube.com/embed/%s" '
+                        'title="YouTube video player" frameborder="0" '
+                        'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" '
+                        'allowfullscreen></iframe></div>'
+                    ) % video_id
+                elif 'youtu.be/' in lower:
+                    video_id = lower.split('youtu.be/')[-1].split('?')[0]
+                    html = (
+                        '<div style="max-width:900px;">'
+                        '<iframe width="100%%" height="420" src="https://www.youtube.com/embed/%s" '
+                        'title="YouTube video player" frameborder="0" '
+                        'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" '
+                        'allowfullscreen></iframe></div>'
+                    ) % video_id
+                elif 'vimeo.com/' in lower:
+                    path = urlparse(url).path.strip('/').split('/')
+                    video_id = path[-1] if path else ''
+                    if video_id.isdigit():
+                        html = (
+                            '<div style="max-width:900px;">'
+                            '<iframe src="https://player.vimeo.com/video/%s" width="100%%" height="420" '
+                            'frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>'
+                            '</div>'
+                        ) % video_id
+                    else:
+                        mime = self._guess_video_mime(url)
+                        html = (
+                            '<video controls preload="metadata" style="width:100%%;max-width:900px;">'
+                            '<source src="%s" type="%s"/>'
+                            'Trình duyệt không hỗ trợ phát video trực tiếp.'
+                            '</video>'
+                        ) % (url, mime)
+                else:
+                    mime = self._guess_video_mime(url)
+                    html = (
+                        '<video controls preload="metadata" style="width:100%%;max-width:900px;">'
+                        '<source src="%s" type="%s"/>'
+                        'Trình duyệt không hỗ trợ phát video trực tiếp.'
+                        '</video>'
+                    ) % (url, mime)
+            elif lesson.video_attachment and lesson.id:
+                stream_url = '/web/content/%s?model=lms.lesson&field=video_attachment&download=false' % lesson.id
+                mime = self._guess_video_mime(lesson.video_filename or '')
+                html = (
+                    '<video controls preload="metadata" style="width:100%%;max-width:900px;">'
+                    '<source src="%s" type="%s"/>'
+                    'Trình duyệt không hỗ trợ phát video trực tiếp.'
+                    '</video>'
+                ) % (stream_url, mime)
+            lesson.video_preview_html = html
+
+    @api.depends('video_url', 'video_attachment', 'video_filename')
+    def _compute_video_upload_hint_html(self):
+        max_mb = self._get_max_video_upload_mb()
+        text_hint = (
+            'Khuyến nghị: ưu tiên MP4 (hoặc WebM/OGG), dung lượng video nên dưới %sMB.'
+        ) % max_mb
+        hint = (
+            '<p style="margin:6px 0 0 0;color:#6b7280;font-size:12px;">'
+            '%s'
+            '</p>'
+        ) % text_hint
+        for lesson in self:
+            lesson.video_upload_hint_html = hint
+
+    @api.depends('video_url', 'video_attachment', 'video_filename')
+    def _compute_video_upload_hint(self):
+        max_mb = self._get_max_video_upload_mb()
+        text_hint = 'Khuyến nghị file video: ưu tiên MP4 (hoặc WebM/OGG), dung lượng video nên dưới %sMB.' % max_mb
+        for lesson in self:
+            lesson.video_upload_hint = text_hint
 
     def _google_calendar_apply_updates(self, vals):
         return self.with_context(skip_google_calendar_sync=True).write(vals)
