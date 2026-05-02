@@ -55,4 +55,8 @@ access_lms_lecturer_lms_manager,lms.lecturer.lms.manager,model_lms_lecturer,lms.
 access_lms_lecturer_instructor,lms.lecturer.instructor,model_lms_lecturer,lms.group_lms_instructor,1,1,0,0
 access_lms_lecturer_lms_user,lms.lecturer.lms.user,model_lms_lecturer,lms.group_lms_user,1,0,0,0
 access_lms_lecturer_base_user,lms.lecturer.base.user,model_lms_lecturer,base.group_user,1,0,0,0
+access_lms_student_lesson_progress_manager,lms.student.lesson.progress.manager,model_lms_student_lesson_progress,lms.group_lms_manager,1,1,1,1
+access_lms_student_lesson_progress_instructor,lms.student.lesson.progress.instructor,model_lms_student_lesson_progress,lms.group_lms_instructor,1,1,1,1
+access_lms_student_lesson_progress_user,lms.student.lesson.progress.user,model_lms_student_lesson_progress,lms.group_lms_user,1,1,1,0
+access_lms_student_lesson_progress_system,lms.student.lesson.progress.system,model_lms_student_lesson_progress,base.group_system,1,1,1,1
 

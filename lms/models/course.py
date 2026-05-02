@@ -490,6 +490,31 @@ class Lesson(models.Model):
     calendar_sync_error = fields.Text(string='Calendar Sync Error', copy=False)
     google_event_id = fields.Char(string='Google Event ID', copy=False, readonly=True)
     google_event_html_link = fields.Char(string='Google Event Link', copy=False, readonly=True)
+    progress_ids = fields.One2many(
+        'lms.student.lesson.progress', 'lesson_id', string='Tiến độ học viên'
+    )
+    current_user_progress_percent = fields.Float(
+        string='Tiến độ học viên hiện tại (%)',
+        compute='_compute_current_user_progress',
+        digits=(16, 2),
+    )
+    current_user_status = fields.Selection(
+        [
+            ('not_started', 'Chưa bắt đầu'),
+            ('in_progress', 'Đang học'),
+            ('done', 'Hoàn thành'),
+        ],
+        string='Trạng thái học viên hiện tại',
+        compute='_compute_current_user_progress',
+    )
+    current_user_watched_seconds = fields.Integer(
+        string='Thời gian đã xem (giây)',
+        compute='_compute_current_user_progress',
+    )
+    current_user_last_position_seconds = fields.Integer(
+        string='Vị trí xem gần nhất (giây)',
+        compute='_compute_current_user_progress',
+    )
 
     @api.depends('state')
     def _compute_calendar_color(self):
@@ -502,6 +527,38 @@ class Lesson(models.Model):
         }
         for lesson in self:
             lesson.calendar_color = color_map.get(lesson.state, 0)
+
+    @api.depends('progress_ids')
+    def _compute_current_user_progress(self):
+        student = self.env['lms.student'].sudo().search([('user_id', '=', self.env.user.id)], limit=1)
+        for lesson in self:
+            progress = self.env['lms.student.lesson.progress']
+            if student:
+                progress = self.env['lms.student.lesson.progress'].sudo().search(
+                    [('student_id', '=', student.id), ('lesson_id', '=', lesson.id)],
+                    limit=1,
+                )
+            lesson.current_user_progress_percent = progress.progress_percent if progress else 0.0
+            lesson.current_user_status = progress.status if progress else 'not_started'
+            lesson.current_user_watched_seconds = progress.watched_seconds if progress else 0
+            lesson.current_user_last_position_seconds = (
+                progress.last_position_seconds if progress else 0
+            )
+
+    def action_update_current_user_progress(self, watched_seconds, last_position_seconds, video_duration_seconds=None):
+        self.ensure_one()
+        student = self.env['lms.student'].sudo().search([('user_id', '=', self.env.user.id)], limit=1)
+        if not student:
+            raise ValidationError(_('Không tìm thấy hồ sơ học viên của tài khoản hiện tại.'))
+        progress = self.env['lms.student.lesson.progress'].sudo().get_or_create_progress(student, self)
+        vals = {
+            'watched_seconds': max(progress.watched_seconds, int(watched_seconds or 0)),
+            'last_position_seconds': max(0, int(last_position_seconds or 0)),
+        }
+        if video_duration_seconds is not None:
+            vals['video_duration_seconds'] = max(progress.video_duration_seconds or 0, int(video_duration_seconds or 0))
+        progress.write(vals)
+        return True
 
     @staticmethod
     def _guess_video_mime(name_or_url):
@@ -558,28 +615,28 @@ class Lesson(models.Model):
                     else:
                         mime = self._guess_video_mime(url)
                         html = (
-                            '<video controls preload="metadata" style="width:100%%;max-width:900px;">'
+                            '<video class="lms-video-tracker" data-lms-lesson-id="%s" controls preload="metadata" style="width:100%%;max-width:900px;">'
                             '<source src="%s" type="%s"/>'
                             'Trình duyệt không hỗ trợ phát video trực tiếp.'
                             '</video>'
-                        ) % (url, mime)
+                        ) % (lesson.id or 0, url, mime)
                 else:
                     mime = self._guess_video_mime(url)
                     html = (
-                        '<video controls preload="metadata" style="width:100%%;max-width:900px;">'
+                        '<video class="lms-video-tracker" data-lms-lesson-id="%s" controls preload="metadata" style="width:100%%;max-width:900px;">'
                         '<source src="%s" type="%s"/>'
                         'Trình duyệt không hỗ trợ phát video trực tiếp.'
                         '</video>'
-                    ) % (url, mime)
+                    ) % (lesson.id or 0, url, mime)
             elif lesson.video_attachment and lesson.id:
                 stream_url = '/web/content/%s?model=lms.lesson&field=video_attachment&download=false' % lesson.id
                 mime = self._guess_video_mime(lesson.video_filename or '')
                 html = (
-                    '<video controls preload="metadata" style="width:100%%;max-width:900px;">'
+                    '<video class="lms-video-tracker" data-lms-lesson-id="%s" controls preload="metadata" style="width:100%%;max-width:900px;">'
                     '<source src="%s" type="%s"/>'
                     'Trình duyệt không hỗ trợ phát video trực tiếp.'
                     '</video>'
-                ) % (stream_url, mime)
+                ) % (lesson.id, stream_url, mime)
             lesson.video_preview_html = html
 
     @api.depends('video_url', 'video_attachment', 'video_filename')
@@ -682,4 +739,132 @@ class Lesson(models.Model):
         if not self.env.context.get('skip_google_calendar_sync'):
             self._google_calendar_unsync(clear_meeting_url=False)
         return super().unlink()
+
+
+class StudentLessonProgress(models.Model):
+    _name = 'lms.student.lesson.progress'
+    _description = 'Tiến độ học viên theo bài học'
+    _order = 'id desc'
+
+    student_id = fields.Many2one('lms.student', string='Học viên', required=True, ondelete='cascade', index=True)
+    lesson_id = fields.Many2one('lms.lesson', string='Bài học', required=True, ondelete='cascade', index=True)
+    course_id = fields.Many2one(
+        'lms.course',
+        string='Khóa học',
+        related='lesson_id.course_id',
+        store=True,
+        readonly=True,
+    )
+    enrollment_id = fields.Many2one(
+        'lms.student.course',
+        string='Đăng ký khóa học',
+        required=True,
+        ondelete='cascade',
+        index=True,
+    )
+    watched_seconds = fields.Integer(string='Số giây đã xem', default=0)
+    video_duration_seconds = fields.Integer(string='Thời lượng video (giây)', default=0)
+    progress_percent = fields.Float(
+        string='Tiến độ (%)',
+        compute='_compute_progress_percent',
+        store=True,
+        digits=(16, 2),
+    )
+    last_position_seconds = fields.Integer(string='Vị trí xem gần nhất (giây)', default=0)
+    status = fields.Selection(
+        [
+            ('not_started', 'Chưa bắt đầu'),
+            ('in_progress', 'Đang học'),
+            ('done', 'Hoàn thành'),
+        ],
+        string='Trạng thái',
+        compute='_compute_status',
+        store=True,
+    )
+    started_at = fields.Datetime(string='Bắt đầu học', default=fields.Datetime.now)
+    completed_at = fields.Datetime(string='Hoàn thành')
+
+    _sql_constraints = [
+        ('student_lesson_progress_unique', 'unique(student_id, lesson_id)', 'Tiến độ bài học của học viên đã tồn tại.'),
+    ]
+
+    @api.model
+    def get_or_create_progress(self, student, lesson):
+        progress = self.sudo().search(
+            [('student_id', '=', student.id), ('lesson_id', '=', lesson.id)],
+            limit=1,
+        )
+        if progress:
+            return progress
+        enrollment = self.env['lms.student.course'].sudo().search(
+            [
+                ('student_id', '=', student.id),
+                ('course_id', '=', lesson.course_id.id),
+                ('status', '!=', 'cancelled'),
+            ],
+            limit=1,
+        )
+        if not enrollment:
+            raise ValidationError(_('Học viên chưa đăng ký khóa học chứa bài học này.'))
+        return self.sudo().create(
+            {
+                'student_id': student.id,
+                'lesson_id': lesson.id,
+                'enrollment_id': enrollment.id,
+                'started_at': fields.Datetime.now(),
+            }
+        )
+
+    @api.depends('watched_seconds', 'lesson_id.duration_minutes', 'video_duration_seconds')
+    def _compute_progress_percent(self):
+        for rec in self:
+            duration_seconds = int((rec.lesson_id.duration_minutes or 0) * 60)
+            if duration_seconds <= 0:
+                duration_seconds = int(rec.video_duration_seconds or 0)
+            if duration_seconds <= 0:
+                rec.progress_percent = 0.0
+                continue
+            watched = max(0, rec.watched_seconds or 0)
+            rec.progress_percent = min(100.0, (watched / duration_seconds) * 100.0)
+
+    @api.depends('watched_seconds', 'lesson_id.duration_minutes', 'video_duration_seconds', 'progress_percent')
+    def _compute_status(self):
+        for rec in self:
+            pct = rec.progress_percent or 0.0
+            # Coi đạt từ 90% tiến độ là hoàn thành (không bắt buộc tới 100%).
+            if pct >= 90.0:
+                rec.status = 'done'
+            elif pct > 0:
+                rec.status = 'in_progress'
+            else:
+                rec.status = 'not_started'
+
+    @api.constrains('last_position_seconds', 'watched_seconds')
+    def _check_video_positions(self):
+        for rec in self:
+            if rec.last_position_seconds < 0 or rec.watched_seconds < 0:
+                raise ValidationError(_('Giây xem video không được âm.'))
+            if rec.last_position_seconds > rec.watched_seconds:
+                raise ValidationError(_('Vị trí gần nhất không được lớn hơn tổng thời gian đã xem.'))
+
+    @api.constrains('enrollment_id', 'lesson_id', 'student_id')
+    def _check_enrollment_consistency(self):
+        for rec in self:
+            if not rec.enrollment_id or not rec.lesson_id:
+                continue
+            if rec.enrollment_id.student_id != rec.student_id:
+                raise ValidationError(_('Enrollment không thuộc đúng học viên của tiến độ bài học.'))
+            if rec.enrollment_id.course_id != rec.lesson_id.course_id:
+                raise ValidationError(_('Enrollment không thuộc khóa học của bài học đã chọn.'))
+
+    def write(self, vals):
+        res = super().write(vals)
+        if self.env.context.get('skip_progress_completion_ts'):
+            return res
+        done_no_ts = self.filtered(lambda r: r.status == 'done' and not r.completed_at)
+        if done_no_ts:
+            done_no_ts.with_context(skip_progress_completion_ts=True).write(
+                {'completed_at': fields.Datetime.now()}
+            )
+        return res
 
