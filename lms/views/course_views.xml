@@ -175,6 +175,12 @@
                                     <field name="duration_minutes"/>
                                     <field name="state"/>
                                     <field name="is_published"/>
+                                    <field
+                                        name="current_user_lesson_progress_label"
+                                        string="Trạng thái của tôi"
+                                        groups="lms.group_lms_user"
+                                        optional="show"
+                                    />
                                 </list>
                                 <form>
                                     <sheet>

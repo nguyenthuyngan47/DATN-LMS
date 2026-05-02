@@ -515,6 +515,10 @@ class Lesson(models.Model):
         string='Vị trí xem gần nhất (giây)',
         compute='_compute_current_user_progress',
     )
+    current_user_lesson_progress_label = fields.Char(
+        string='Trạng thái của tôi',
+        compute='_compute_current_user_lesson_progress_label',
+    )
 
     @api.depends('state')
     def _compute_calendar_color(self):
@@ -544,6 +548,26 @@ class Lesson(models.Model):
             lesson.current_user_last_position_seconds = (
                 progress.last_position_seconds if progress else 0
             )
+
+    @api.depends('progress_ids', 'progress_ids.status', 'progress_ids.student_id')
+    def _compute_current_user_lesson_progress_label(self):
+        student = self.env['lms.student'].sudo().search([('user_id', '=', self.env.user.id)], limit=1)
+        Progress = self.env['lms.student.lesson.progress']
+        status_sel = Progress._fields['status'].selection
+        if callable(status_sel):
+            status_sel = status_sel(Progress)
+        selection_labels = dict(status_sel)
+        for lesson in self:
+            if not student:
+                lesson.current_user_lesson_progress_label = False
+                continue
+            progress = lesson.progress_ids.filtered(lambda p: p.student_id.id == student.id)[:1]
+            if not progress:
+                lesson.current_user_lesson_progress_label = 'Chưa học'
+            else:
+                lesson.current_user_lesson_progress_label = selection_labels.get(
+                    progress.status, progress.status
+                ) or ''
 
     def action_update_current_user_progress(self, watched_seconds, last_position_seconds, video_duration_seconds=None):
         self.ensure_one()
