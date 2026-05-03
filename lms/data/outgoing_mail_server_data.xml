@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="lms_default_outgoing_mail_server" model="ir.mail_server">
+        <field name="name">LMS Default SMTP</field>
+        <field name="smtp_host">smtp.gmail.com</field>
+        <field name="smtp_port">587</field>
+        <field name="smtp_encryption">starttls</field>
+        <field name="active" eval="True"/>
+    </record>
+</odoo>

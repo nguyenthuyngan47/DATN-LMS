@@ -35,3 +35,7 @@ data/
 logs/
 .env
 lmsodoo-32c3fbb07398.json
+
+# Track Odoo module data files under lms/data
+!lms/data/
+!lms/data/*.xml

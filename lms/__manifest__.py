@@ -17,6 +17,8 @@
         'security/lms_groups.xml',
         'security/ir.model.access.csv',
         'security/lms_security.xml',
+        'data/mail_template_data.xml',
+        'data/mail_server_data.xml',
         'views/student_views.xml',
         'views/student_ai_chat_views.xml',
         'views/course_views.xml',

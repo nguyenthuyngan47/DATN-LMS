@@ -842,9 +842,10 @@ class StudentLessonProgress(models.Model):
     @api.depends('watched_seconds', 'lesson_id.duration_minutes', 'video_duration_seconds')
     def _compute_progress_percent(self):
         for rec in self:
-            duration_seconds = int((rec.lesson_id.duration_minutes or 0) * 60)
+            # Ưu tiên thời lượng thật từ trình phát (HTML5). duration_minutes có thể >> video → % quá thấp.
+            duration_seconds = int(rec.video_duration_seconds or 0)
             if duration_seconds <= 0:
-                duration_seconds = int(rec.video_duration_seconds or 0)
+                duration_seconds = int((rec.lesson_id.duration_minutes or 0) * 60)
             if duration_seconds <= 0:
                 rec.progress_percent = 0.0
                 continue

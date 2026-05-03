@@ -95,7 +95,6 @@ class Student(models.Model):
         required=False,
         ondelete='cascade',
         index=True,
-        tracking=True,
         help='Để trống: mỗi lần tạo bản ghi (kể cả import CSV), hệ thống tự tạo res.users với login = email.',
     )
     username = fields.Char(

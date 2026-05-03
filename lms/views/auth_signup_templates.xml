@@ -12,11 +12,315 @@
     <template id="lms_auth_signup_lecturer_document" inherit_id="auth_signup.fields">
         <xpath expr="//div[hasclass('field-name')]" position="after">
             <div class="mb-3 field-lms-lecturer-document" t-if="lms_register == 'lecturer'">
-                <label class="form-label" for="lms_lecturer_document">Link Document</label>
+                <label class="form-label" for="lms_lecturer_document">Link tài liệu</label>
                 <textarea id="lms_lecturer_document" name="lms_lecturer_document" rows="4"
                     class="form-control form-control-sm"
-                    placeholder="Link gg drive chứng chỉ hành nghề, CV, lịch sử công việc,..."><t t-esc="lms_lecturer_document or ''"/></textarea>
-            </div>
+                    placeholder="Link Google Drive chứa chứng chỉ hành nghề, CV, lịch sử công việc,..."><t t-esc="lms_lecturer_document or ''"/></textarea>            </div>
         </xpath>
+    </template>
+    <!--
+        Dùng web.layout thay web.login_layout để tránh block "Your logo".
+        Trang chiếm toàn màn hình với background gradient.
+    -->
+    <template id="signup_pending_approval" name="LMS Signup Pending Approval">
+        <t t-call="web.layout">
+            <t t-set="head">
+                <style>
+                    html, body { height: 100%; margin: 0; padding: 0; }
+
+                    .lms-page {
+                        min-height: 100vh;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 32px 16px;
+                        background:
+                            radial-gradient(ellipse 60% 50% at 80% 10%, rgba(167,139,250,0.2) 0%, transparent 70%),
+                            radial-gradient(ellipse 50% 40% at 10% 90%, rgba(124,58,237,0.13) 0%, transparent 70%),
+                            #f0edf7;
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    }
+
+                    .lms-card {
+                        width: 100%;
+                        max-width: 460px;
+                        background: #fff;
+                        border-radius: 20px;
+                        overflow: hidden;
+                        box-shadow: 0 8px 32px rgba(80,40,120,0.13), 0 1px 4px rgba(80,40,120,0.08);
+                    }
+
+                    .lms-top-strip {
+                        height: 4px;
+                        background: linear-gradient(90deg, #7c3aed, #a78bfa);
+                    }
+
+                    .lms-card-top {
+                        padding: 32px 32px 24px;
+                        text-align: center;
+                        border-bottom: 1px solid #f0edf6;
+                    }
+
+                    .lms-check-circle {
+                        width: 60px;
+                        height: 60px;
+                        border-radius: 50%;
+                        background: #f0ebff;
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        margin-bottom: 16px;
+                    }
+
+                    .lms-check-circle svg {
+                        width: 28px;
+                        height: 28px;
+                        stroke: #7c3aed;
+                        fill: none;
+                        stroke-width: 2.2;
+                        stroke-linecap: round;
+                        stroke-linejoin: round;
+                    }
+
+                    .lms-card-top h1 {
+                        font-size: 21px;
+                        font-weight: 700;
+                        letter-spacing: -0.4px;
+                        margin: 0 0 6px;
+                        color: #1a1625;
+                    }
+
+                    .lms-card-top p {
+                        margin: 0;
+                        font-size: 14px;
+                        color: #6b6580;
+                        line-height: 1.5;
+                    }
+
+                    .lms-status-badge {
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 6px;
+                        margin-top: 16px;
+                        font-size: 12px;
+                        font-weight: 600;
+                        background: #fef9ec;
+                        border: 1px solid #f6d860;
+                        border-radius: 999px;
+                        padding: 5px 14px;
+                        color: #92660a;
+                    }
+
+                    .lms-badge-dot {
+                        width: 7px;
+                        height: 7px;
+                        border-radius: 50%;
+                        background: #f59e0b;
+                        display: inline-block;
+                        flex-shrink: 0;
+                    }
+
+                    .lms-card-body { padding: 24px 32px 30px; }
+
+                    .lms-note {
+                        background: #faf8ff;
+                        border: 1px solid #e4daf5;
+                        border-radius: 12px;
+                        padding: 14px 16px;
+                        margin-bottom: 22px;
+                        font-size: 14px;
+                        line-height: 1.7;
+                        color: #3b2f5e;
+                    }
+
+                    .lms-note strong { color: #5b21b6; font-weight: 700; }
+
+                    .lms-sec-label {
+                        font-size: 11px;
+                        font-weight: 700;
+                        color: #a09ab5;
+                        letter-spacing: 0.8px;
+                        text-transform: uppercase;
+                        margin-bottom: 10px;
+                    }
+
+                    .lms-steps { list-style: none; margin: 0 0 22px; padding: 0; }
+
+                    .lms-steps li {
+                        display: flex;
+                        align-items: flex-start;
+                        gap: 12px;
+                        padding: 10px 0;
+                        font-size: 14px;
+                        color: #2e2e2e;
+                        line-height: 1.5;
+                    }
+
+                    .lms-steps li + li { border-top: 1px solid #f5f2fb; }
+
+                    .lms-step-num {
+                        width: 24px;
+                        height: 24px;
+                        border-radius: 50%;
+                        background: #ede9f8;
+                        color: #6d3fa8;
+                        font-size: 12px;
+                        font-weight: 700;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        flex-shrink: 0;
+                        margin-top: 1px;
+                    }
+
+                    .lms-contact-box {
+                        background: #faf8ff;
+                        border: 1px solid #e8e0f5;
+                        border-radius: 12px;
+                        padding: 16px;
+                        margin-bottom: 22px;
+                    }
+
+                    .lms-contact-row {
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        padding: 7px 0;
+                    }
+
+                    .lms-contact-row + .lms-contact-row { border-top: 1px solid #f0ebfb; }
+
+                    .lms-contact-ico {
+                        width: 34px;
+                        height: 34px;
+                        border-radius: 9px;
+                        background: #ede9f8;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        flex-shrink: 0;
+                    }
+
+                    .lms-contact-ico svg {
+                        width: 15px;
+                        height: 15px;
+                        stroke: #7c3aed;
+                        fill: none;
+                        stroke-width: 2;
+                        stroke-linecap: round;
+                        stroke-linejoin: round;
+                    }
+
+                    .lms-contact-label { font-size: 11px; color: #a09ab5; margin-bottom: 3px; line-height: 1; }
+                    .lms-contact-val { font-size: 14px; color: #2e2e2e; font-weight: 500; }
+                    .lms-contact-val a { color: #7c3aed; text-decoration: none; word-break: break-all; }
+                    .lms-contact-val a:hover { text-decoration: underline; }
+
+                    .lms-btn {
+                        display: block;
+                        width: 100%;
+                        padding: 13px;
+                        border-radius: 12px;
+                        background: #7c3aed;
+                        color: #fff;
+                        font-size: 15px;
+                        font-weight: 600;
+                        text-align: center;
+                        text-decoration: none;
+                        border: none;
+                        cursor: pointer;
+                    }
+
+                    .lms-btn:hover { background: #6d28d9; color: #fff; text-decoration: none; }
+                </style>
+            </t>
+
+            <div class="lms-page">
+                <div class="lms-card">
+                    <div class="lms-top-strip"/>
+
+                    <div class="lms-card-top">
+                        <div class="lms-check-circle">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M9 12l2 2 4-4"/>
+                                <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <h1>Đăng ký thành công!</h1>
+                        <p>Yêu cầu của bạn đã được ghi nhận thành công.</p>
+                        <div class="lms-status-badge">
+                            <span class="lms-badge-dot"/>
+                            Trạng thái: Chờ duyệt
+                        </div>
+                    </div>
+
+                    <div class="lms-card-body">
+                        <div class="lms-note">
+                            Tài khoản <strong><t t-esc="lms_pending_role_text"/></strong> của bạn đang chờ admin phê duyệt.
+                            Chúng tôi sẽ gửi email thông báo ngay khi tài khoản được kích hoạt.
+                        </div>
+
+                        <div class="lms-sec-label">Các bước tiếp theo</div>
+                        <ol class="lms-steps">
+                            <li><span class="lms-step-num">1</span><span>Admin kiểm tra và phê duyệt tài khoản của bạn.</span></li>
+                            <li><span class="lms-step-num">2</span><span>Hệ thống gửi email thông báo kích hoạt.</span></li>
+                            <li><span class="lms-step-num">3</span><span>Bạn quay lại đăng nhập để bắt đầu sử dụng LMS.</span></li>
+                        </ol>
+
+                        <div class="lms-contact-box">
+                            <div class="lms-sec-label" style="margin-bottom:12px">Liên hệ hỗ trợ</div>
+
+                            <div class="lms-contact-row">
+                                <div class="lms-contact-ico">
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                                        <circle cx="12" cy="7" r="4"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="lms-contact-label">Phụ trách</div>
+                                    <div class="lms-contact-val"><t t-esc="lms_admin_contact_name"/></div>
+                                </div>
+                            </div>
+
+                            <t t-if="lms_admin_contact_email">
+                                <div class="lms-contact-row">
+                                    <div class="lms-contact-ico">
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                            <polyline points="22,6 12,13 2,6"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div class="lms-contact-label">Email</div>
+                                        <div class="lms-contact-val">
+                                            <a t-att-href="'mailto:%s' % lms_admin_contact_email">
+                                                <t t-esc="lms_admin_contact_email"/>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+
+                            <t t-if="lms_admin_contact_phone">
+                                <div class="lms-contact-row">
+                                    <div class="lms-contact-ico">
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.7A2 2 0 012 1h3a2 2 0 012 1.72c.12.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.34 1.85.58 2.81.7A2 2 0 0122 16.92z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div class="lms-contact-label">Điện thoại</div>
+                                        <div class="lms-contact-val"><t t-esc="lms_admin_contact_phone"/></div>
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+
+                        <a class="lms-btn" href="/web/login">Quay lại đăng nhập</a>
+                    </div>
+                </div>
+            </div>
+        </t>
     </template>
 </odoo>
