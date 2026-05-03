@@ -5,7 +5,8 @@ import os
 from urllib.parse import urlparse
 
 from odoo import _, api, fields, models
-from odoo.exceptions import ValidationError
+from odoo.api import NewId
+from odoo.exceptions import UserError, ValidationError
 
 from ..services import google_calendar_sync
 
@@ -384,7 +385,31 @@ class Lesson(models.Model):
     description = fields.Html(string='Mô tả')
     
     course_id = fields.Many2one('lms.course', string='Khóa học', required=True, ondelete='cascade')
-    
+    course_form_readonly = fields.Boolean(
+        string='Form bài học chỉ đọc (theo khóa học)',
+        related='course_id.is_student_course_readonly',
+        readonly=True,
+    )
+
+    def action_open_lesson_full(self):
+        """Mở form bài học trên cửa sổ chính (nút trên list one2many; không dùng JS)."""
+        self.ensure_one()
+        if isinstance(self.id, NewId):
+            raise UserError(_('Vui lòng lưu khóa học (và bài học mới) trước khi mở chi tiết.'))
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Bài học'),
+            'res_model': 'lms.lesson',
+            'res_id': self.id,
+            'view_mode': 'form',
+            'views': [(False, 'form')],
+            'target': 'current',
+            'context': dict(
+                self.env.context,
+                form_view_ref='lms.view_lms_lesson_course_tab_form',
+            ),
+        }
+
     # Tài liệu học
     video_url = fields.Char(string='Link video')
     video_attachment = fields.Binary(string='File video', attachment=True)

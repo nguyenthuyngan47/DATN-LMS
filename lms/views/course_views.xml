@@ -166,8 +166,17 @@
                             <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}" readonly="is_student_course_readonly"/>
                         </page>
                         <page string="Bài học" name="lessons" invisible="not show_learning_content_tabs">
+                            <!-- no_open: chỉ mở bài qua nút Chi tiết → action_open_lesson_full (không JS). -->
                             <field name="lesson_ids" nolabel="1" readonly="is_student_course_readonly">
-                                <list>
+                                <list no_open="1">
+                                    <button
+                                        name="action_open_lesson_full"
+                                        type="object"
+                                        string="Chi tiết"
+                                        class="btn-link"
+                                        icon="fa-external-link"
+                                        title="Mở bài học toàn màn hình"
+                                    />
                                     <field name="sequence" widget="handle"/>
                                     <field name="name"/>
                                     <field name="start_datetime"/>
@@ -182,42 +191,6 @@
                                         optional="show"
                                     />
                                 </list>
-                                <form>
-                                    <sheet>
-                                        <group>
-                                            <group>
-                                                <field name="name" readonly="parent.is_student_course_readonly"/>
-                                                <field name="sequence" readonly="parent.is_student_course_readonly"/>
-                                                <field name="duration_minutes" readonly="parent.is_student_course_readonly"/>
-                                                <field name="start_datetime" readonly="parent.is_student_course_readonly"/>
-                                                <field name="end_datetime" readonly="parent.is_student_course_readonly"/>
-                                                <field name="meeting_url" readonly="parent.is_student_course_readonly"/>
-                                                <field name="state" readonly="parent.is_student_course_readonly"/>
-                                                <field name="is_published" readonly="parent.is_student_course_readonly"/>
-                                                <field name="calendar_event_id" readonly="1"/>
-                                                <field name="calendar_sync_status" readonly="1"/>
-                                            </group>
-                                        </group>
-                                        <group>
-                                            <field name="description" readonly="parent.is_student_course_readonly"/>
-                                        </group>
-                                        <group string="Tiến độ học viên hiện tại">
-                                            <field name="current_user_progress_percent" readonly="1"/>
-                                            <field name="current_user_status" readonly="1"/>
-                                        </group>
-                                        <group string="Tài liệu">
-                                            <field name="video_url" readonly="parent.is_student_course_readonly"/>
-                                            <field name="video_upload_hint_html" widget="html" readonly="1" nolabel="1"/>
-                                            <field name="video_attachment" filename="video_filename" readonly="parent.is_student_course_readonly"/>
-                                            <field name="video_filename" invisible="1"/>
-                                            <field name="video_preview_html" widget="html" readonly="1" nolabel="1"/>
-                                            <field name="pdf_attachment" filename="pdf_filename" readonly="parent.is_student_course_readonly"/>
-                                        </group>
-                                        <group string="Calendar Sync">
-                                            <field name="calendar_sync_error" readonly="1" invisible="calendar_sync_status != 'error'"/>
-                                        </group>
-                                    </sheet>
-                                </form>
                             </field>
                         </page>
                     </notebook>
@@ -319,6 +292,52 @@
         <field name="name">Nhãn khóa học</field>
         <field name="res_model">lms.course.tag</field>
         <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Form bài học khi mở từ tab Khóa học (full trang, không dialog); readonly theo học viên -->
+    <record id="view_lms_lesson_course_tab_form" model="ir.ui.view">
+        <field name="name">lms.lesson.course.tab.form</field>
+        <field name="model">lms.lesson</field>
+        <field name="priority">32</field>
+        <field name="arch" type="xml">
+            <form string="Bài học" create="0" delete="0">
+                <sheet>
+                    <field name="course_form_readonly" invisible="1"/>
+                    <group>
+                        <group>
+                            <field name="name" readonly="course_form_readonly"/>
+                            <field name="sequence" readonly="course_form_readonly"/>
+                            <field name="duration_minutes" readonly="course_form_readonly"/>
+                            <field name="start_datetime" readonly="course_form_readonly"/>
+                            <field name="end_datetime" readonly="course_form_readonly"/>
+                            <field name="meeting_url" readonly="course_form_readonly"/>
+                            <field name="state" readonly="course_form_readonly"/>
+                            <field name="is_published" readonly="course_form_readonly"/>
+                            <field name="calendar_event_id" readonly="1"/>
+                            <field name="calendar_sync_status" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="description" readonly="course_form_readonly"/>
+                    </group>
+                    <group string="Tiến độ học viên hiện tại">
+                        <field name="current_user_progress_percent" readonly="1"/>
+                        <field name="current_user_status" readonly="1"/>
+                    </group>
+                    <group string="Tài liệu">
+                        <field name="video_url" readonly="course_form_readonly"/>
+                        <field name="video_upload_hint_html" widget="html" readonly="1" nolabel="1"/>
+                        <field name="video_attachment" filename="video_filename" readonly="course_form_readonly"/>
+                        <field name="video_filename" invisible="1"/>
+                        <field name="video_preview_html" widget="html" readonly="1" nolabel="1"/>
+                        <field name="pdf_attachment" filename="pdf_filename" readonly="course_form_readonly"/>
+                    </group>
+                    <group string="Calendar Sync">
+                        <field name="calendar_sync_error" readonly="1" invisible="calendar_sync_status != 'error'"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
     </record>
 
     <!-- Student lesson calendar -->
