@@ -133,6 +133,13 @@
                                 </list>
                             </field>
                         </page>
+                        <page string="Khuôn mặt (điểm danh)" name="face_biometric" invisible="is_instructor_restricted">
+                            <group>
+                                <field name="face_embedding_json" invisible="1"/>
+                                <field name="face_embedding_registered_at" readonly="1"/>
+                            </group>
+                            <field name="face_enrollment_mount_html" widget="html" readonly="1" nolabel="1" colspan="2"/>
+                        </page>
                         <!-- <page string="Thống kê" name="statistics">
                             <group>
                                 <group string="Tổng quan">

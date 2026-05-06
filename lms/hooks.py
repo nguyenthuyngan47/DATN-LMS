@@ -67,3 +67,12 @@ def post_init_hook(cr, registry=None):
 
     if hasattr(env, "ref"):
         _cleanup_removed_maintenance_ui(env)
+
+    # Tiến độ đã "done" trước khi có điểm danh khuôn mặt: đánh dấu đã điểm danh để không downgrade trạng thái.
+    try:
+        Progress = env["lms.student.lesson.progress"].sudo()
+        legacy = Progress.search([("status", "=", "done"), ("face_checked_in", "=", False)])
+        if legacy:
+            legacy.write({"face_checked_in": True})
+    except Exception:  # noqa: BLE001
+        pass

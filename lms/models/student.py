@@ -5,7 +5,9 @@ nếu không gán ``user_id``, hệ thống tự tạo ``res.users`` (login = em
 """
 
 from odoo import _, api, fields, models
-from odoo.exceptions import ValidationError
+from odoo.exceptions import AccessError, ValidationError
+
+from . import face_embedding_utils
 from odoo.tools.mail import email_normalize
 
 _DEFAULT_STUDENT_AUTO_PASSWORD = "123456"
@@ -63,7 +65,15 @@ class Student(models.Model):
     
     learning_goals = fields.Text(string='Mục tiêu học tập', tracking=True)
     desired_skills = fields.Text(string='Kỹ năng mong muốn', tracking=True)
-    
+
+    face_embedding_json = fields.Text(string='Embedding khuôn mặt (JSON)', copy=False)
+    face_embedding_registered_at = fields.Datetime(string='Đăng ký khuôn mặt lúc', readonly=True, copy=False)
+    face_enrollment_mount_html = fields.Html(
+        string=' ',
+        compute='_compute_face_enrollment_mount_html',
+        sanitize=False,
+    )
+
     # Quan hệ
     enrolled_courses_ids = fields.One2many(
         'lms.student.course', 'student_id', string='Khóa học đã đăng ký'
@@ -213,6 +223,34 @@ class Student(models.Model):
                 vals['name'] = user.name
         return super().create(vals_list)
 
+    @api.depends('create_date', 'write_date')
+    def _compute_face_enrollment_mount_html(self):
+        for rec in self:
+            if isinstance(rec.id, int) and rec.id:
+                rec.face_enrollment_mount_html = (
+                    '<div class="o_lms_student_face_root" data-lms-role="enroll" data-student-id="%s"></div>'
+                    % rec.id
+                )
+            else:
+                rec.face_enrollment_mount_html = (
+                    '<p class="text-muted">Lưu hồ sơ học viên trước, sau đó quay lại tab này để đăng ký mẫu khuôn mặt.</p>'
+                )
+
+    def action_save_face_embedding_json(self, embedding_json):
+        """RPC/JS: lưu embedding (chỉ chính học viên)."""
+        self.ensure_one()
+        if self.user_id != self.env.user:
+            raise AccessError(_('Chỉ học viên được đăng ký mẫu khuôn mặt của chính mình.'))
+        if not isinstance(embedding_json, str) or not embedding_json.strip():
+            raise ValidationError(_('Thiếu dữ liệu embedding.'))
+        self.write(
+            {
+                'face_embedding_json': embedding_json.strip(),
+                'face_embedding_registered_at': fields.Datetime.now(),
+            }
+        )
+        return {'lms_face_result': True, 'message': _('Đã lưu mẫu khuôn mặt.')}
+
     def write(self, vals):
         """Chuẩn hóa email nếu có; quyền chỉnh sửa được kiểm soát chủ yếu ở UI/rule."""
         if 'email' in vals and vals.get('email'):
@@ -222,6 +260,23 @@ class Student(models.Model):
                     _('Email không hợp lệ. Dùng định dạng email chuẩn (kể cả khi nhập tay hoặc import).')
                 )
             vals = dict(vals, email=email_norm)
+        if 'face_embedding_json' in vals:
+            privileged = self.env.user.has_group('base.group_system') or self.env.user.has_group(
+                'lms.group_lms_manager'
+            )
+            if not privileged:
+                for rec in self:
+                    if rec.user_id != self.env.user:
+                        raise AccessError(_('Chỉ học viên được cập nhật mẫu khuôn mặt của chính mình.'))
+            raw = vals.get('face_embedding_json')
+            if raw:
+                if len(raw) > 65536:
+                    raise ValidationError(_('Dữ liệu embedding quá lớn.'))
+                if not face_embedding_utils.parse_embedding(raw):
+                    raise ValidationError(
+                        _('Embedding không hợp lệ (cần đúng %s số thực).')
+                        % face_embedding_utils.FACE_EMBEDDING_DIM
+                    )
         return super().write(vals)
 
     def _compute_current_course_registration_status(self):

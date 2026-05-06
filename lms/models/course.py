@@ -9,6 +9,7 @@ from odoo.api import NewId
 from odoo.exceptions import UserError, ValidationError
 
 from ..services import google_calendar_sync
+from . import face_embedding_utils
 
 
 class CourseCategory(models.Model):
@@ -185,7 +186,7 @@ class Course(models.Model):
         for record in self:
             record.enrolled_students_count = len(record.student_course_ids)
 
-    @api.depends('state')
+    @api.depends('state', 'is_active', 'student_course_ids', 'instructor_id')
     def _compute_current_user_registration_state(self):
         """Điều khiển hiển thị nút đăng ký/hủy theo user hiện tại trên form course."""
         user = self.env.user
@@ -231,7 +232,12 @@ class Course(models.Model):
         )
         for record in self:
             is_enrolled = record.id in enrolled_ids
-            record.show_register_button = not is_enrolled
+            # Khớp action_register_courses: chỉ published + đang hoạt động mới cho đăng ký mới.
+            record.show_register_button = (
+                not is_enrolled
+                and record.state == 'published'
+                and record.is_active
+            )
             record.show_cancel_button = is_enrolled
             approved_or_learning = self.env['lms.student.course'].sudo().search_count(
                 [
@@ -544,6 +550,15 @@ class Lesson(models.Model):
         string='Trạng thái của tôi',
         compute='_compute_current_user_lesson_progress_label',
     )
+    current_user_face_checked_in = fields.Boolean(
+        string='Đã điểm danh khuôn mặt',
+        compute='_compute_current_user_progress',
+    )
+    face_lesson_attendance_mount_html = fields.Html(
+        string='Điểm danh khuôn mặt',
+        compute='_compute_face_lesson_attendance_mount_html',
+        sanitize=False,
+    )
 
     @api.depends('state')
     def _compute_calendar_color(self):
@@ -557,7 +572,15 @@ class Lesson(models.Model):
         for lesson in self:
             lesson.calendar_color = color_map.get(lesson.state, 0)
 
-    @api.depends('progress_ids')
+    @api.depends(
+        'progress_ids',
+        'progress_ids.watched_seconds',
+        'progress_ids.last_position_seconds',
+        'progress_ids.progress_percent',
+        'progress_ids.status',
+        'progress_ids.video_duration_seconds',
+        'progress_ids.face_checked_in',
+    )
     def _compute_current_user_progress(self):
         student = self.env['lms.student'].sudo().search([('user_id', '=', self.env.user.id)], limit=1)
         for lesson in self:
@@ -573,6 +596,21 @@ class Lesson(models.Model):
             lesson.current_user_last_position_seconds = (
                 progress.last_position_seconds if progress else 0
             )
+            lesson.current_user_face_checked_in = bool(progress.face_checked_in) if progress else False
+
+    @api.depends('create_date', 'write_date', 'course_form_readonly', 'course_id')
+    def _compute_face_lesson_attendance_mount_html(self):
+        for lesson in self:
+            if not lesson.course_form_readonly:
+                lesson.face_lesson_attendance_mount_html = ''
+                continue
+            if isinstance(lesson.id, int) and lesson.id:
+                lesson.face_lesson_attendance_mount_html = (
+                    '<div class="o_lms_lesson_face_root" data-lms-role="attend" data-lesson-id="%s"></div>'
+                    % lesson.id
+                )
+            else:
+                lesson.face_lesson_attendance_mount_html = ''
 
     @api.depends('progress_ids', 'progress_ids.status', 'progress_ids.student_id')
     def _compute_current_user_lesson_progress_label(self):
@@ -608,6 +646,50 @@ class Lesson(models.Model):
             vals['video_duration_seconds'] = max(progress.video_duration_seconds or 0, int(video_duration_seconds or 0))
         progress.write(vals)
         return True
+
+    def action_lesson_face_attendance(self, embedding_json):
+        """Điểm danh khuôn mặt (1 lần / bài / học viên). Cần đã đăng ký embedding trên hồ sơ."""
+        self.ensure_one()
+        if not isinstance(embedding_json, str) or not embedding_json.strip():
+            raise ValidationError(_('Thiếu dữ liệu ảnh chụp (embedding).'))
+        student = self.env['lms.student'].sudo().search([('user_id', '=', self.env.user.id)], limit=1)
+        if not student:
+            raise ValidationError(_('Không tìm thấy hồ sơ học viên.'))
+        if not student.face_embedding_json:
+            raise UserError(_('Vui lòng đăng ký mẫu khuôn mặt trên hồ sơ học viên trước khi điểm danh.'))
+        enrolled = self.env['lms.student.course'].sudo().search_count(
+            [
+                ('student_id', '=', student.id),
+                ('course_id', '=', self.course_id.id),
+                ('status', 'in', ('approved', 'learning')),
+            ]
+        )
+        if not enrolled:
+            raise UserError(_('Bạn chưa được duyệt đăng ký khóa học này.'))
+        ref = face_embedding_utils.parse_embedding(student.face_embedding_json)
+        probe = face_embedding_utils.parse_embedding(embedding_json)
+        if not ref or not probe:
+            raise ValidationError(_('Dữ liệu khuôn mặt không hợp lệ.'))
+        sim = face_embedding_utils.cosine_similarity(ref, probe)
+        if sim < face_embedding_utils.COSINE_MATCH_THRESHOLD:
+            raise UserError(
+                _('Không khớp khuôn mặt (độ tương đồng %.0f%%). Hãy thử lại với ánh sáng tốt hơn.')
+                % (sim * 100)
+            )
+        progress = self.env['lms.student.lesson.progress'].sudo().get_or_create_progress(student, self)
+        if progress.face_checked_in:
+            raise UserError(_('Bạn đã điểm danh bài học này.'))
+        progress.sudo().write(
+            {
+                'face_checked_in': True,
+                'face_checked_in_at': fields.Datetime.now(),
+            }
+        )
+        return {
+            'lms_face_result': True,
+            'message': _('Điểm danh thành công.'),
+            'progress_status': progress.status,
+        }
 
     @staticmethod
     def _guess_video_mime(name_or_url):
@@ -820,6 +902,8 @@ class StudentLessonProgress(models.Model):
         digits=(16, 2),
     )
     last_position_seconds = fields.Integer(string='Vị trí xem gần nhất (giây)', default=0)
+    face_checked_in = fields.Boolean(string='Đã điểm danh khuôn mặt', default=False, copy=False)
+    face_checked_in_at = fields.Datetime(string='Điểm danh lúc', copy=False)
     status = fields.Selection(
         [
             ('not_started', 'Chưa bắt đầu'),
@@ -877,11 +961,16 @@ class StudentLessonProgress(models.Model):
             watched = max(0, rec.watched_seconds or 0)
             rec.progress_percent = min(100.0, (watched / duration_seconds) * 100.0)
 
-    @api.depends('watched_seconds', 'lesson_id.duration_minutes', 'video_duration_seconds', 'progress_percent')
+    @api.depends(
+        'watched_seconds',
+        'lesson_id.duration_minutes',
+        'video_duration_seconds',
+        'progress_percent',
+    )
     def _compute_status(self):
         for rec in self:
             pct = rec.progress_percent or 0.0
-            # Coi đạt từ 90% tiến độ là hoàn thành (không bắt buộc tới 100%).
+            # Hoàn thành: đạt ≥90% tiến độ xem video (không bắt buộc điểm danh khuôn mặt).
             if pct >= 90.0:
                 rec.status = 'done'
             elif pct > 0:
