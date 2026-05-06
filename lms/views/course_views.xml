@@ -169,14 +169,6 @@
                             <!-- no_open: chỉ mở bài qua nút Chi tiết → action_open_lesson_full (không JS). -->
                             <field name="lesson_ids" nolabel="1" readonly="is_student_course_readonly">
                                 <list no_open="1">
-                                    <button
-                                        name="action_open_lesson_full"
-                                        type="object"
-                                        string="Chi tiết"
-                                        class="btn-link"
-                                        icon="fa-external-link"
-                                        title="Mở bài học toàn màn hình"
-                                    />
                                     <field name="sequence" widget="handle"/>
                                     <field name="name"/>
                                     <field name="start_datetime"/>
@@ -189,6 +181,14 @@
                                         string="Trạng thái của tôi"
                                         groups="lms.group_lms_user"
                                         optional="show"
+                                    />
+                                    <button
+                                        name="action_open_lesson_full"
+                                        type="object"
+                                        string="Chi tiết"
+                                        class="btn-link"
+                                        icon="fa-external-link"
+                                        title="Mở bài học toàn màn hình"
                                     />
                                 </list>
                             </field>
