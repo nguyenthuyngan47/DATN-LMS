@@ -308,10 +308,11 @@
                         <group>
                             <field name="name" readonly="course_form_readonly"/>
                             <field name="sequence" readonly="course_form_readonly"/>
+                            <field name="lesson_type" readonly="course_form_readonly"/>
                             <field name="duration_minutes" readonly="course_form_readonly"/>
                             <field name="start_datetime" readonly="course_form_readonly"/>
                             <field name="end_datetime" readonly="course_form_readonly"/>
-                            <field name="meeting_url" readonly="course_form_readonly"/>
+                            <field name="meeting_url" readonly="course_form_readonly" invisible="lesson_type != 'online'"/>
                             <field name="state" readonly="course_form_readonly"/>
                             <field name="is_published" readonly="course_form_readonly"/>
                             <field name="calendar_event_id" readonly="1"/>
@@ -330,11 +331,10 @@
                         <field name="face_lesson_attendance_mount_html" widget="html" readonly="1" nolabel="1" colspan="2"/>
                     </group>
                     <group string="Tài liệu">
-                        <field name="video_url" readonly="course_form_readonly"/>
-                        <field name="video_upload_hint_html" widget="html" readonly="1" nolabel="1"/>
-                        <field name="video_attachment" filename="video_filename" readonly="course_form_readonly"/>
+                        <field name="video_upload_hint_html" widget="html" readonly="1" nolabel="1" invisible="lesson_type != 'video'"/>
+                        <field name="video_attachment" filename="video_filename" readonly="course_form_readonly" invisible="lesson_type != 'video'"/>
                         <field name="video_filename" invisible="1"/>
-                        <field name="video_preview_html" widget="html" readonly="1" nolabel="1"/>
+                        <field name="video_preview_html" widget="html" readonly="1" nolabel="1" invisible="lesson_type != 'video'"/>
                         <field name="pdf_attachment" filename="pdf_filename" readonly="course_form_readonly"/>
                     </group>
                     <group string="Calendar Sync">
@@ -383,10 +383,11 @@
                         <group>
                             <field name="name" readonly="1"/>
                             <field name="sequence" readonly="1"/>
+                            <field name="lesson_type" readonly="1"/>
                             <field name="duration_minutes" readonly="1"/>
                             <field name="start_datetime" readonly="1"/>
                             <field name="end_datetime" readonly="1"/>
-                            <field name="meeting_url" readonly="1"/>
+                            <field name="meeting_url" readonly="1" invisible="lesson_type != 'online'"/>
                             <field name="state" readonly="1"/>
                             <field name="is_published" readonly="1"/>
                             <field name="calendar_event_id" readonly="1"/>
@@ -405,11 +406,10 @@
                         <field name="face_lesson_attendance_mount_html" widget="html" readonly="1" nolabel="1" colspan="2"/>
                     </group>
                     <group string="Tài liệu">
-                        <field name="video_url" readonly="1"/>
-                        <field name="video_upload_hint_html" widget="html" readonly="1" nolabel="1"/>
-                        <field name="video_attachment" filename="video_filename" readonly="1"/>
+                        <field name="video_upload_hint_html" widget="html" readonly="1" nolabel="1" invisible="lesson_type != 'video'"/>
+                        <field name="video_attachment" filename="video_filename" readonly="1" invisible="lesson_type != 'video'"/>
                         <field name="video_filename" invisible="1"/>
-                        <field name="video_preview_html" widget="html" readonly="1" nolabel="1"/>
+                        <field name="video_preview_html" widget="html" readonly="1" nolabel="1" invisible="lesson_type != 'video'"/>
                         <field name="pdf_attachment" filename="pdf_filename" readonly="1"/>
                     </group>
                     <group string="Calendar Sync">

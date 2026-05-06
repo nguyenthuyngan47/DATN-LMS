@@ -2,7 +2,6 @@
 
 from dateutil.relativedelta import relativedelta
 import os
-from urllib.parse import urlparse
 
 from odoo import _, api, fields, models
 from odoo.api import NewId
@@ -388,6 +387,15 @@ class Lesson(models.Model):
 
     name = fields.Char(string='Tên bài học', required=True)
     sequence = fields.Integer(string='Thứ tự', default=10, required=True)
+    lesson_type = fields.Selection(
+        [
+            ('video', 'Video'),
+            ('online', 'Online'),
+        ],
+        string='Loại bài học',
+        required=True,
+        default='online',
+    )
     description = fields.Html(string='Mô tả')
     
     course_id = fields.Many2one('lms.course', string='Khóa học', required=True, ondelete='cascade')
@@ -417,7 +425,6 @@ class Lesson(models.Model):
         }
 
     # Tài liệu học
-    video_url = fields.Char(string='Link video')
     video_attachment = fields.Binary(string='File video', attachment=True)
     video_filename = fields.Char(string='Tên file video')
     pdf_attachment = fields.Binary(string='File PDF', attachment=True)
@@ -708,58 +715,11 @@ class Lesson(models.Model):
             return 'video/x-matroska'
         return 'video/mp4'
 
-    @api.depends('video_url', 'video_attachment', 'video_filename')
+    @api.depends('video_attachment', 'video_filename')
     def _compute_video_preview_html(self):
         for lesson in self:
             html = '<p class="text-muted"><i>Chưa có video để xem trực tiếp.</i></p>'
-            url = (lesson.video_url or '').strip()
-            if url:
-                lower = url.lower()
-                if 'youtube.com/watch' in lower:
-                    video_id = url.split('v=')[-1].split('&')[0]
-                    html = (
-                        '<div style="max-width:900px;">'
-                        '<iframe width="100%%" height="420" src="https://www.youtube.com/embed/%s" '
-                        'title="YouTube video player" frameborder="0" '
-                        'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" '
-                        'allowfullscreen></iframe></div>'
-                    ) % video_id
-                elif 'youtu.be/' in lower:
-                    video_id = lower.split('youtu.be/')[-1].split('?')[0]
-                    html = (
-                        '<div style="max-width:900px;">'
-                        '<iframe width="100%%" height="420" src="https://www.youtube.com/embed/%s" '
-                        'title="YouTube video player" frameborder="0" '
-                        'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" '
-                        'allowfullscreen></iframe></div>'
-                    ) % video_id
-                elif 'vimeo.com/' in lower:
-                    path = urlparse(url).path.strip('/').split('/')
-                    video_id = path[-1] if path else ''
-                    if video_id.isdigit():
-                        html = (
-                            '<div style="max-width:900px;">'
-                            '<iframe src="https://player.vimeo.com/video/%s" width="100%%" height="420" '
-                            'frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>'
-                            '</div>'
-                        ) % video_id
-                    else:
-                        mime = self._guess_video_mime(url)
-                        html = (
-                            '<video class="lms-video-tracker" data-lms-lesson-id="%s" controls preload="metadata" style="width:100%%;max-width:900px;">'
-                            '<source src="%s" type="%s"/>'
-                            'Trình duyệt không hỗ trợ phát video trực tiếp.'
-                            '</video>'
-                        ) % (lesson.id or 0, url, mime)
-                else:
-                    mime = self._guess_video_mime(url)
-                    html = (
-                        '<video class="lms-video-tracker" data-lms-lesson-id="%s" controls preload="metadata" style="width:100%%;max-width:900px;">'
-                        '<source src="%s" type="%s"/>'
-                        'Trình duyệt không hỗ trợ phát video trực tiếp.'
-                        '</video>'
-                    ) % (lesson.id or 0, url, mime)
-            elif lesson.video_attachment and lesson.id:
+            if lesson.video_attachment and lesson.id:
                 stream_url = '/web/content/%s?model=lms.lesson&field=video_attachment&download=false' % lesson.id
                 mime = self._guess_video_mime(lesson.video_filename or '')
                 html = (
@@ -770,7 +730,7 @@ class Lesson(models.Model):
                 ) % (lesson.id, stream_url, mime)
             lesson.video_preview_html = html
 
-    @api.depends('video_url', 'video_attachment', 'video_filename')
+    @api.depends('video_attachment', 'video_filename')
     def _compute_video_upload_hint_html(self):
         max_mb = self._get_max_video_upload_mb()
         text_hint = (
@@ -784,7 +744,7 @@ class Lesson(models.Model):
         for lesson in self:
             lesson.video_upload_hint_html = hint
 
-    @api.depends('video_url', 'video_attachment', 'video_filename')
+    @api.depends('video_attachment', 'video_filename')
     def _compute_video_upload_hint(self):
         max_mb = self._get_max_video_upload_mb()
         text_hint = 'Khuyến nghị file video: ưu tiên MP4 (hoặc WebM/OGG), dung lượng video nên dưới %sMB.' % max_mb
@@ -796,7 +756,7 @@ class Lesson(models.Model):
 
     def _google_calendar_sync_if_needed(self):
         for lesson in self:
-            if lesson.state != 'scheduled':
+            if lesson.state != 'scheduled' or lesson.lesson_type != 'online':
                 continue
             try:
                 vals = google_calendar_sync.sync_lesson_event(lesson)
@@ -852,18 +812,27 @@ class Lesson(models.Model):
         if self.env.context.get('skip_google_calendar_sync'):
             return super().write(vals)
 
-        was_scheduled = {lesson.id: lesson.state == 'scheduled' for lesson in self}
+        was_syncable = {
+            lesson.id: lesson.state == 'scheduled' and lesson.lesson_type == 'online'
+            for lesson in self
+        }
         res = super().write(vals)
 
         status_changed = 'state' in vals
+        lesson_type_changed = 'lesson_type' in vals
         sync_relevant = {'name', 'description', 'start_datetime', 'end_datetime', 'course_id', 'meeting_url'}
-        if status_changed:
-            became_unscheduled = self.filtered(lambda l: was_scheduled.get(l.id) and l.state != 'scheduled')
-            if became_unscheduled:
-                became_unscheduled._google_calendar_unsync(clear_meeting_url=True)
+        if status_changed or lesson_type_changed:
+            became_unsyncable = self.filtered(
+                lambda l: was_syncable.get(l.id)
+                and not (l.state == 'scheduled' and l.lesson_type == 'online')
+            )
+            if became_unsyncable:
+                became_unsyncable._google_calendar_unsync(clear_meeting_url=True)
 
-        if status_changed or (set(vals.keys()) & sync_relevant):
-            self.filtered(lambda l: l.state == 'scheduled')._google_calendar_sync_if_needed()
+        if status_changed or lesson_type_changed or (set(vals.keys()) & sync_relevant):
+            self.filtered(
+                lambda l: l.state == 'scheduled' and l.lesson_type == 'online'
+            )._google_calendar_sync_if_needed()
         return res
 
     def unlink(self):
@@ -964,19 +933,26 @@ class StudentLessonProgress(models.Model):
     @api.depends(
         'watched_seconds',
         'lesson_id.duration_minutes',
+        'lesson_id.lesson_type',
         'video_duration_seconds',
         'progress_percent',
+        'face_checked_in',
     )
     def _compute_status(self):
         for rec in self:
-            pct = rec.progress_percent or 0.0
-            # Hoàn thành: đạt ≥90% tiến độ xem video (không bắt buộc điểm danh khuôn mặt).
-            if pct >= 90.0:
-                rec.status = 'done'
-            elif pct > 0:
-                rec.status = 'in_progress'
+            lesson_type = rec.lesson_id.lesson_type or 'online'
+            if lesson_type == 'online':
+                # Bài online: chỉ cần điểm danh khuôn mặt thành công là hoàn thành.
+                rec.status = 'done' if rec.face_checked_in else 'not_started'
             else:
-                rec.status = 'not_started'
+                pct = rec.progress_percent or 0.0
+                # Bài video: hoàn thành khi xem >= 90%.
+                if pct >= 90.0:
+                    rec.status = 'done'
+                elif pct > 0:
+                    rec.status = 'in_progress'
+                else:
+                    rec.status = 'not_started'
 
     @api.constrains('last_position_seconds', 'watched_seconds')
     def _check_video_positions(self):

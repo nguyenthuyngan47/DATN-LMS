@@ -553,7 +553,6 @@ def import_lms_from_csv_directory(
             "sequence": int(r.get("sequence") or 10),
             "description": (r.get("description") or "")[:65535] or False,
             "course_id": map_course[int(r["course_id"])],
-            "video_url": (r.get("video_url") or "")[:2048] or False,
             "pdf_filename": (r.get("pdf_filename") or "")[:255] or False,
             "duration_minutes": int(float(r.get("duration_minutes") or 0)),
         }
