@@ -156,15 +156,6 @@
                         </group>
                     </group>
                     <notebook>
-                        <page string="Mô tả" name="description">
-                            <field name="description" readonly="is_student_course_readonly"/>
-                        </page>
-                        <page string="Khóa học tiên quyết" name="prerequisites">
-                            <field name="prerequisite_ids" widget="many2many_tags" readonly="is_student_course_readonly"/>
-                        </page>
-                        <page string="Nhãn" name="tags" invisible="not show_learning_content_tabs">
-                            <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}" readonly="is_student_course_readonly"/>
-                        </page>
                         <page string="Bài học" name="lessons" invisible="not show_learning_content_tabs">
                             <!-- no_open: chỉ mở bài qua nút Chi tiết → action_open_lesson_full (không JS). -->
                             <field name="lesson_ids" nolabel="1" readonly="is_student_course_readonly">
@@ -193,6 +184,16 @@
                                 </list>
                             </field>
                         </page>
+                        <page string="Mô tả" name="description">
+                            <field name="description" readonly="is_student_course_readonly"/>
+                        </page>
+                        <page string="Khóa học tiên quyết" name="prerequisites">
+                            <field name="prerequisite_ids" widget="many2many_tags" readonly="is_student_course_readonly"/>
+                        </page>
+                        <page string="Nhãn" name="tags" invisible="not show_learning_content_tabs">
+                            <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}" readonly="is_student_course_readonly"/>
+                        </page>
+                        
                     </notebook>
                 </sheet>
                 <chatter/>
