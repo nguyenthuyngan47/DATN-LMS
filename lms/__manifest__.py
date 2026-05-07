@@ -28,6 +28,7 @@
         'views/analytics_views.xml',
         'views/settings_views.xml',
         'views/menu_views.xml',
+        'views/hide_calendar_menu.xml',
         'views/web_login_templates.xml',
         'views/auth_signup_templates.xml',
         'views/res_users_views.xml',
