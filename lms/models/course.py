@@ -528,6 +528,11 @@ class Lesson(models.Model):
     calendar_sync_error = fields.Text(string='Calendar Sync Error', copy=False)
     google_event_id = fields.Char(string='Google Event ID', copy=False, readonly=True)
     google_event_html_link = fields.Char(string='Google Event Link', copy=False, readonly=True)
+    attendance_notice_sent = fields.Boolean(
+        string='Đã gửi thông báo điểm danh',
+        default=False,
+        copy=False,
+    )
     progress_ids = fields.One2many(
         'lms.student.lesson.progress', 'lesson_id', string='Tiến độ học viên'
     )
@@ -657,6 +662,8 @@ class Lesson(models.Model):
     def action_lesson_face_attendance(self, embedding_json):
         """Điểm danh khuôn mặt (1 lần / bài / học viên). Cần đã đăng ký embedding trên hồ sơ."""
         self.ensure_one()
+        if self.lesson_type != 'online':
+            raise UserError(_('Chỉ bài học online mới cần điểm danh khuôn mặt.'))
         if not isinstance(embedding_json, str) or not embedding_json.strip():
             raise ValidationError(_('Thiếu dữ liệu ảnh chụp (embedding).'))
         student = self.env['lms.student'].sudo().search([('user_id', '=', self.env.user.id)], limit=1)
@@ -692,11 +699,74 @@ class Lesson(models.Model):
                 'face_checked_in_at': fields.Datetime.now(),
             }
         )
+        try:
+            self._google_calendar_add_attendee_after_attendance(student)
+        except Exception as e:  # noqa: BLE001
+            raise UserError(
+                _('Điểm danh thành công nhưng không thể thêm bạn vào danh sách tham dự Google Meet: %s')
+                % str(e)
+            ) from e
         return {
             'lms_face_result': True,
             'message': _('Điểm danh thành công.'),
             'progress_status': progress.status,
         }
+
+    def _lesson_attendance_url(self):
+        self.ensure_one()
+        base_url = (self.get_base_url() or '').rstrip('/')
+        return '%s/web#id=%s&model=lms.lesson&view_type=form' % (base_url, self.id)
+
+    def _notify_learning_students_for_attendance(self):
+        template = self.env.ref('lms.email_template_lesson_attendance_link', raise_if_not_found=False)
+        if not template:
+            raise UserError(_('Không tìm thấy mẫu email điểm danh (email_template_lesson_attendance_link).'))
+
+        StudentCourse = self.env['lms.student.course'].sudo()
+        for lesson in self:
+            if lesson.lesson_type != 'online' or lesson.state != 'scheduled' or lesson.attendance_notice_sent:
+                continue
+
+            enrollments = StudentCourse.search(
+                [
+                    ('course_id', '=', lesson.course_id.id),
+                    ('status', '=', 'learning'),
+                ]
+            )
+            attendance_url = lesson._lesson_attendance_url()
+            mail_ctx = dict(self.env.context, attendance_url=attendance_url)
+
+            for student in enrollments.mapped('student_id'):
+                email_to = (student.email or student.user_id.email or student.user_id.login or '').strip()
+                if email_to:
+                    template.with_context(mail_ctx).send_mail(
+                        lesson.id,
+                        force_send=True,
+                        email_values={'email_to': email_to},
+                    )
+                partner = student.user_id.partner_id
+                if partner:
+                    body = _(
+                        'Bạn có buổi học online mới: <b>%s</b>.<br/>'
+                        'Vui lòng điểm danh tại đây: <a href="%s">%s</a>'
+                    ) % (lesson.name, attendance_url, attendance_url)
+                    student.message_notify(
+                        partner_ids=[partner.id],
+                        subject=_('[LMS] Link điểm danh buổi học online'),
+                        body=body,
+                        email_layout_xmlid='mail.mail_notification_light',
+                    )
+
+            lesson._google_calendar_apply_updates({'attendance_notice_sent': True})
+
+    def _google_calendar_add_attendee_after_attendance(self, student):
+        self.ensure_one()
+        if self.lesson_type != 'online' or not self.google_event_id:
+            return
+        attendee_email = (student.email or student.user_id.email or student.user_id.login or '').strip()
+        if not attendee_email:
+            raise ValidationError(_('Học viên chưa có email để thêm vào danh sách tham dự Google Meet.'))
+        google_calendar_sync.add_lesson_attendee(self, attendee_email, student.name)
 
     @staticmethod
     def _guess_video_mime(name_or_url):
@@ -806,6 +876,7 @@ class Lesson(models.Model):
         lessons = super().create(vals_list)
         if not self.env.context.get('skip_google_calendar_sync'):
             lessons._google_calendar_sync_if_needed()
+            lessons._notify_learning_students_for_attendance()
         return lessons
 
     def write(self, vals):
@@ -828,11 +899,18 @@ class Lesson(models.Model):
             )
             if became_unsyncable:
                 became_unsyncable._google_calendar_unsync(clear_meeting_url=True)
+            became_unnotifiable = self.filtered(
+                lambda l: l.attendance_notice_sent
+                and not (l.state == 'scheduled' and l.lesson_type == 'online')
+            )
+            if became_unnotifiable:
+                became_unnotifiable._google_calendar_apply_updates({'attendance_notice_sent': False})
 
         if status_changed or lesson_type_changed or (set(vals.keys()) & sync_relevant):
             self.filtered(
                 lambda l: l.state == 'scheduled' and l.lesson_type == 'online'
             )._google_calendar_sync_if_needed()
+        self._notify_learning_students_for_attendance()
         return res
 
     def unlink(self):

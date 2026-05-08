@@ -235,3 +235,30 @@ def delete_event(event_id: str) -> None:
     params = {'sendUpdates': config['send_updates']}
     _request('DELETE', url, params=params)
 
+
+def get_event(event_id: str) -> Dict[str, object]:
+    config = get_google_calendar_config()
+    cid = _path_segment(str(config['calendar_id']))
+    eid = _path_segment(str(event_id))
+    url = f"{config['api_base_url']}/calendars/{cid}/events/{eid}"
+    params = {'conferenceDataVersion': 1} if config['create_meet_link'] else None
+    return _request('GET', url, params=params)
+
+
+def add_attendee_to_event(event_id: str, email: str, display_name: Optional[str] = None) -> Dict[str, object]:
+    event = get_event(event_id)
+    attendees = list(event.get('attendees') or [])
+    normalized = (email or '').strip().lower()
+    if not normalized:
+        raise GoogleCalendarConfigError('Email attendee trống.')
+    for item in attendees:
+        if (item.get('email') or '').strip().lower() == normalized:
+            return event
+
+    attendee = {'email': email.strip()}
+    if display_name:
+        attendee['displayName'] = display_name.strip()
+    attendees.append(attendee)
+    payload = {'attendees': attendees}
+    return update_event(event_id, payload)
+

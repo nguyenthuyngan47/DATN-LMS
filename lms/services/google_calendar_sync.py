@@ -115,3 +115,21 @@ def delete_lesson_event(lesson):
         _logger.exception('Google Calendar delete failed for lesson %s', lesson.id)
         raise
 
+
+def add_lesson_attendee(lesson, attendee_email, attendee_name=None):
+    if not lesson.google_event_id:
+        raise ValueError('Bài học chưa có google_event_id để thêm attendee.')
+    try:
+        google_calendar_client.add_attendee_to_event(
+            lesson.google_event_id,
+            attendee_email,
+            attendee_name,
+        )
+    except Exception:  # noqa: BLE001
+        _logger.exception(
+            'Google Calendar add attendee failed for lesson %s (%s)',
+            lesson.id,
+            attendee_email,
+        )
+        raise
+
