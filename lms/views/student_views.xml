@@ -60,20 +60,11 @@
         <field name="model">lms.student</field>
         <field name="arch" type="xml">
             <form string="Học viên">
-                <header>
-                    <button
-                        name="action_generate_roadmap"
-                        string="Tạo Roadmap"
-                        type="object"
-                        class="btn-primary"
-                        invisible="is_instructor_restricted"
-                    />
-                </header>
                 <sheet>
                     <field name="is_instructor_restricted" invisible="1"/>
                     <div class="oe_button_box" name="button_box">
                         <button
-                            name="action_generate_roadmap"
+                            name="action_view_roadmaps"
                             type="object"
                             class="oe_stat_button"
                             icon="fa-graduation-cap"

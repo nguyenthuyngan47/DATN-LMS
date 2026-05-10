@@ -141,31 +141,4 @@
         <field name="res_model">lms.roadmap</field>
         <field name="view_mode">kanban,list,form</field>
     </record>
-
-    <!-- Wizard để tạo roadmap -->
-    <record id="view_lms_roadmap_wizard_form" model="ir.ui.view">
-        <field name="name">lms.roadmap.wizard.form</field>
-        <field name="model">lms.roadmap.wizard</field>
-        <field name="arch" type="xml">
-            <form string="Tạo Roadmap">
-                <sheet>
-                    <group>
-                        <field name="student_id" readonly="1"/>
-                        <field name="method" widget="radio" options="{'horizontal': true}"/>
-                    </group>
-                </sheet>
-                <footer>
-                    <button string="Tạo Roadmap" name="action_generate" type="object" class="btn-primary"/>
-                    <button string="Hủy" class="btn-secondary" special="cancel"/>
-                </footer>
-            </form>
-        </field>
-    </record>
-
-    <record id="action_lms_roadmap_wizard" model="ir.actions.act_window">
-        <field name="name">Tạo Roadmap</field>
-        <field name="res_model">lms.roadmap.wizard</field>
-        <field name="view_mode">form</field>
-        <field name="target">new</field>
-    </record>
 </odoo>

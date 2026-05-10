@@ -494,15 +494,15 @@ class Student(models.Model):
                 if template:
                     template.send_mail(record.id, force_send=True)
     
-    def action_generate_roadmap(self):
-        """Tạo roadmap đề xuất cho sinh viên"""
+    def action_view_roadmaps(self):
+        """Mở danh sách roadmap của học viên."""
         self.ensure_one()
         return {
             'type': 'ir.actions.act_window',
-            'name': 'Tạo Roadmap',
-            'res_model': 'lms.roadmap.wizard',
-            'view_mode': 'form',
-            'target': 'new',
+            'name': 'Roadmap',
+            'res_model': 'lms.roadmap',
+            'view_mode': 'kanban,list,form',
+            'domain': [('student_id', '=', self.id)],
             'context': {'default_student_id': self.id},
         }
 
