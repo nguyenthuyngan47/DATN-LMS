@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Ẩn app Calendar core khỏi mọi role (không xóa DB, không gỡ module calendar). -->
-    <function model="ir.ui.menu" name="write">
-        <value model="ir.ui.menu" search="[('name', '=', 'Calendar'), ('parent_id', '=', False)]"/>
-        <value eval="{'groups_id': [(6, 0, [ref('base.group_no_one')])]}"/>
-    </function>
+    <!-- Ẩn app Calendar: vô hiệu hóa menu gốc (không đụng groups_id → không làm lệch UI phân quyền người dùng). -->
+    <record id="calendar.mail_menu_calendar" model="ir.ui.menu">
+        <field name="active" eval="False"/>
+    </record>
 </odoo>

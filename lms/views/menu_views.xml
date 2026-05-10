@@ -30,17 +30,16 @@
     <!-- Giảng viên: menu cấp cao -->
     <menuitem id="menu_lms_lecturers" name="Giảng viên" action="action_lms_lecturer" sequence="15" web_icon="lms,static/description/icon.png"/>
 
-    <!-- Học tập (ẩn khỏi tất cả role bằng group_no_one, không xóa DB) -->
-    <menuitem id="menu_lms_learning" name="Học tập" sequence="30" action="action_lms_learning_history" web_icon="lms,static/description/icon.png" groups="base.group_no_one"/>
-    <menuitem id="menu_lms_learning_history" name="Lịch sử học tập" parent="menu_lms_learning" action="action_lms_learning_history" sequence="10" groups="base.group_no_one"/>
-    <menuitem id="menu_lms_learning_timetable" name="Thời khóa biểu (Calendar)" parent="menu_lms_learning" action="action_lms_learning_timetable" sequence="20" groups="base.group_no_one"/>
-    <menuitem id="menu_lms_learning_timetable_by_course" name="TKB theo khóa học" parent="menu_lms_learning" action="action_lms_learning_timetable_by_course" sequence="30" groups="base.group_no_one"/>
-    <menuitem id="menu_lms_roadmap" name="Roadmap đề xuất" parent="menu_lms_learning" action="action_lms_roadmap" sequence="20" groups="base.group_no_one"/>
+    <!-- Học tập / Analytics: inactive — ẩn khỏi shell app (không dùng groups đặc biệt trên menu). -->
+    <menuitem id="menu_lms_learning" name="Học tập" sequence="30" action="action_lms_learning_history" web_icon="lms,static/description/icon.png" active="False"/>
+    <menuitem id="menu_lms_learning_history" name="Lịch sử học tập" parent="menu_lms_learning" action="action_lms_learning_history" sequence="10"/>
+    <menuitem id="menu_lms_learning_timetable" name="Thời khóa biểu (Calendar)" parent="menu_lms_learning" action="action_lms_learning_timetable" sequence="20"/>
+    <menuitem id="menu_lms_learning_timetable_by_course" name="TKB theo khóa học" parent="menu_lms_learning" action="action_lms_learning_timetable_by_course" sequence="30"/>
+    <menuitem id="menu_lms_roadmap" name="Roadmap đề xuất" parent="menu_lms_learning" action="action_lms_roadmap" sequence="20"/>
 
-    <!-- Analytics (ẩn khỏi tất cả role bằng group_no_one, không xóa DB) -->
-    <menuitem id="menu_lms_analytics_root" name="Analytics" sequence="40" web_icon="lms,static/description/icon.png" groups="base.group_no_one"/>
-    <menuitem id="menu_lms_analytics_enrollments" name="Đăng ký học (Pivot/Graph)" parent="menu_lms_analytics_root" action="action_lms_analytics_student_course" sequence="10" groups="base.group_no_one"/>
-    <menuitem id="menu_lms_analytics_learning_history" name="Lịch sử học tập (Pivot/Graph)" parent="menu_lms_analytics_root" action="action_lms_analytics_learning_history" sequence="20" groups="base.group_no_one"/>
+    <menuitem id="menu_lms_analytics_root" name="Analytics" sequence="40" web_icon="lms,static/description/icon.png" active="False"/>
+    <menuitem id="menu_lms_analytics_enrollments" name="Đăng ký học (Pivot/Graph)" parent="menu_lms_analytics_root" action="action_lms_analytics_student_course" sequence="10"/>
+    <menuitem id="menu_lms_analytics_learning_history" name="Lịch sử học tập (Pivot/Graph)" parent="menu_lms_analytics_root" action="action_lms_analytics_learning_history" sequence="20"/>
 
     <!-- Cấu hình -->
     <menuitem id="menu_lms_config" name="Cấu hình" sequence="99"/>
