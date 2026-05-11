@@ -572,6 +572,29 @@ class Lesson(models.Model):
         sanitize=False,
     )
 
+    @staticmethod
+    def _calc_end_datetime(start_datetime, duration_minutes):
+        """Tính giờ kết thúc theo giờ bắt đầu + thời lượng (phút)."""
+        if not start_datetime:
+            return False
+        start_dt = fields.Datetime.to_datetime(start_datetime)
+        duration = max(0, int(duration_minutes or 0))
+        return start_dt + relativedelta(minutes=duration)
+
+    @api.onchange('start_datetime', 'duration_minutes')
+    def _onchange_schedule_fields(self):
+        for lesson in self:
+            lesson.end_datetime = lesson._calc_end_datetime(
+                lesson.start_datetime,
+                lesson.duration_minutes,
+            )
+
+    @api.constrains('duration_minutes')
+    def _check_duration_minutes_non_negative(self):
+        for lesson in self:
+            if lesson.duration_minutes is not None and lesson.duration_minutes < 0:
+                raise ValidationError(_('Thời lượng (phút) không được âm.'))
+
     @api.depends('state')
     def _compute_calendar_color(self):
         # Odoo calendar color index
@@ -864,6 +887,9 @@ class Lesson(models.Model):
         Course = self.env['lms.course'].sudo()
         ctx_course_id = self.env.context.get('default_course_id')
         for vals in vals_list:
+            start_dt = vals.get('start_datetime') or fields.Datetime.now()
+            duration = vals.get('duration_minutes', 0)
+            vals['end_datetime'] = self._calc_end_datetime(start_dt, duration)
             # Tạo inline từ one2many thường truyền course_id qua context default_course_id.
             course_id = vals.get('course_id') or ctx_course_id
             if not course_id:
@@ -883,11 +909,37 @@ class Lesson(models.Model):
         if self.env.context.get('skip_google_calendar_sync'):
             return super().write(vals)
 
+        if any(key in vals for key in ('start_datetime', 'duration_minutes', 'end_datetime')):
+            if 'start_datetime' in vals:
+                start_dt = vals.get('start_datetime')
+            else:
+                start_dt = self.start_datetime if len(self) == 1 else None
+
+            if 'duration_minutes' in vals:
+                duration = vals.get('duration_minutes')
+            else:
+                duration = self.duration_minutes if len(self) == 1 else None
+
+            if len(self) == 1:
+                vals['end_datetime'] = self._calc_end_datetime(start_dt, duration)
+
         was_syncable = {
             lesson.id: lesson.state == 'scheduled' and lesson.lesson_type == 'online'
             for lesson in self
         }
         res = super().write(vals)
+
+        if len(self) > 1 and any(key in vals for key in ('start_datetime', 'duration_minutes', 'end_datetime')):
+            need_resync = self.env['lms.lesson']
+            for lesson in self:
+                computed_end = self._calc_end_datetime(lesson.start_datetime, lesson.duration_minutes)
+                if lesson.end_datetime != computed_end:
+                    lesson.with_context(skip_google_calendar_sync=True).write({'end_datetime': computed_end})
+                    need_resync |= lesson
+            if need_resync:
+                need_resync.filtered(
+                    lambda l: l.state == 'scheduled' and l.lesson_type == 'online'
+                )._google_calendar_sync_if_needed()
 
         status_changed = 'state' in vals
         lesson_type_changed = 'lesson_type' in vals

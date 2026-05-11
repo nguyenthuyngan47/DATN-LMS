@@ -312,7 +312,7 @@
                             <field name="lesson_type" readonly="course_form_readonly"/>
                             <field name="duration_minutes" readonly="course_form_readonly"/>
                             <field name="start_datetime" readonly="course_form_readonly"/>
-                            <field name="end_datetime" readonly="course_form_readonly"/>
+                            <field name="end_datetime" readonly="1"/>
                             <field name="meeting_url" readonly="course_form_readonly" invisible="lesson_type != 'online'"/>
                             <field name="state" readonly="course_form_readonly"/>
                             <field name="is_published" readonly="course_form_readonly"/>
