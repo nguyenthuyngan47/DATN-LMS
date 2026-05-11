@@ -22,7 +22,7 @@
         <field name="name">lms.student.list</field>
         <field name="model">lms.student</field>
         <field name="arch" type="xml">
-            <list string="Học viên">
+            <list string="Học viên" create="0">
                 <field name="id"/>
                 <field name="name"/>
                 <field name="email"/>
@@ -40,7 +40,7 @@
         <field name="name">lms.student.list.by.course</field>
         <field name="model">lms.student</field>
         <field name="arch" type="xml">
-            <list string="Học viên của khóa học">
+            <list string="Học viên của khóa học" create="0">
                 <field name="id"/>
                 <field name="name"/>
                 <field name="current_course_registration_status" string="Trạng thái đăng ký"/>
@@ -59,7 +59,7 @@
         <field name="name">lms.student.form</field>
         <field name="model">lms.student</field>
         <field name="arch" type="xml">
-            <form string="Học viên">
+            <form string="Học viên" create="0">
                 <sheet>
                     <field name="is_instructor_restricted" invisible="1"/>
                     <div class="oe_button_box" name="button_box">

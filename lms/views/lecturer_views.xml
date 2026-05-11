@@ -4,7 +4,7 @@
         <field name="name">lms.lecturer.list</field>
         <field name="model">lms.lecturer</field>
         <field name="arch" type="xml">
-            <list>
+            <list create="0">
                 <field name="id"/>
                 <field name="full_name"/>
                 <field name="email"/>
@@ -22,7 +22,7 @@
         <field name="name">lms.lecturer.form</field>
         <field name="model">lms.lecturer</field>
         <field name="arch" type="xml">
-            <form>
+            <form create="0">
                 <sheet>
                     <group>
                         <group>
