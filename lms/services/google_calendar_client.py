@@ -114,8 +114,7 @@ def get_google_calendar_config() -> Dict[str, object]:
             )
         if not config['oauth_refresh_token']:
             raise GoogleCalendarConfigError(
-                'oauth_refresh: cần GOOGLE_CALENDAR_OAUTH_REFRESH_TOKEN '
-                '(lấy bằng scripts/google_calendar_oauth_setup.py).'
+                'oauth_refresh: cần GOOGLE_CALENDAR_OAUTH_REFRESH_TOKEN (OAuth Google / refresh token).'
             )
 
     return config

@@ -62,10 +62,8 @@ services:
       - ./.env:/mnt/extra-addons/.env:ro
       # Google service account key (read-only) cho Google Calendar API
       - ./lmsodoo-32c3fbb07398.json:/run/secrets/google-service-account.json:ro
-      # Không dùng :ro ở data: mount lồng export/ bên dưới cần tạo mountpoint (Docker sẽ mkdir trên parent).
+      # Dữ liệu host; CSV bootstrap/sync mặc định đọc /mnt/extra-addons/data/export (tạo LMS/data/export nếu cần).
       - ./data:/mnt/extra-addons/data
-      # CSV bootstrap (post_init): trùng đường mặc định /mnt/extra-addons/data/export
-      - ./scripts/export:/mnt/extra-addons/data/export:ro
 
       # Cấu hình riêng
       - ./config/odoo.conf:/etc/odoo/odoo.conf

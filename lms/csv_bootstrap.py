@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Import LMS từ thư mục CSV trong tiến trình Odoo (cùng thứ tự/ánh xạ như scripts/import_csv_to_odoo.py)."""
+"""Import LMS từ thư mục CSV trong tiến trình Odoo (mặc định LMS_CSV_IMPORT_DIR / data/export)."""
 
 from __future__ import annotations
 
