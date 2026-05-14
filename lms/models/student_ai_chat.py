@@ -65,6 +65,21 @@ class LmsStudentAiChat(models.TransientModel):
         compute='_compute_roadmap_options_html',
         sanitize=False,
     )
+    roadmap_option_1_html = fields.Html(
+        string='Roadmap Option 1',
+        compute='_compute_roadmap_options_html',
+        sanitize=False,
+    )
+    roadmap_option_2_html = fields.Html(
+        string='Roadmap Option 2',
+        compute='_compute_roadmap_options_html',
+        sanitize=False,
+    )
+    roadmap_option_3_html = fields.Html(
+        string='Roadmap Option 3',
+        compute='_compute_roadmap_options_html',
+        sanitize=False,
+    )
     has_roadmap_options = fields.Boolean(string='Roadmaps Available', compute='_compute_roadmap_choice_ui')
     has_roadmap_selected = fields.Boolean(string='Roadmap Selected', compute='_compute_roadmap_choice_ui')
     roadmap_option_1_available = fields.Boolean(string='Roadmap 1', compute='_compute_roadmap_choice_ui')
@@ -178,8 +193,12 @@ class LmsStudentAiChat(models.TransientModel):
                     '<div style="padding:8px 10px;border:1px dashed #d1d5db;border-radius:8px;color:#6b7280;">'
                     'No roadmaps to choose from.</div>'
                 )
+                rec.roadmap_option_1_html = False
+                rec.roadmap_option_2_html = False
+                rec.roadmap_option_3_html = False
                 continue
             lines = ['<div style="display:flex;flex-direction:column;gap:10px;">']
+            individual_htmls = {}
             for opt in options:
                 is_selected = rec.selected_roadmap_index == opt['index']
                 title = escape(opt['title'])
@@ -188,29 +207,36 @@ class LmsStudentAiChat(models.TransientModel):
                     if is_selected
                     else ''
                 )
-                lines.append(
+                opt_lines = []
+                opt_lines.append(
                     '<div style="border:1px solid #d1d5db;border-radius:10px;padding:10px;background:#fff;">'
                     '<div style="font-weight:600;">%s%s</div>' % (title, badge)
                 )
                 if opt['strategy']:
-                    lines.append('<div><b>Strategy:</b> %s</div>' % escape(opt['strategy']))
+                    opt_lines.append('<div><b>Strategy:</b> %s</div>' % escape(opt['strategy']))
                 if opt['summary']:
-                    lines.append('<div><b>Summary:</b> %s</div>' % escape(opt['summary']))
+                    opt_lines.append('<div><b>Summary:</b> %s</div>' % escape(opt['summary']))
                 if opt['courses']:
-                    lines.append('<div><b>Suggested Courses:</b><ul style="margin:4px 0 0 18px;">')
+                    opt_lines.append('<div><b>Suggested Courses:</b><ul style="margin:4px 0 0 18px;">')
                     for course_name in opt['courses']:
                         course = rec.env['lms.course'].sudo().search([('name', '=', course_name)], limit=1)
                         price_text = self._format_vnd(course.price) if course else '0VND'
-                        lines.append('<li>%s (%s)</li>' % (escape(course_name), escape(price_text)))
-                    lines.append('</ul></div>')
-                lines.append('<div><b>Total Roadmap Cost:</b> %s</div>' % escape(self._format_vnd(opt['total_cost_vnd'])))
+                        opt_lines.append('<li>%s (%s)</li>' % (escape(course_name), escape(price_text)))
+                    opt_lines.append('</ul></div>')
+                opt_lines.append('<div><b>Total Roadmap Cost:</b> %s</div>' % escape(self._format_vnd(opt['total_cost_vnd'])))
                 if opt['difference']:
-                    lines.append('<div><b>Key Difference:</b> %s</div>' % escape(opt['difference']))
+                    opt_lines.append('<div><b>Key Difference:</b> %s</div>' % escape(opt['difference']))
                 if opt['fit_when']:
-                    lines.append('<div><b>Suitable When:</b> %s</div>' % escape(opt['fit_when']))
-                lines.append('</div>')
+                    opt_lines.append('<div><b>Suitable When:</b> %s</div>' % escape(opt['fit_when']))
+                opt_lines.append('</div>')
+                opt_html = ''.join(opt_lines)
+                individual_htmls[opt['index']] = opt_html
+                lines.append(opt_html)
             lines.append('</div>')
             rec.roadmap_options_html = ''.join(lines)
+            rec.roadmap_option_1_html = individual_htmls.get(1, False)
+            rec.roadmap_option_2_html = individual_htmls.get(2, False)
+            rec.roadmap_option_3_html = individual_htmls.get(3, False)
 
     def read(self, fields=None, load='_classic_read'):
         rows = super().read(fields=fields, load=load)

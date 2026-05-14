@@ -74,28 +74,36 @@
                             invisible="session_state != 'done' or not has_roadmap_options"
                             col="1"
                         >
-                            <field name="roadmap_options_html" widget="html" readonly="1" nolabel="1"/>
-                            <button
-                                name="action_select_roadmap_1"
-                                string="Select Roadmap 1"
-                                type="object"
-                                class="btn-primary"
-                                invisible="not roadmap_option_1_available or has_roadmap_selected"
-                            />
-                            <button
-                                name="action_select_roadmap_2"
-                                string="Select Roadmap 2"
-                                type="object"
-                                class="btn-primary"
-                                invisible="not roadmap_option_2_available or has_roadmap_selected"
-                            />
-                            <button
-                                name="action_select_roadmap_3"
-                                string="Select Roadmap 3"
-                                type="object"
-                                class="btn-primary"
-                                invisible="not roadmap_option_3_available or has_roadmap_selected"
-                            />
+                            <div invisible="not roadmap_option_1_available" style="margin-bottom:10px;">
+                                <field name="roadmap_option_1_html" widget="html" readonly="1" nolabel="1"/>
+                                <button
+                                    name="action_select_roadmap_1"
+                                    string="Select Roadmap 1"
+                                    type="object"
+                                    class="btn-primary mt-2"
+                                    invisible="not roadmap_option_1_available or has_roadmap_selected"
+                                />
+                            </div>
+                            <div invisible="not roadmap_option_2_available" style="margin-bottom:10px;">
+                                <field name="roadmap_option_2_html" widget="html" readonly="1" nolabel="1"/>
+                                <button
+                                    name="action_select_roadmap_2"
+                                    string="Select Roadmap 2"
+                                    type="object"
+                                    class="btn-primary mt-2"
+                                    invisible="not roadmap_option_2_available or has_roadmap_selected"
+                                />
+                            </div>
+                            <div invisible="not roadmap_option_3_available" style="margin-bottom:10px;">
+                                <field name="roadmap_option_3_html" widget="html" readonly="1" nolabel="1"/>
+                                <button
+                                    name="action_select_roadmap_3"
+                                    string="Select Roadmap 3"
+                                    type="object"
+                                    class="btn-primary mt-2"
+                                    invisible="not roadmap_option_3_available or has_roadmap_selected"
+                                />
+                            </div>
                             <div class="o_form_label text-success" invisible="not has_roadmap_selected">
                                 You have selected a roadmap for this session. The system has processed course registration based on your choice.
                             </div>
