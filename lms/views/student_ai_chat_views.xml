@@ -4,7 +4,7 @@
         <field name="name">lms.student.ai.chat.form</field>
         <field name="model">lms.student.ai.chat</field>
         <field name="arch" type="xml">
-            <form string="Tư vấn roadmap cho học viên" create="0" edit="1" delete="0">
+            <form string="Roadmap Consultation for Students" create="0" edit="1" delete="0">
                 <sheet>
                     <group>
                         <field name="title" readonly="1"/>
@@ -26,39 +26,39 @@
                         <field name="debug_last_ai_request" invisible="1"/>
                         <field name="debug_last_ai_response" invisible="1"/>
                     </group>
-                    <group string="Thiết lập phiên tư vấn">
+                    <group string="Setup Consultation Session">
                         <div
                             class="o_form_label text-warning"
                             invisible="has_available_courses"
                         >
-                            Hiện hệ thống chưa có khóa học nào, chưa thể dùng chức năng tư vấn roadmap.
+                            The system currently has no courses; the roadmap consultation feature cannot be used.
                         </div>
                         <div
                             class="o_form_label text-info"
                             invisible="not has_available_courses"
                         >
-                            Cho phép AI đọc dữ liệu cá nhân sẽ cải thiện chất lượng phân tích và đưa ra roadmap phù hợp hơn.
+                            Allowing AI to access personal data will improve analysis quality and provide a more suitable roadmap.
                         </div>
                         <field name="allow_personal_data"/>
                         <button
                             name="action_start_session"
-                            string="Bắt đầu tư vấn"
+                            string="Start Consultation"
                             type="object"
                             class="btn-primary"
                             invisible="session_state != 'draft'"
                         />
                     </group>
-                    <group string="Trò chuyện" col="1">
+                    <group string="Chat" col="1">
                         <field name="conversation_html" widget="html" readonly="1" nolabel="1"/>
                         <field
                             name="user_message"
-                            placeholder="Nhập câu trả lời của bạn tại đây rồi nhấn Gửi (Enter)..."
+                            placeholder="Type your answer here then press Send (Enter)..."
                             nolabel="1"
                             invisible="session_state != 'chatting' or is_chat_locked"
                         />
                         <button
                             name="action_send_message"
-                            string="Gửi (Enter)"
+                            string="Send (Enter)"
                             type="object"
                             class="btn-primary"
                             invisible="session_state != 'chatting' or is_chat_locked"
@@ -67,50 +67,50 @@
                             class="o_form_label text-muted"
                             invisible="not is_chat_locked"
                         >
-                            Phiên tư vấn đã hoàn tất, chat đã được khóa.
+                            The consultation session is complete; chat has been locked.
                         </div>
                         <group
-                            string="Danh sách roadmap để chọn"
+                            string="Roadmap Options to Choose"
                             invisible="session_state != 'done' or not has_roadmap_options"
                             col="1"
                         >
                             <field name="roadmap_options_html" widget="html" readonly="1" nolabel="1"/>
                             <button
                                 name="action_select_roadmap_1"
-                                string="Chọn roadmap 1"
+                                string="Select Roadmap 1"
                                 type="object"
                                 class="btn-primary"
                                 invisible="not roadmap_option_1_available or has_roadmap_selected"
                             />
                             <button
                                 name="action_select_roadmap_2"
-                                string="Chọn roadmap 2"
+                                string="Select Roadmap 2"
                                 type="object"
                                 class="btn-primary"
                                 invisible="not roadmap_option_2_available or has_roadmap_selected"
                             />
                             <button
                                 name="action_select_roadmap_3"
-                                string="Chọn roadmap 3"
+                                string="Select Roadmap 3"
                                 type="object"
                                 class="btn-primary"
                                 invisible="not roadmap_option_3_available or has_roadmap_selected"
                             />
                             <div class="o_form_label text-success" invisible="not has_roadmap_selected">
-                                Bạn đã chọn roadmap cho phiên này. Hệ thống đã xử lý đăng ký khóa học theo lựa chọn.
+                                You have selected a roadmap for this session. The system has processed course registration based on your choice.
                             </div>
                         </group>
                     </group>
                 </sheet>
                 <footer>
-                    <button string="Đóng" class="btn-secondary" special="cancel"/>
+                    <button string="Close" class="btn-secondary" special="cancel"/>
                 </footer>
             </form>
         </field>
     </record>
 
     <record id="action_lms_student_ai_chat" model="ir.actions.act_window">
-        <field name="name">Tư vấn roadmap cho học viên</field>
+        <field name="name">Roadmap Consultation for Students</field>
         <field name="res_model">lms.student.ai.chat</field>
         <field name="view_mode">form</field>
         <field name="view_id" ref="view_lms_student_ai_chat_form"/>

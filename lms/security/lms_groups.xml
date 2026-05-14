@@ -8,26 +8,25 @@
             <field name="sequence">10</field>
         </record>
 
-        <!-- LMS Administrator Group -->
+        <!-- LMS Administrator -->
         <record id="group_lms_manager" model="res.groups">
             <field name="name">LMS Administrator</field>
             <field name="category_id" ref="module_category_lms"/>
-            <field name="comment">Full administrative access to all LMS features: students, courses, roadmaps, AI analysis</field>
+            <field name="comment">Full admin access: students, courses, roadmaps, AI analytics</field>
         </record>
 
-        <!-- Student Group -->
+        <!-- Student -->
         <record id="group_lms_user" model="res.groups">
             <field name="name">Student</field>
             <field name="category_id" ref="module_category_lms"/>
             <field name="comment">Student: view and manage own courses, learning history, and roadmaps</field>
         </record>
 
-        <!-- Academic Advisor Group -->
-        <!-- Instructor Group -->
+        <!-- Instructor -->
         <record id="group_lms_instructor" model="res.groups">
             <field name="name">Instructor</field>
             <field name="category_id" ref="module_category_lms"/>
-            <field name="comment">Instructor: create and manage course content (courses and lessons). No student monitoring access</field>
+            <field name="comment">Instructor: create and manage course content (courses and lessons)</field>
         </record>
     </data>
 </odoo>

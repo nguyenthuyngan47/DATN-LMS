@@ -8,7 +8,7 @@ class CalendarEvent(models.Model):
 
     lms_learning_history_id = fields.Many2one(
         'lms.learning.history',
-        string='Buổi học LMS',
+        string='LMS Learning Session',
         ondelete='cascade',
         index=True,
         copy=False,

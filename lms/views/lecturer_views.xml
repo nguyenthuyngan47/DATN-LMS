@@ -13,7 +13,7 @@
                 <field name="faculty"/>
                 <field name="academic_degree"/>
                 <field name="years_of_experience"/>
-                <field name="status" string="Trạng thái"/>
+                <field name="status" string="Status"/>
             </list>
         </field>
     </record>
@@ -37,11 +37,10 @@
                             <field name="email"/>
                             <field name="phone_number"/>
                             <field name="last_login" readonly="1"/>
-                            <field name="last_active_at" readonly="1"/>
                         </group>
                     </group>
                     <notebook>
-                        <page string="Thông tin cá nhân">
+                        <page string="Personal Information">
                             <group>
                                 <group>
                                     <field name="gender"/>
@@ -56,7 +55,7 @@
                                 </group>
                             </group>
                         </page>
-                        <page string="Thông tin chuyên môn">
+                        <page string="Professional Information">
                             <group>
                                 <group>
                                     <field name="faculty"/>
@@ -69,7 +68,7 @@
                                 </group>
                             </group>
                         </page>
-                        <!-- <page string="Nghiệp vụ LMS">
+                        <!-- <page string="LMS Operations">
                             <group>
                                 <field name="course_assigned">
                                     <list>
@@ -89,7 +88,7 @@
                                 <field name="exam_created" readonly="1"/>
                             </group>
                         </page>
-                        <page string="Chỉ số hoạt động">
+                        <page string="Activity Metrics">
                             <group>
                                 <field name="total_courses" readonly="1"/>
                                 <field name="total_students" readonly="1"/>
@@ -108,7 +107,7 @@
     </record>
 
     <record id="action_lms_lecturer" model="ir.actions.act_window">
-        <field name="name">Giảng viên</field>
+        <field name="name">Instructors</field>
         <field name="res_model">lms.lecturer</field>
         <field name="view_mode">list,form</field>
     </record>

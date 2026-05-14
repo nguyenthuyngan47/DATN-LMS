@@ -13,97 +13,97 @@ from . import face_embedding_utils
 
 class CourseCategory(models.Model):
     _name = 'lms.course.category'
-    _description = 'Danh mục khóa học'
+    _description = 'Course Category'
     _order = 'sequence, name'
 
-    name = fields.Char(string='Tên danh mục', required=True)
-    sequence = fields.Integer(string='Thứ tự', default=10)
-    description = fields.Text(string='Mô tả')
-    course_ids = fields.One2many('lms.course', 'category_id', string='Khóa học')
+    name = fields.Char(string='Category Name', required=True)
+    sequence = fields.Integer(string='Sequence', default=10)
+    description = fields.Text(string='Description')
+    course_ids = fields.One2many('lms.course', 'category_id', string='Courses')
 
 
 class CourseLevel(models.Model):
     _name = 'lms.course.level'
-    _description = 'Cấp độ khóa học'
+    _description = 'Course Level'
     _order = 'sequence, name'
 
-    name = fields.Char(string='Tên cấp độ', required=True)
-    sequence = fields.Integer(string='Thứ tự', default=10)
-    description = fields.Text(string='Mô tả')
-    course_ids = fields.One2many('lms.course', 'level_id', string='Khóa học')
+    name = fields.Char(string='Level Name', required=True)
+    sequence = fields.Integer(string='Sequence', default=10)
+    description = fields.Text(string='Description')
+    course_ids = fields.One2many('lms.course', 'level_id', string='Courses')
 
 
 class CourseTag(models.Model):
     _name = 'lms.course.tag'
-    _description = 'Nhãn khóa học'
+    _description = 'Course Tag'
     _order = 'name'
 
-    name = fields.Char(string='Tên nhãn', required=True)
-    color = fields.Integer(string='Màu sắc')
-    course_ids = fields.Many2many('lms.course', 'course_tag_rel', 'tag_id', 'course_id', string='Khóa học')
+    name = fields.Char(string='Tag Name', required=True)
+    color = fields.Integer(string='Color')
+    course_ids = fields.Many2many('lms.course', 'course_tag_rel', 'tag_id', 'course_id', string='Courses')
 
 
 class Course(models.Model):
     _name = 'lms.course'
-    _description = 'Khóa học'
+    _description = 'Course'
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
-    name = fields.Char(string='Tên khóa học', required=True, tracking=True)
+    name = fields.Char(string='Course Name', required=True, tracking=True)
     # mail.tracking không hỗ trợ field Html, chỉ giữ hiển thị nội dung.
-    description = fields.Html(string='Mô tả')
-    image_1920 = fields.Image(string='Ảnh khóa học', max_width=1920, max_height=1920)
+    description = fields.Html(string='Description')
+    image_1920 = fields.Image(string='Course Image', max_width=1920, max_height=1920)
     
     # Phân loại
-    category_id = fields.Many2one('lms.course.category', string='Danh mục', required=True, tracking=True)
-    level_id = fields.Many2one('lms.course.level', string='Cấp độ', required=True, tracking=True)
-    tag_ids = fields.Many2many('lms.course.tag', 'course_tag_rel', 'course_id', 'tag_id', string='Nhãn')
+    category_id = fields.Many2one('lms.course.category', string='Category', required=True, tracking=True)
+    level_id = fields.Many2one('lms.course.level', string='Level', required=True, tracking=True)
+    tag_ids = fields.Many2many('lms.course.tag', 'course_tag_rel', 'course_id', 'tag_id', string='Tags')
     
     # Thông tin khóa học
-    instructor_id = fields.Many2one('res.users', string='Giảng viên', tracking=True)
-    duration_hours = fields.Float(string='Thời lượng (giờ)', digits=(16, 2), tracking=True)
-    max_student = fields.Integer(string='Số học viên tối đa')
-    start_date = fields.Date(string='Ngày bắt đầu')
-    end_date = fields.Date(string='Ngày kết thúc')
+    instructor_id = fields.Many2one('res.users', string='Instructor', tracking=True)
+    duration_hours = fields.Float(string='Duration (hours)', digits=(16, 2), tracking=True)
+    max_student = fields.Integer(string='Max Students')
+    start_date = fields.Date(string='Start Date')
+    end_date = fields.Date(string='End Date')
     # VND không dùng phần thập phân -> lưu số nguyên để tránh hiển thị 100,000.00
-    price = fields.Integer(string='Chi phí (VND)', default=0, tracking=True)
-    contact_payment = fields.Text(string='Liên hệ giáo viên', tracking=True)
+    price = fields.Integer(string='Cost (VND)', default=0, tracking=True)
+    contact_payment = fields.Text(string='Instructor Contact', tracking=True)
     prerequisite_ids = fields.Many2many(
         'lms.course', 'course_prerequisite_rel', 'course_id', 'prerequisite_id',
-        string='Khóa học tiên quyết'
+        string='Prerequisites'
     )
     
     # Nội dung
-    lesson_ids = fields.One2many('lms.lesson', 'course_id', string='Bài học')
-    total_lessons = fields.Integer(string='Tổng số bài học', compute='_compute_total_lessons', store=True)
+    lesson_ids = fields.One2many('lms.lesson', 'course_id', string='Lessons')
+    total_lessons = fields.Integer(string='Total Lessons', compute='_compute_total_lessons', store=True)
     
     # Thống kê
-    enrolled_students_count = fields.Integer(string='Số học viên đăng ký', compute='_compute_enrolled_students', store=True)
-    average_rating = fields.Float(string='Đánh giá trung bình', digits=(16, 2))
+    enrolled_students_count = fields.Integer(string='Enrolled Students', compute='_compute_enrolled_students', store=True)
+    average_rating = fields.Float(string='Average Rating', digits=(16, 2))
     show_register_button = fields.Boolean(
-        string='Hiển thị nút đăng ký',
+        string='Show Register Button',
         compute='_compute_current_user_registration_state',
     )
     show_cancel_button = fields.Boolean(
-        string='Hiển thị nút hủy đăng ký',
+        string='Show Cancel Button',
         compute='_compute_current_user_registration_state',
     )
     show_learning_content_tabs = fields.Boolean(
-        string='Hiển thị tab học tập',
+        string='Show Learning Tabs',
         compute='_compute_current_user_registration_state',
     )
     is_student_course_readonly = fields.Boolean(
-        string='Form khóa học chỉ đọc (học viên)',
+        string='Course Form Read-only (Student)',
         compute='_compute_is_student_course_readonly',
     )
 
     # Trạng thái
     state = fields.Selection([
-        ('draft', 'Nháp'),
-        ('published', 'Đã xuất bản'),
-        ('archived', 'Lưu trữ'),
-    ], string='Trạng thái', default='draft', tracking=True)
+        ('draft', 'Draft'),
+        ('published', 'Published'),
+        ('archived', 'Archived'),
+    ], string='Status', default='draft', tracking=True)
     
-    is_active = fields.Boolean(string='Đang hoạt động', default=True)
+    is_active = fields.Boolean(string='Active', default=True)
 
     @api.model
     def default_get(self, fields_list):
@@ -130,7 +130,7 @@ class Course(models.Model):
         try:
             vals['price'] = int(raw)
         except (TypeError, ValueError) as e:
-            raise ValidationError('Chi phí khóa học phải là số nguyên (VND).') from e
+            raise ValidationError('Course cost must be an integer (VND).') from e
         return vals
 
     @api.model_create_multi
@@ -147,27 +147,27 @@ class Course(models.Model):
         """Kiểm tra thời lượng khóa học không được âm"""
         for record in self:
             if record.duration_hours and record.duration_hours < 0:
-                raise ValueError('Thời lượng khóa học không được âm')
+                raise ValueError('Course duration cannot be negative')
 
     @api.constrains('price')
     def _check_price_non_negative(self):
         for record in self:
             if record.price is not None and record.price < 0:
-                raise ValueError('Chi phí khóa học không được âm')
+                raise ValueError('Course cost cannot be negative')
     
     @api.constrains('prerequisite_ids')
     def _check_prerequisite_cycle(self):
         """Kiểm tra prerequisite không được tạo vòng lặp"""
         for record in self:
             if record.id in record.prerequisite_ids.ids:
-                raise ValueError('Khóa học không thể là prerequisite của chính nó')
+                raise ValueError('A course cannot be a prerequisite of itself')
             # Kiểm tra vòng lặp gián tiếp (đệ quy)
             visited = set()
             to_check = list(record.prerequisite_ids.ids)
             while to_check:
                 prereq_id = to_check.pop()
                 if prereq_id == record.id:
-                    raise ValueError('Phát hiện vòng lặp trong prerequisite. Khóa học không thể có prerequisite dẫn đến chính nó.')
+                    raise ValueError('Circular dependency detected in prerequisites. A course cannot have prerequisites leading back to itself.')
                 if prereq_id in visited:
                     continue
                 visited.add(prereq_id)
@@ -259,7 +259,7 @@ class Course(models.Model):
         for record in self:
             record.is_student_course_readonly = readonly
 
-    student_course_ids = fields.One2many('lms.student.course', 'course_id', string='Học viên đăng ký')
+    student_course_ids = fields.One2many('lms.student.course', 'course_id', string='Enrolled Students')
     
     def action_publish(self):
         """Xuất bản khóa học"""
@@ -277,8 +277,8 @@ class Course(models.Model):
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
                 'params': {
-                    'title': _('Đăng ký khóa học'),
-                    'message': _('Chỉ tài khoản học viên mới được đăng ký khóa học.'),
+                    'title': _('Course Registration'),
+                    'message': _('Only student accounts can register for courses.'),
                     'type': 'warning',
                     'sticky': False,
                     'next': {'type': 'ir.actions.client', 'tag': 'reload'},
@@ -291,8 +291,8 @@ class Course(models.Model):
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
                 'params': {
-                    'title': _('Đăng ký khóa học'),
-                    'message': _('Tài khoản của bạn chưa liên kết hồ sơ học viên.'),
+                    'title': _('Course Registration'),
+                    'message': _('Your account is not linked to a student profile.'),
                     'type': 'warning',
                     'sticky': False,
                     'next': {'type': 'ir.actions.client', 'tag': 'reload'},
@@ -329,24 +329,24 @@ class Course(models.Model):
 
         lines = []
         if created_names:
-            lines.append(_('Đăng ký thành công: %s') % ', '.join(created_names))
+            lines.append(_('Successfully registered: %s') % ', '.join(created_names))
         if duplicate_names:
             for name in duplicate_names:
-                lines.append(_('Bạn đã đăng ký khóa học %s rồi') % name)
+                lines.append(_('You have already registered for course %s') % name)
         if blocked_names:
             lines.append(
-                _('Không thể đăng ký (chưa xuất bản hoặc không hoạt động): %s')
+                _('Cannot register (not published or inactive): %s')
                 % ', '.join(blocked_names)
             )
         if not lines:
-            lines.append(_('Không có khóa học nào được xử lý.'))
+            lines.append(_('No courses were processed.'))
 
         notif_type = 'success' if created_names and not (duplicate_names or blocked_names) else 'warning'
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
-                'title': _('Đăng ký khóa học'),
+                'title': _('Course Registration'),
                 'message': '\n'.join(lines),
                 'type': notif_type,
                 'sticky': False,
@@ -367,8 +367,8 @@ class Course(models.Model):
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
-                'title': _('Hủy đăng ký'),
-                'message': _('Đã hủy đăng ký khóa học %s.') % self.name,
+                'title': _('Cancel Registration'),
+                'message': _('Course registration for %s has been cancelled.') % self.name,
                 'type': 'success',
                 'sticky': False,
                 'next': {'type': 'ir.actions.client', 'tag': 'reload'},
@@ -378,29 +378,29 @@ class Course(models.Model):
 
 class Lesson(models.Model):
     _name = 'lms.lesson'
-    _description = 'Bài học'
+    _description = 'Lesson'
     _order = 'sequence, name'
 
     @api.model
     def _default_end_datetime(self):
         return fields.Datetime.now() + relativedelta(hours=1)
 
-    name = fields.Char(string='Tên bài học', required=True)
-    sequence = fields.Integer(string='Thứ tự', default=10, required=True)
+    name = fields.Char(string='Lesson Name', required=True)
+    sequence = fields.Integer(string='Sequence', default=10, required=True)
     lesson_type = fields.Selection(
         [
-            ('video', 'Video'),
+            ('video', 'Video Lecture'),
             ('online', 'Online'),
         ],
-        string='Loại bài học',
+        string='Lesson Type',
         required=True,
         default='online',
     )
-    description = fields.Html(string='Mô tả')
+    description = fields.Html(string='Description')
     
-    course_id = fields.Many2one('lms.course', string='Khóa học', required=True, ondelete='cascade')
+    course_id = fields.Many2one('lms.course', string='Course', required=True, ondelete='cascade')
     course_form_readonly = fields.Boolean(
-        string='Form bài học chỉ đọc (theo khóa học)',
+        string='Lesson Form Read-only (by Course)',
         related='course_id.is_student_course_readonly',
         readonly=True,
     )
@@ -409,10 +409,10 @@ class Lesson(models.Model):
         """Mở form bài học trên cửa sổ chính (nút trên list one2many; không dùng JS)."""
         self.ensure_one()
         if isinstance(self.id, NewId):
-            raise UserError(_('Vui lòng lưu khóa học (và bài học mới) trước khi mở chi tiết.'))
+            raise UserError(_('Please save the course (and new lessons) before opening details.'))
         return {
             'type': 'ir.actions.act_window',
-            'name': _('Bài học'),
+            'name': _('Lesson'),
             'res_model': 'lms.lesson',
             'res_id': self.id,
             'view_mode': 'form',
@@ -425,22 +425,22 @@ class Lesson(models.Model):
         }
 
     # Tài liệu học
-    video_attachment = fields.Binary(string='File video', attachment=True)
-    video_filename = fields.Char(string='Tên file video')
-    pdf_attachment = fields.Binary(string='File PDF', attachment=True)
-    pdf_filename = fields.Char(string='Tên file PDF')
+    video_attachment = fields.Binary(string='Video File', attachment=True)
+    video_filename = fields.Char(string='Video Filename')
+    pdf_attachment = fields.Binary(string='PDF File', attachment=True)
+    pdf_filename = fields.Char(string='PDF Filename')
     video_preview_html = fields.Html(
-        string='Xem video',
+        string='Video Preview',
         compute='_compute_video_preview_html',
         sanitize=False,
     )
     video_upload_hint_html = fields.Html(
-        string='Gợi ý upload video',
+        string='Video Upload Hint',
         compute='_compute_video_upload_hint_html',
         sanitize=False,
     )
     video_upload_hint = fields.Char(
-        string='Khuyến nghị video',
+        string='Video Recommendation',
         compute='_compute_video_upload_hint',
     )
 
@@ -480,20 +480,20 @@ class Lesson(models.Model):
             if size_bytes > max_bytes:
                 raise ValidationError(
                     _(
-                        'File video vượt quá dung lượng cho phép (%sMB). '
-                        'Vui lòng nén video hoặc chọn file nhỏ hơn.'
+                        'Video file exceeds the allowed size (%sMB). '
+                        'Please compress the video or choose a smaller file.'
                     )
                     % max_mb
                 )
 
     # Thời lượng
-    duration_minutes = fields.Integer(string='Thời lượng (phút)')
-    start_datetime = fields.Datetime(string='Thời gian bắt đầu', required=True, default=fields.Datetime.now)
-    end_datetime = fields.Datetime(string='Thời gian kết thúc', required=True, default=_default_end_datetime)
-    meeting_url = fields.Char(string='Link Google Meet')
+    duration_minutes = fields.Integer(string='Duration (minutes)')
+    start_datetime = fields.Datetime(string='Start Time', required=True, default=fields.Datetime.now)
+    end_datetime = fields.Datetime(string='End Time', required=True, default=_default_end_datetime)
+    meeting_url = fields.Char(string='Google Meet Link')
     calendar_event_id = fields.Many2one(
         'calendar.event',
-        string='Sự kiện lịch Odoo',
+        string='Odoo Calendar Event',
         ondelete='set null',
         copy=False,
     )
@@ -501,20 +501,20 @@ class Lesson(models.Model):
         [
             ('draft', 'Draft'),
             ('scheduled', 'Scheduled'),
-            ('done', 'Done'),
+            ('done', 'Completed'),
             ('cancelled', 'Cancelled'),
         ],
-        string='Trạng thái',
+        string='Status',
         default='draft',
         required=True,
         copy=False,
     )
     calendar_color = fields.Integer(
-        string='Màu lịch',
+        string='Calendar Color',
         compute='_compute_calendar_color',
         store=False,
     )
-    is_published = fields.Boolean(string='Hiển thị cho học viên', default=False, copy=False)
+    is_published = fields.Boolean(string='Visible to Students', default=False, copy=False)
     calendar_sync_status = fields.Selection(
         [
             ('not_synced', 'Not Synced'),
@@ -529,45 +529,45 @@ class Lesson(models.Model):
     google_event_id = fields.Char(string='Google Event ID', copy=False, readonly=True)
     google_event_html_link = fields.Char(string='Google Event Link', copy=False, readonly=True)
     attendance_notice_sent = fields.Boolean(
-        string='Đã gửi thông báo điểm danh',
+        string='Attendance Notice Sent',
         default=False,
         copy=False,
     )
     progress_ids = fields.One2many(
-        'lms.student.lesson.progress', 'lesson_id', string='Tiến độ học viên'
+        'lms.student.lesson.progress', 'lesson_id', string='Student Progress'
     )
     current_user_progress_percent = fields.Float(
-        string='Tiến độ học viên hiện tại (%)',
+        string='Current Student Progress (%)',
         compute='_compute_current_user_progress',
         digits=(16, 2),
     )
     current_user_status = fields.Selection(
         [
-            ('not_started', 'Chưa bắt đầu'),
-            ('in_progress', 'Đang học'),
-            ('done', 'Hoàn thành'),
+            ('not_started', 'Not Started'),
+            ('in_progress', 'In Progress'),
+            ('done', 'Completed'),
         ],
-        string='Trạng thái học viên hiện tại',
+        string='Current Student Status',
         compute='_compute_current_user_progress',
     )
     current_user_watched_seconds = fields.Integer(
-        string='Thời gian đã xem (giây)',
+        string='Watched Time (seconds)',
         compute='_compute_current_user_progress',
     )
     current_user_last_position_seconds = fields.Integer(
-        string='Vị trí xem gần nhất (giây)',
+        string='Last Watch Position (seconds)',
         compute='_compute_current_user_progress',
     )
     current_user_lesson_progress_label = fields.Char(
-        string='Trạng thái của tôi',
+        string='My Status',
         compute='_compute_current_user_lesson_progress_label',
     )
     current_user_face_checked_in = fields.Boolean(
-        string='Đã điểm danh khuôn mặt',
+        string='Face Checked In',
         compute='_compute_current_user_progress',
     )
     face_lesson_attendance_mount_html = fields.Html(
-        string='Điểm danh khuôn mặt',
+        string='Face Attendance',
         compute='_compute_face_lesson_attendance_mount_html',
         sanitize=False,
     )
@@ -593,7 +593,7 @@ class Lesson(models.Model):
     def _check_duration_minutes_non_negative(self):
         for lesson in self:
             if lesson.duration_minutes is not None and lesson.duration_minutes < 0:
-                raise ValidationError(_('Thời lượng (phút) không được âm.'))
+                raise ValidationError(_('Duration (minutes) cannot be negative.'))
 
     @api.depends('state')
     def _compute_calendar_color(self):
@@ -661,7 +661,7 @@ class Lesson(models.Model):
                 continue
             progress = lesson.progress_ids.filtered(lambda p: p.student_id.id == student.id)[:1]
             if not progress:
-                lesson.current_user_lesson_progress_label = 'Chưa học'
+                lesson.current_user_lesson_progress_label = 'Not Started'
             else:
                 lesson.current_user_lesson_progress_label = selection_labels.get(
                     progress.status, progress.status
@@ -671,7 +671,7 @@ class Lesson(models.Model):
         self.ensure_one()
         student = self.env['lms.student'].sudo().search([('user_id', '=', self.env.user.id)], limit=1)
         if not student:
-            raise ValidationError(_('Không tìm thấy hồ sơ học viên của tài khoản hiện tại.'))
+            raise ValidationError(_('Student profile not found for the current account.'))
         progress = self.env['lms.student.lesson.progress'].sudo().get_or_create_progress(student, self)
         vals = {
             'watched_seconds': max(progress.watched_seconds, int(watched_seconds or 0)),
@@ -686,14 +686,14 @@ class Lesson(models.Model):
         """Điểm danh khuôn mặt (1 lần / bài / học viên). Cần đã đăng ký embedding trên hồ sơ."""
         self.ensure_one()
         if self.lesson_type != 'online':
-            raise UserError(_('Chỉ bài học online mới cần điểm danh khuôn mặt.'))
+            raise UserError(_('Only online lessons require face attendance.'))
         if not isinstance(embedding_json, str) or not embedding_json.strip():
-            raise ValidationError(_('Thiếu dữ liệu ảnh chụp (embedding).'))
+            raise ValidationError(_('Missing photo data (embedding).'))
         student = self.env['lms.student'].sudo().search([('user_id', '=', self.env.user.id)], limit=1)
         if not student:
-            raise ValidationError(_('Không tìm thấy hồ sơ học viên.'))
+            raise ValidationError(_('Student profile not found.'))
         if not student.face_embedding_json:
-            raise UserError(_('Vui lòng đăng ký mẫu khuôn mặt trên hồ sơ học viên trước khi điểm danh.'))
+            raise UserError(_('Please register a face template on the student profile before checking in.'))
         enrolled = self.env['lms.student.course'].sudo().search_count(
             [
                 ('student_id', '=', student.id),
@@ -702,20 +702,20 @@ class Lesson(models.Model):
             ]
         )
         if not enrolled:
-            raise UserError(_('Bạn chưa được duyệt đăng ký khóa học này.'))
+            raise UserError(_('Your course registration has not been approved.'))
         ref = face_embedding_utils.parse_embedding(student.face_embedding_json)
         probe = face_embedding_utils.parse_embedding(embedding_json)
         if not ref or not probe:
-            raise ValidationError(_('Dữ liệu khuôn mặt không hợp lệ.'))
+            raise ValidationError(_('Invalid face data.'))
         sim = face_embedding_utils.cosine_similarity(ref, probe)
         if sim < face_embedding_utils.COSINE_MATCH_THRESHOLD:
             raise UserError(
-                _('Không khớp khuôn mặt (độ tương đồng %.0f%%). Hãy thử lại với ánh sáng tốt hơn.')
+                _('Face mismatch (similarity %.0f%%). Please try again with better lighting.')
                 % (sim * 100)
             )
         progress = self.env['lms.student.lesson.progress'].sudo().get_or_create_progress(student, self)
         if progress.face_checked_in:
-            raise UserError(_('Bạn đã điểm danh bài học này.'))
+            raise UserError(_('You have already checked in for this lesson.'))
         progress.sudo().write(
             {
                 'face_checked_in': True,
@@ -726,12 +726,12 @@ class Lesson(models.Model):
             self._google_calendar_add_attendee_after_attendance(student)
         except Exception as e:  # noqa: BLE001
             raise UserError(
-                _('Điểm danh thành công nhưng không thể thêm bạn vào danh sách tham dự Google Meet: %s')
+                _('Attendance recorded but could not add you to the Google Meet attendee list: %s')
                 % str(e)
             ) from e
         return {
             'lms_face_result': True,
-            'message': _('Điểm danh thành công.'),
+            'message': _('Attendance recorded successfully.'),
             'progress_status': progress.status,
         }
 
@@ -743,7 +743,7 @@ class Lesson(models.Model):
     def _notify_learning_students_for_attendance(self):
         template = self.env.ref('lms.email_template_lesson_attendance_link', raise_if_not_found=False)
         if not template:
-            raise UserError(_('Không tìm thấy mẫu email điểm danh (email_template_lesson_attendance_link).'))
+            raise UserError(_('Attendance email template not found (email_template_lesson_attendance_link).'))
 
         StudentCourse = self.env['lms.student.course'].sudo()
         for lesson in self:
@@ -767,18 +767,6 @@ class Lesson(models.Model):
                         force_send=True,
                         email_values={'email_to': email_to},
                     )
-                partner = student.user_id.partner_id
-                if partner:
-                    body = _(
-                        'Bạn có buổi học online mới: <b>%s</b>.<br/>'
-                        'Vui lòng điểm danh tại đây: <a href="%s">%s</a>'
-                    ) % (lesson.name, attendance_url, attendance_url)
-                    student.message_notify(
-                        partner_ids=[partner.id],
-                        subject=_('[LMS] Link điểm danh buổi học online'),
-                        body=body,
-                        email_layout_xmlid='mail.mail_notification_light',
-                    )
 
             lesson._google_calendar_apply_updates({'attendance_notice_sent': True})
 
@@ -788,7 +776,7 @@ class Lesson(models.Model):
             return
         attendee_email = (student.email or student.user_id.email or student.user_id.login or '').strip()
         if not attendee_email:
-            raise ValidationError(_('Học viên chưa có email để thêm vào danh sách tham dự Google Meet.'))
+            raise ValidationError(_('Student does not have an email to add to the Google Meet attendee list.'))
         google_calendar_sync.add_lesson_attendee(self, attendee_email, student.name)
 
     @staticmethod
@@ -811,14 +799,14 @@ class Lesson(models.Model):
     @api.depends('video_attachment', 'video_filename')
     def _compute_video_preview_html(self):
         for lesson in self:
-            html = '<p class="text-muted"><i>Chưa có video để xem trực tiếp.</i></p>'
+            html = '<p class="text-muted"><i>No video available for direct viewing.</i></p>'
             if lesson.video_attachment and lesson.id:
                 stream_url = '/web/content/%s?model=lms.lesson&field=video_attachment&download=false' % lesson.id
                 mime = self._guess_video_mime(lesson.video_filename or '')
                 html = (
                     '<video class="lms-video-tracker" data-lms-lesson-id="%s" controls preload="metadata" style="width:100%%;max-width:900px;">'
                     '<source src="%s" type="%s"/>'
-                    'Trình duyệt không hỗ trợ phát video trực tiếp.'
+                    'Your browser does not support direct video playback.'
                     '</video>'
                 ) % (lesson.id, stream_url, mime)
             lesson.video_preview_html = html
@@ -827,7 +815,7 @@ class Lesson(models.Model):
     def _compute_video_upload_hint_html(self):
         max_mb = self._get_max_video_upload_mb()
         text_hint = (
-            'Khuyến nghị: ưu tiên MP4 (hoặc WebM/OGG), dung lượng video nên dưới %sMB.'
+            'Recommended: prefer MP4 (or WebM/OGG), video size should be under %sMB.'
         ) % max_mb
         hint = (
             '<p style="margin:6px 0 0 0;color:#6b7280;font-size:12px;">'
@@ -840,7 +828,7 @@ class Lesson(models.Model):
     @api.depends('video_attachment', 'video_filename')
     def _compute_video_upload_hint(self):
         max_mb = self._get_max_video_upload_mb()
-        text_hint = 'Khuyến nghị file video: ưu tiên MP4 (hoặc WebM/OGG), dung lượng video nên dưới %sMB.' % max_mb
+        text_hint = 'Video recommendation: prefer MP4 (or WebM/OGG), video size should be under %sMB.' % max_mb
         for lesson in self:
             lesson.video_upload_hint = text_hint
 
@@ -897,7 +885,7 @@ class Lesson(models.Model):
             course = Course.browse(int(course_id))
             if course.exists() and course.state != 'published':
                 raise ValidationError(
-                    _('Chỉ có thể tạo bài học khi khóa học đã ở trạng thái "Đã xuất bản".')
+                    _('Lessons can only be created when the course is in "Published" status.')
                 )
         lessons = super().create(vals_list)
         if not self.env.context.get('skip_google_calendar_sync'):
@@ -973,51 +961,51 @@ class Lesson(models.Model):
 
 class StudentLessonProgress(models.Model):
     _name = 'lms.student.lesson.progress'
-    _description = 'Tiến độ học viên theo bài học'
+    _description = 'Student Lesson Progress'
     _order = 'id desc'
 
-    student_id = fields.Many2one('lms.student', string='Học viên', required=True, ondelete='cascade', index=True)
-    lesson_id = fields.Many2one('lms.lesson', string='Bài học', required=True, ondelete='cascade', index=True)
+    student_id = fields.Many2one('lms.student', string='Student', required=True, ondelete='cascade', index=True)
+    lesson_id = fields.Many2one('lms.lesson', string='Lesson', required=True, ondelete='cascade', index=True)
     course_id = fields.Many2one(
         'lms.course',
-        string='Khóa học',
+        string='Course',
         related='lesson_id.course_id',
         store=True,
         readonly=True,
     )
     enrollment_id = fields.Many2one(
         'lms.student.course',
-        string='Đăng ký khóa học',
+        string='Course Enrollment',
         required=True,
         ondelete='cascade',
         index=True,
     )
-    watched_seconds = fields.Integer(string='Số giây đã xem', default=0)
-    video_duration_seconds = fields.Integer(string='Thời lượng video (giây)', default=0)
+    watched_seconds = fields.Integer(string='Watched Seconds', default=0)
+    video_duration_seconds = fields.Integer(string='Video Duration (seconds)', default=0)
     progress_percent = fields.Float(
-        string='Tiến độ (%)',
+        string='Progress (%)',
         compute='_compute_progress_percent',
         store=True,
         digits=(16, 2),
     )
-    last_position_seconds = fields.Integer(string='Vị trí xem gần nhất (giây)', default=0)
-    face_checked_in = fields.Boolean(string='Đã điểm danh khuôn mặt', default=False, copy=False)
-    face_checked_in_at = fields.Datetime(string='Điểm danh lúc', copy=False)
+    last_position_seconds = fields.Integer(string='Last Watch Position (seconds)', default=0)
+    face_checked_in = fields.Boolean(string='Face Checked In', default=False, copy=False)
+    face_checked_in_at = fields.Datetime(string='Checked In At', copy=False)
     status = fields.Selection(
         [
-            ('not_started', 'Chưa bắt đầu'),
-            ('in_progress', 'Đang học'),
-            ('done', 'Hoàn thành'),
+            ('not_started', 'Not Started'),
+            ('in_progress', 'In Progress'),
+            ('done', 'Completed'),
         ],
-        string='Trạng thái',
+        string='Status',
         compute='_compute_status',
         store=True,
     )
-    started_at = fields.Datetime(string='Bắt đầu học', default=fields.Datetime.now)
-    completed_at = fields.Datetime(string='Hoàn thành')
+    started_at = fields.Datetime(string='Started At', default=fields.Datetime.now)
+    completed_at = fields.Datetime(string='Completed At')
 
     _sql_constraints = [
-        ('student_lesson_progress_unique', 'unique(student_id, lesson_id)', 'Tiến độ bài học của học viên đã tồn tại.'),
+        ('student_lesson_progress_unique', 'unique(student_id, lesson_id)', 'Student lesson progress already exists.'),
     ]
 
     @api.model
@@ -1037,7 +1025,7 @@ class StudentLessonProgress(models.Model):
             limit=1,
         )
         if not enrollment:
-            raise ValidationError(_('Học viên chưa đăng ký khóa học chứa bài học này.'))
+            raise ValidationError(_('Student has not enrolled in the course containing this lesson.'))
         return self.sudo().create(
             {
                 'student_id': student.id,
@@ -1088,9 +1076,9 @@ class StudentLessonProgress(models.Model):
     def _check_video_positions(self):
         for rec in self:
             if rec.last_position_seconds < 0 or rec.watched_seconds < 0:
-                raise ValidationError(_('Giây xem video không được âm.'))
+                raise ValidationError(_('Video watch time cannot be negative.'))
             if rec.last_position_seconds > rec.watched_seconds:
-                raise ValidationError(_('Vị trí gần nhất không được lớn hơn tổng thời gian đã xem.'))
+                raise ValidationError(_('Last position cannot be greater than total watched time.'))
 
     @api.constrains('enrollment_id', 'lesson_id', 'student_id')
     def _check_enrollment_consistency(self):
@@ -1098,9 +1086,9 @@ class StudentLessonProgress(models.Model):
             if not rec.enrollment_id or not rec.lesson_id:
                 continue
             if rec.enrollment_id.student_id != rec.student_id:
-                raise ValidationError(_('Enrollment không thuộc đúng học viên của tiến độ bài học.'))
+                raise ValidationError(_('Enrollment does not belong to the correct student for this lesson progress.'))
             if rec.enrollment_id.course_id != rec.lesson_id.course_id:
-                raise ValidationError(_('Enrollment không thuộc khóa học của bài học đã chọn.'))
+                raise ValidationError(_('Enrollment does not belong to the course of the selected lesson.'))
 
     def write(self, vals):
         res = super().write(vals)
@@ -1112,4 +1100,3 @@ class StudentLessonProgress(models.Model):
                 {'completed_at': fields.Datetime.now()}
             )
         return res
-

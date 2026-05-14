@@ -15,10 +15,10 @@ _DEFAULT_STUDENT_AUTO_PASSWORD = "123456"
 
 class Student(models.Model):
     _name = 'lms.student'
-    _description = 'Học viên'
+    _description = 'Student'
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
-    name = fields.Char(string='Tên học viên', required=True, tracking=True)
+    name = fields.Char(string='Student Name', required=True, tracking=True)
     email = fields.Char(string='Email', required=True, tracking=True)
     
     @api.constrains('email')
@@ -30,7 +30,7 @@ class Student(models.Model):
             email_norm = email_normalize(record.email)
             if not email_norm:
                 raise ValidationError(
-                    _('Email không hợp lệ. Dùng định dạng email chuẩn (kể cả khi nhập tay hoặc import).')
+                    _('Invalid email. Use standard email format (including manual entry or import).')
                 )
             dup = self.search(
                 [
@@ -40,34 +40,34 @@ class Student(models.Model):
                 limit=1,
             )
             if dup:
-                raise ValidationError(_('Email đã tồn tại. Vui lòng dùng email khác.'))
-    phone = fields.Char(string='Số điện thoại')
-    image_1920 = fields.Image(string='Ảnh đại diện', max_width=1920, max_height=1920)
+                raise ValidationError(_('Email already exists. Please use a different email.'))
+    phone = fields.Char(string='Phone')
+    image_1920 = fields.Image(string='Avatar', max_width=1920, max_height=1920)
     gender = fields.Selection(
-        [('male', 'Nam'), ('female', 'Nữ'), ('other', 'Khác')],
-        string='Giới tính',
+        [('male', 'Male'), ('female', 'Female'), ('other', 'Other')],
+        string='Gender',
         tracking=True,
     )
-    date_of_birth = fields.Date(string='Ngày sinh', tracking=True)
-    address = fields.Char(string='Địa chỉ', tracking=True)
+    date_of_birth = fields.Date(string='Date of Birth', tracking=True)
+    address = fields.Char(string='Address', tracking=True)
     
     # Thông tin đầu vào
     current_level = fields.Selection([
         ('beginner', 'Beginner'),
         ('intermediate', 'Intermediate'),
         ('advanced', 'Advanced'),
-    ], string='Trình độ hiện tại', default='beginner', required=True, tracking=True)
+    ], string='Current Level', default='beginner', required=True, tracking=True)
     manual_level_lock = fields.Boolean(
-        string='Khóa level theo nghiệp vụ',
+        string='Lock Level Manually',
         default=False,
-        help='Khi bật, hệ thống không tự ghi đè current_level từ average_score.',
+        help='When enabled, the system will not auto-override current_level from average_score.',
     )
     
-    learning_goals = fields.Text(string='Mục tiêu học tập', tracking=True)
-    desired_skills = fields.Text(string='Kỹ năng mong muốn', tracking=True)
+    learning_goals = fields.Text(string='Learning Goals', tracking=True)
+    desired_skills = fields.Text(string='Desired Skills', tracking=True)
 
-    face_embedding_json = fields.Text(string='Embedding khuôn mặt (JSON)', copy=False)
-    face_embedding_registered_at = fields.Datetime(string='Đăng ký khuôn mặt lúc', readonly=True, copy=False)
+    face_embedding_json = fields.Text(string='Face Embedding (JSON)', copy=False)
+    face_embedding_registered_at = fields.Datetime(string='Face Registered At', readonly=True, copy=False)
     face_enrollment_mount_html = fields.Html(
         string=' ',
         compute='_compute_face_enrollment_mount_html',
@@ -76,24 +76,24 @@ class Student(models.Model):
 
     # Quan hệ
     enrolled_courses_ids = fields.One2many(
-        'lms.student.course', 'student_id', string='Khóa học đã đăng ký'
+        'lms.student.course', 'student_id', string='Enrolled Courses'
     )
     learning_history_ids = fields.One2many(
-        'lms.learning.history', 'student_id', string='Lịch sử học tập'
+        'lms.learning.history', 'student_id', string='Learning History'
     )
     roadmap_ids = fields.One2many(
-        'lms.roadmap', 'student_id', string='Roadmap đề xuất'
+        'lms.roadmap', 'student_id', string='Suggested Roadmaps'
     )
     current_course_registration_status = fields.Selection(
         [
-            ('pending', 'Chờ duyệt'),
-            ('approved', 'Đã duyệt'),
-            ('rejected', 'Từ chối'),
-            ('learning', 'Đang học'),
-            ('completed', 'Hoàn thành'),
-            ('cancelled', 'Đã hủy'),
+            ('pending', 'Pending'),
+            ('approved', 'Approved'),
+            ('rejected', 'Rejected'),
+            ('learning', 'Learning'),
+            ('completed', 'Completed'),
+            ('cancelled', 'Cancelled'),
         ],
-        string='Trạng thái đăng ký (khóa hiện tại)',
+        string='Registration Status (Current Course)',
         compute='_compute_current_course_registration_status',
         compute_sudo=True,
         search='_search_current_course_registration_status',
@@ -101,59 +101,59 @@ class Student(models.Model):
     )
     user_id = fields.Many2one(
         'res.users',
-        string='Tài khoản',
+        string='User Account',
         required=False,
         ondelete='cascade',
         index=True,
-        help='Để trống: mỗi lần tạo bản ghi (kể cả import CSV), hệ thống tự tạo res.users với login = email.',
+        help='Leave empty: each time a record is created (including CSV import), the system auto-creates a res.users with login = email.',
     )
     username = fields.Char(
-        string='Tên đăng nhập',
+        string='Username',
         related='user_id.login',
         store=True,
         readonly=True,
     )
     last_login = fields.Datetime(
-        string='Đăng nhập lần cuối',
+        string='Last Login',
         related='user_id.login_date',
         store=True,
         readonly=True,
     )
     is_instructor_restricted = fields.Boolean(
-        string='Giới hạn chỉnh sửa cho giáo viên',
+        string='Instructor Edit Restricted',
         compute='_compute_is_instructor_restricted',
     )
 
     # Thống kê
-    total_courses = fields.Integer(string='Tổng số khóa học', compute='_compute_statistics', store=True)
-    completed_courses = fields.Integer(string='Khóa học đã hoàn thành', compute='_compute_statistics', store=True)
-    average_score = fields.Float(string='Điểm trung bình', compute='_compute_statistics', store=True, digits=(16, 2))
+    total_courses = fields.Integer(string='Total Courses', compute='_compute_statistics', store=True)
+    completed_courses = fields.Integer(string='Completed Courses', compute='_compute_statistics', store=True)
+    average_score = fields.Float(string='Average Score', compute='_compute_statistics', store=True, digits=(16, 2))
     learning_progress = fields.Float(
-        string='Tiến độ học tập (%)',
+        string='Learning Progress (%)',
         compute='_compute_statistics',
         store=True,
         digits=(16, 2),
     )
     learning_status = fields.Selection(
         [
-            ('not_started', 'Chưa hoạt động'),
-            ('in_progress', 'Đang hoạt động'),
-            ('inactive', 'Không hoạt động'),
-            ('completed', 'Hoàn thành'),
+            ('not_started', 'Not Started'),
+            ('in_progress', 'Active'),
+            ('inactive', 'Inactive'),
+            ('completed', 'Completed'),
         ],
-        string='Trạng thái học tập',
+        string='Learning Status',
         compute='_compute_statistics',
         store=True,
     )
-    total_study_time = fields.Float(string='Tổng thời gian học (giờ)', compute='_compute_statistics', store=True, digits=(16, 2))
-    last_activity_date = fields.Date(string='Hoạt động cuối', compute='_compute_statistics', store=True, index=True)
+    total_study_time = fields.Float(string='Total Study Time (hours)', compute='_compute_statistics', store=True, digits=(16, 2))
+    last_activity_date = fields.Date(string='Last Activity', compute='_compute_statistics', store=True, index=True)
     
     # Trạng thái
-    is_active = fields.Boolean(string='Đang hoạt động', default=True, tracking=True)
-    inactive_days = fields.Integer(string='Số ngày không hoạt động', compute='_compute_inactive_days', store=True, index=True)
+    is_active = fields.Boolean(string='Active', default=True, tracking=True)
+    inactive_days = fields.Integer(string='Inactive Days', compute='_compute_inactive_days', store=True, index=True)
 
     _sql_constraints = [
-        ('student_user_unique', 'unique(user_id)', 'Mỗi tài khoản chỉ gắn với một học viên.'),
+        ('student_user_unique', 'unique(user_id)', 'Each user account can only be linked to one student.'),
     ]
 
     @api.model
@@ -174,12 +174,12 @@ class Student(models.Model):
         display_name = (vals.get('name') or '').strip()
         if not display_name:
             raise ValidationError(
-                _('Thiếu tên học viên: bắt buộc để tạo hoặc gán tài khoản đăng nhập.')
+                _('Student name is required to create or assign a login account.')
             )
         email_norm = email_normalize(vals.get('email'))
         if not email_norm:
             raise ValidationError(
-                _('Email không hợp lệ hoặc trống. Dùng định dạng email chuẩn (kể cả khi import CSV).')
+                _('Invalid or empty email. Use standard email format (including CSV import).')
             )
         vals['email'] = email_norm
         login = email_norm
@@ -188,7 +188,7 @@ class Student(models.Model):
         if existing:
             if self.sudo().search_count([('user_id', '=', existing.id)]):
                 raise ValidationError(
-                    _('Email/login đã được dùng cho học viên khác: %s') % login
+                    _('Email/login is already used by another student: %s') % login
                 )
             vals['user_id'] = existing.id
             return
@@ -233,23 +233,23 @@ class Student(models.Model):
                 )
             else:
                 rec.face_enrollment_mount_html = (
-                    '<p class="text-muted">Lưu hồ sơ học viên trước, sau đó quay lại tab này để đăng ký mẫu khuôn mặt.</p>'
+                    '<p class="text-muted">Save the student profile first, then return to this tab to register the face template.</p>'
                 )
 
     def action_save_face_embedding_json(self, embedding_json):
         """RPC/JS: lưu embedding (chỉ chính học viên)."""
         self.ensure_one()
         if self.user_id != self.env.user:
-            raise AccessError(_('Chỉ học viên được đăng ký mẫu khuôn mặt của chính mình.'))
+            raise AccessError(_('Only students can register their own face template.'))
         if not isinstance(embedding_json, str) or not embedding_json.strip():
-            raise ValidationError(_('Thiếu dữ liệu embedding.'))
+            raise ValidationError(_('Missing embedding data.'))
         self.write(
             {
                 'face_embedding_json': embedding_json.strip(),
                 'face_embedding_registered_at': fields.Datetime.now(),
             }
         )
-        return {'lms_face_result': True, 'message': _('Đã lưu mẫu khuôn mặt.')}
+        return {'lms_face_result': True, 'message': _('Face template saved.')}
 
     def write(self, vals):
         """Chuẩn hóa email nếu có; quyền chỉnh sửa được kiểm soát chủ yếu ở UI/rule."""
@@ -257,7 +257,7 @@ class Student(models.Model):
             email_norm = email_normalize(vals['email'])
             if not email_norm:
                 raise ValidationError(
-                    _('Email không hợp lệ. Dùng định dạng email chuẩn (kể cả khi nhập tay hoặc import).')
+                    _('Invalid email. Use standard email format (including manual entry or import).')
                 )
             vals = dict(vals, email=email_norm)
         if 'face_embedding_json' in vals:
@@ -267,14 +267,14 @@ class Student(models.Model):
             if not privileged:
                 for rec in self:
                     if rec.user_id != self.env.user:
-                        raise AccessError(_('Chỉ học viên được cập nhật mẫu khuôn mặt của chính mình.'))
+                        raise AccessError(_('Only students can update their own face template.'))
             raw = vals.get('face_embedding_json')
             if raw:
                 if len(raw) > 65536:
-                    raise ValidationError(_('Dữ liệu embedding quá lớn.'))
+                    raise ValidationError(_('Embedding data is too large.'))
                 if not face_embedding_utils.parse_embedding(raw):
                     raise ValidationError(
-                        _('Embedding không hợp lệ (cần đúng %s số thực).')
+                        _('Invalid embedding (requires exactly %s floating point numbers).')
                         % face_embedding_utils.FACE_EMBEDDING_DIM
                     )
         return super().write(vals)
@@ -334,8 +334,8 @@ class Student(models.Model):
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
                 'params': {
-                    'title': _('Cập nhật trạng thái'),
-                    'message': _('Chỉ dùng được khi mở từ màn hình Học viên của khóa học.'),
+                    'title': _('Update Status'),
+                    'message': _('Can only be used when opened from the Course Students screen.'),
                     'type': 'warning',
                     'sticky': False,
                 },
@@ -352,9 +352,9 @@ class Student(models.Model):
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
-                'title': _('Cập nhật trạng thái'),
+                'title': _('Update Status'),
                 'message': _(
-                    'Đã cập nhật trạng thái "%s" cho %s học viên.'
+                    'Updated status "%s" for %s students.'
                 ) % (
                     dict(self._fields['current_course_registration_status'].selection).get(new_status, new_status),
                     len(updated),
@@ -534,33 +534,33 @@ class Student(models.Model):
 
 class StudentCourse(models.Model):
     _name = 'lms.student.course'
-    _description = 'Khóa học của học viên'
+    _description = 'Student Course Enrollment'
     _rec_name = 'course_id'
 
-    student_id = fields.Many2one('lms.student', string='Học viên', required=True, ondelete='cascade')
+    student_id = fields.Many2one('lms.student', string='Student', required=True, ondelete='cascade')
     course_id = fields.Many2one(
-        'lms.course', string='Khóa học', required=True, ondelete='cascade'
+        'lms.course', string='Course', required=True, ondelete='cascade'
     )
     
-    enrollment_date = fields.Date(string='Ngày đăng ký', default=fields.Date.today, required=True)
-    start_date = fields.Date(string='Ngày bắt đầu')
-    completion_date = fields.Date(string='Ngày hoàn thành')
+    enrollment_date = fields.Date(string='Enrollment Date', default=fields.Date.today, required=True)
+    start_date = fields.Date(string='Start Date')
+    completion_date = fields.Date(string='Completion Date')
     
     status = fields.Selection([
-        ('pending', 'Chờ duyệt'),
-        ('approved', 'Đã duyệt'),
-        ('rejected', 'Từ chối'),
-        ('learning', 'Đang học'),
-        ('completed', 'Hoàn thành'),
-        ('cancelled', 'Đã hủy'),
-    ], string='Trạng thái', default='pending', tracking=True)
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+        ('learning', 'Learning'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ], string='Status', default='pending', tracking=True)
 
     _sql_constraints = [
-        ('student_course_unique', 'unique(student_id, course_id)', 'Student đã đăng ký khóa học này rồi!'),
+        ('student_course_unique', 'unique(student_id, course_id)', 'Student has already enrolled in this course!'),
     ]
 
-    progress = fields.Float(string='Tiến độ (%)', compute='_compute_progress', store=True, digits=(16, 2))
-    final_score = fields.Float(string='Điểm cuối cùng', digits=(16, 2))
+    progress = fields.Float(string='Progress (%)', compute='_compute_progress', store=True, digits=(16, 2))
+    final_score = fields.Float(string='Final Score', digits=(16, 2))
     
     @api.depends('learning_history_ids', 'learning_history_ids.status', 'course_id', 'course_id.lesson_ids')
     def _compute_progress(self):
@@ -578,7 +578,7 @@ class StudentCourse(models.Model):
                 record.progress = 0.0
     
     learning_history_ids = fields.One2many(
-        'lms.learning.history', 'student_course_id', string='Lịch sử học tập'
+        'lms.learning.history', 'student_course_id', string='Learning History'
     )
 
     @api.model_create_multi

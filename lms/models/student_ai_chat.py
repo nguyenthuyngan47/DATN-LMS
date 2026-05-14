@@ -17,70 +17,70 @@ _logger = logging.getLogger(__name__)
 
 class LmsStudentAiChat(models.TransientModel):
     _name = 'lms.student.ai.chat'
-    _description = 'Tư vấn roadmap AI cho học viên'
+    _description = 'AI Roadmap Counseling for Students'
 
-    title = fields.Char(string='Tiêu đề phiên tư vấn', default='Tư vấn roadmap học tập')
+    title = fields.Char(string='Session Title', default='Learning Roadmap Counseling')
     student_id = fields.Many2one(
         'lms.student',
-        string='Học viên',
+        string='Student',
         readonly=True,
         default=lambda self: self.env['lms.student'].sudo().search([('user_id', '=', self.env.user.id)], limit=1),
     )
-    allow_personal_data = fields.Boolean(string='Cho phép AI đọc dữ liệu cá nhân')
+    allow_personal_data = fields.Boolean(string='Allow AI to Read Personal Data')
     question_target = fields.Integer(
-        string='Số câu hỏi mục tiêu',
+        string='Target Questions',
         readonly=True,
         default=lambda self: self._get_question_target_from_env(),
     )
-    asked_count = fields.Integer(string='Số câu đã hỏi', readonly=True, default=0)
+    asked_count = fields.Integer(string='Questions Asked', readonly=True, default=0)
     session_state = fields.Selection(
-        [('draft', 'Chưa bắt đầu'), ('chatting', 'Đang trò chuyện'), ('done', 'Đã hoàn thành')],
-        string='Trạng thái',
+        [('draft', 'Not Started'), ('chatting', 'Chatting'), ('done', 'Completed')],
+        string='Status',
         default='draft',
         readonly=True,
     )
-    user_message = fields.Text(string='Tin nhắn của bạn')
-    conversation_json = fields.Text(string='Lịch sử hội thoại (JSON)', readonly=True, default='[]')
-    useful_answers_json = fields.Text(string='Trả lời hữu ích (JSON)', readonly=True, default='[]')
-    roadmap_options_json = fields.Text(string='Danh sách roadmap (JSON)', readonly=True, default='[]')
-    selected_roadmap_index = fields.Integer(string='Roadmap đã chọn', readonly=True, default=0)
-    debug_last_ai_request = fields.Text(string='Debug request AI', readonly=True)
-    debug_last_ai_response = fields.Text(string='Debug response AI', readonly=True)
+    user_message = fields.Text(string='Your Message')
+    conversation_json = fields.Text(string='Conversation History (JSON)', readonly=True, default='[]')
+    useful_answers_json = fields.Text(string='Useful Answers (JSON)', readonly=True, default='[]')
+    roadmap_options_json = fields.Text(string='Roadmap List (JSON)', readonly=True, default='[]')
+    selected_roadmap_index = fields.Integer(string='Selected Roadmap', readonly=True, default=0)
+    debug_last_ai_request = fields.Text(string='Debug AI Request', readonly=True)
+    debug_last_ai_response = fields.Text(string='Debug AI Response', readonly=True)
     conversation_html = fields.Html(
-        string='Cuộc trò chuyện',
+        string='Conversation',
         compute='_compute_conversation_html',
         sanitize=False,
     )
-    is_chat_locked = fields.Boolean(string='Khóa chat', compute='_compute_is_chat_locked')
+    is_chat_locked = fields.Boolean(string='Chat Locked', compute='_compute_is_chat_locked')
     has_available_courses = fields.Boolean(
-        string='Có khóa học khả dụng',
+        string='Courses Available',
         compute='_compute_has_available_courses',
     )
     unavailable_reason = fields.Char(
-        string='Thông báo không khả dụng',
+        string='Unavailable Notice',
         compute='_compute_has_available_courses',
     )
     roadmap_options_html = fields.Html(
-        string='Danh sách roadmap',
+        string='Roadmap List',
         compute='_compute_roadmap_options_html',
         sanitize=False,
     )
-    has_roadmap_options = fields.Boolean(string='Có roadmap để chọn', compute='_compute_roadmap_choice_ui')
-    has_roadmap_selected = fields.Boolean(string='Đã chọn roadmap', compute='_compute_roadmap_choice_ui')
+    has_roadmap_options = fields.Boolean(string='Roadmaps Available', compute='_compute_roadmap_choice_ui')
+    has_roadmap_selected = fields.Boolean(string='Roadmap Selected', compute='_compute_roadmap_choice_ui')
     roadmap_option_1_available = fields.Boolean(string='Roadmap 1', compute='_compute_roadmap_choice_ui')
     roadmap_option_2_available = fields.Boolean(string='Roadmap 2', compute='_compute_roadmap_choice_ui')
     roadmap_option_3_available = fields.Boolean(string='Roadmap 3', compute='_compute_roadmap_choice_ui')
-    roadmap_option_1_label = fields.Char(string='Nhãn roadmap 1', compute='_compute_roadmap_choice_ui')
-    roadmap_option_2_label = fields.Char(string='Nhãn roadmap 2', compute='_compute_roadmap_choice_ui')
-    roadmap_option_3_label = fields.Char(string='Nhãn roadmap 3', compute='_compute_roadmap_choice_ui')
+    roadmap_option_1_label = fields.Char(string='Roadmap 1 Label', compute='_compute_roadmap_choice_ui')
+    roadmap_option_2_label = fields.Char(string='Roadmap 2 Label', compute='_compute_roadmap_choice_ui')
+    roadmap_option_3_label = fields.Char(string='Roadmap 3 Label', compute='_compute_roadmap_choice_ui')
 
     @staticmethod
     def _no_course_message():
-        return 'Hiện hệ thống chưa có khóa học nào, chưa thể dùng chức năng tư vấn roadmap.'
+        return 'No courses available in the system. Roadmap counseling cannot be used yet.'
 
     @staticmethod
     def _chat_ephemeral_notice():
-        return 'Lưu ý: Bạn hãy lưu lại gợi ý roadmap này. Nếu thoát khỏi màn hình này, toàn bộ cuộc trò chuyện sẽ bị xóa.'
+        return 'Note: Please save this roadmap suggestion. If you leave this screen, the entire conversation will be deleted.'
 
     def _get_available_courses_count(self):
         return self.env['lms.course'].sudo().search_count([])
@@ -97,7 +97,7 @@ class LmsStudentAiChat(models.TransientModel):
         self.ensure_one()
         return {
             'type': 'ir.actions.act_window',
-            'name': _('Tư vấn roadmap cho học viên'),
+            'name': _('AI Roadmap Counseling'),
             'res_model': 'lms.student.ai.chat',
             'view_mode': 'form',
             'view_id': self.env.ref('lms.view_lms_student_ai_chat_form').id,
@@ -166,9 +166,9 @@ class LmsStudentAiChat(models.TransientModel):
             rec.roadmap_option_1_available = 1 in by_index
             rec.roadmap_option_2_available = 2 in by_index
             rec.roadmap_option_3_available = 3 in by_index
-            rec.roadmap_option_1_label = by_index.get(1, {}).get('title') or 'Phương án A'
-            rec.roadmap_option_2_label = by_index.get(2, {}).get('title') or 'Phương án B'
-            rec.roadmap_option_3_label = by_index.get(3, {}).get('title') or 'Phương án C'
+            rec.roadmap_option_1_label = by_index.get(1, {}).get('title') or 'Option A'
+            rec.roadmap_option_2_label = by_index.get(2, {}).get('title') or 'Option B'
+            rec.roadmap_option_3_label = by_index.get(3, {}).get('title') or 'Option C'
 
     def _compute_roadmap_options_html(self):
         for rec in self:
@@ -176,7 +176,7 @@ class LmsStudentAiChat(models.TransientModel):
             if not options:
                 rec.roadmap_options_html = (
                     '<div style="padding:8px 10px;border:1px dashed #d1d5db;border-radius:8px;color:#6b7280;">'
-                    'Chưa có roadmap để chọn.</div>'
+                    'No roadmaps to choose from.</div>'
                 )
                 continue
             lines = ['<div style="display:flex;flex-direction:column;gap:10px;">']
@@ -184,7 +184,7 @@ class LmsStudentAiChat(models.TransientModel):
                 is_selected = rec.selected_roadmap_index == opt['index']
                 title = escape(opt['title'])
                 badge = (
-                    '<span style="margin-left:8px;color:#166534;background:#dcfce7;padding:2px 8px;border-radius:999px;">Đã chọn</span>'
+                    '<span style="margin-left:8px;color:#166534;background:#dcfce7;padding:2px 8px;border-radius:999px;">Selected</span>'
                     if is_selected
                     else ''
                 )
@@ -193,21 +193,21 @@ class LmsStudentAiChat(models.TransientModel):
                     '<div style="font-weight:600;">%s%s</div>' % (title, badge)
                 )
                 if opt['strategy']:
-                    lines.append('<div><b>Chiến lược:</b> %s</div>' % escape(opt['strategy']))
+                    lines.append('<div><b>Strategy:</b> %s</div>' % escape(opt['strategy']))
                 if opt['summary']:
-                    lines.append('<div><b>Tóm tắt:</b> %s</div>' % escape(opt['summary']))
+                    lines.append('<div><b>Summary:</b> %s</div>' % escape(opt['summary']))
                 if opt['courses']:
-                    lines.append('<div><b>Khóa học gợi ý:</b><ul style="margin:4px 0 0 18px;">')
+                    lines.append('<div><b>Suggested Courses:</b><ul style="margin:4px 0 0 18px;">')
                     for course_name in opt['courses']:
                         course = rec.env['lms.course'].sudo().search([('name', '=', course_name)], limit=1)
                         price_text = self._format_vnd(course.price) if course else '0VND'
                         lines.append('<li>%s (%s)</li>' % (escape(course_name), escape(price_text)))
                     lines.append('</ul></div>')
-                lines.append('<div><b>Tổng chi phí roadmap:</b> %s</div>' % escape(self._format_vnd(opt['total_cost_vnd'])))
+                lines.append('<div><b>Total Roadmap Cost:</b> %s</div>' % escape(self._format_vnd(opt['total_cost_vnd'])))
                 if opt['difference']:
-                    lines.append('<div><b>Khác biệt chính:</b> %s</div>' % escape(opt['difference']))
+                    lines.append('<div><b>Key Difference:</b> %s</div>' % escape(opt['difference']))
                 if opt['fit_when']:
-                    lines.append('<div><b>Phù hợp khi:</b> %s</div>' % escape(opt['fit_when']))
+                    lines.append('<div><b>Suitable When:</b> %s</div>' % escape(opt['fit_when']))
                 lines.append('</div>')
             lines.append('</div>')
             rec.roadmap_options_html = ''.join(lines)
@@ -230,7 +230,7 @@ class LmsStudentAiChat(models.TransientModel):
             if not msgs:
                 rec.conversation_html = (
                     '<div style="padding:12px;border:1px solid #ddd;border-radius:8px;">'
-                    '<i>Hãy bấm "Bắt đầu tư vấn" để AI đặt câu hỏi.</i></div>'
+                    '<i>Click "Start Counseling" for AI to ask questions.</i></div>'
                 )
                 continue
             lines = ['<div style="border:1px solid #ddd;border-radius:10px;padding:12px;min-height:280px;background:#fafafa;">']
@@ -314,14 +314,14 @@ class LmsStudentAiChat(models.TransientModel):
     def _extract_json_object(raw_text):
         text = (raw_text or '').strip()
         if not text:
-            raise ValueError(_('AI trả về rỗng.'))
+            raise ValueError(_('AI returned empty response.'))
         fenced = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', text, flags=re.S | re.I)
         if fenced:
             text = fenced.group(1)
         start = text.find('{')
         end = text.rfind('}')
         if start == -1 or end == -1 or end <= start:
-            raise ValueError(_('Không đọc được JSON từ phản hồi AI.'))
+            raise ValueError(_('Could not parse JSON from AI response.'))
         return json.loads(text[start : end + 1])
 
     def _build_personal_data_text(self):
@@ -379,7 +379,7 @@ class LmsStudentAiChat(models.TransientModel):
         for idx, raw in enumerate(raw_roadmaps[:3], start=1):
             if not isinstance(raw, dict):
                 continue
-            title = str(raw.get('title') or '').strip() or ('Phương án %s' % chr(64 + idx))
+            title = str(raw.get('title') or '').strip() or ('Option %s' % chr(64 + idx))
             strategy = str(raw.get('strategy') or '').strip()
             summary = str(raw.get('summary') or '').strip()
             fit_when = str(raw.get('fit_when') or '').strip()
@@ -434,7 +434,7 @@ class LmsStudentAiChat(models.TransientModel):
         except Exception as e:
             self._debug_ai_console('ERROR', str(e))
             self._set_browser_debug(error_text=str(e))
-            raise UserError(_('Không thể gọi Groq: %s') % str(e)) from e
+            raise UserError(_('Could not call Groq: %s') % str(e)) from e
 
     # ===== DEBUG BLOCK (dễ xóa) =====
     @staticmethod
@@ -566,38 +566,38 @@ class LmsStudentAiChat(models.TransientModel):
     def _build_roadmap_result_text(self, options):
         if not options:
             return (
-                'Mình chưa thể tạo danh sách roadmap hợp lệ từ dữ liệu hiện có. '
-                'Bạn vui lòng thử lại với câu trả lời chi tiết hơn.'
+                'Could not create valid roadmap options from the current data. '
+                'Please try again with more detailed answers.'
             )
-        lines = ['Mình đã tạo các roadmap gợi ý để bạn chọn 1 phương án:']
+        lines = ['I have created roadmap suggestions for you to choose from:']
         for opt in options:
             lines.append('')
             lines.append('%s' % opt['title'])
             if opt['strategy']:
-                lines.append('Chiến lược: %s' % opt['strategy'])
+                lines.append('Strategy: %s' % opt['strategy'])
             if opt['summary']:
-                lines.append('Tóm tắt: %s' % opt['summary'])
-            lines.append('Khóa học gợi ý:')
+                lines.append('Summary: %s' % opt['summary'])
+            lines.append('Suggested Courses:')
             for course_name in opt['courses']:
                 course = self.env['lms.course'].sudo().search([('name', '=', course_name)], limit=1)
                 price_text = self._format_vnd(course.price if course else 0)
                 lines.append('- %s (%s)' % (course_name, price_text))
-            lines.append('Tổng chi phí roadmap: %s' % self._format_vnd(opt['total_cost_vnd']))
+            lines.append('Total Roadmap Cost: %s' % self._format_vnd(opt['total_cost_vnd']))
             if opt['difference']:
-                lines.append('Khác biệt chính: %s' % opt['difference'])
+                lines.append('Key Difference: %s' % opt['difference'])
             if opt['fit_when']:
-                lines.append('Phù hợp khi: %s' % opt['fit_when'])
+                lines.append('Suitable When: %s' % opt['fit_when'])
         lines.append('')
-        lines.append('Hãy chọn đúng 1 roadmap bằng nút "Chọn roadmap".')
+        lines.append('Please select exactly one roadmap using the "Select Roadmap" button.')
         return '\n'.join(lines)
 
     def _enroll_courses_from_option(self, option):
         self.ensure_one()
         if not self.student_id:
-            raise UserError(_('Không tìm thấy hồ sơ học viên để đăng ký khóa học.'))
+            raise UserError(_('Student profile not found for course enrollment.'))
         course_names = option.get('courses') or []
         if not course_names:
-            raise UserError(_('Roadmap được chọn không có khóa học hợp lệ.'))
+            raise UserError(_('Selected roadmap has no valid courses.'))
         Course = self.env['lms.course'].sudo()
         Enrollment = self.env['lms.student.course'].sudo()
         created = 0
@@ -633,20 +633,20 @@ class LmsStudentAiChat(models.TransientModel):
     def _action_select_roadmap(self, index):
         self.ensure_one()
         if self.session_state != 'done':
-            raise UserError(_('Bạn chỉ có thể chọn roadmap sau khi phiên tư vấn kết thúc.'))
+            raise UserError(_('You can only select a roadmap after the counseling session ends.'))
         if self.selected_roadmap_index:
-            raise UserError(_('Bạn đã chọn roadmap trước đó. Mỗi phiên chỉ được chọn 1 roadmap.'))
+            raise UserError(_('You have already selected a roadmap. Each session allows only one selection.'))
         options = self._roadmap_options()
         option = next((x for x in options if x['index'] == index), None)
         if not option:
-            raise UserError(_('Roadmap không tồn tại hoặc không hợp lệ.'))
+            raise UserError(_('Roadmap does not exist or is invalid.'))
         created, skipped = self._enroll_courses_from_option(option)
         self.write({'selected_roadmap_index': index})
         conv = self._conversation_messages()
         conv.append(
             {
                 'role': 'assistant',
-                'content': 'Bạn đã chọn "%s". Đã tạo %s đăng ký mới, bỏ qua %s khóa học đã tồn tại/không hợp lệ.'
+                'content': 'You selected "%s". Created %s new enrollments, skipped %s courses (already enrolled or invalid).'
                 % (option['title'], created, skipped),
             }
         )
@@ -683,15 +683,15 @@ class LmsStudentAiChat(models.TransientModel):
     def action_send_message(self):
         self.ensure_one()
         if self.session_state != 'chatting':
-            raise UserError(_('Phiên chat chưa bắt đầu hoặc đã kết thúc.'))
+            raise UserError(_('Chat session has not started or has already ended.'))
         if self.is_chat_locked:
-            raise UserError(_('Phiên chat đã khóa sau khi sinh roadmap.'))
+            raise UserError(_('Chat session is locked after generating roadmaps.'))
         user_text = (self.user_message or '').strip()
         if not user_text:
-            raise UserError(_('Vui lòng nhập nội dung trước khi gửi.'))
+            raise UserError(_('Please enter a message before sending.'))
         conv = self._conversation_messages()
         if not conv or conv[-1]['role'] != 'assistant':
-            raise UserError(_('Không xác định được câu hỏi gần nhất từ AI.'))
+            raise UserError(_('Could not determine the latest question from AI.'))
         last_question = conv[-1]['content']
         conv.append({'role': 'user', 'content': user_text})
         eval_result = self._evaluate_answer_and_next_question(last_question, user_text)
@@ -708,7 +708,7 @@ class LmsStudentAiChat(models.TransientModel):
             self.write({'session_state': 'done', 'user_message': False})
             self._set_conversation(conv)
             return self._reopen_chat_form_action()
-        next_question = eval_result['next_question'] or 'Bạn có thể chia sẻ thêm mục tiêu học tập cụ thể của mình?'
+        next_question = eval_result['next_question'] or 'Could you share more about your specific learning goals?'
         conv.append({'role': 'assistant', 'content': next_question})
         self.write({'asked_count': self.asked_count + 1, 'user_message': False})
         self._set_conversation(conv)

@@ -14,23 +14,23 @@ _DEFAULT_LECTURER_AUTO_PASSWORD = "123456"
 
 class LmsLecturer(models.Model):
     _name = "lms.lecturer"
-    _description = "Giảng viên LMS"
+    _description = "LMS Lecturer"
     _order = "full_name, id"
 
     lecturer_id = fields.Char(string="Lecturer ID", required=True, copy=False, default="New")
     user_id = fields.Many2one(
         "res.users",
-        string="Tài khoản",
+        string="User Account",
         required=False,
         ondelete="cascade",
         index=True,
-        help="Để trống: mỗi lần tạo bản ghi (kể cả import CSV), hệ thống tự tạo res.users với login = email.",
+        help="Leave empty: each time a record is created (including CSV import), the system auto-creates a res.users with login = email.",
     )
 
     username = fields.Char(string="Username", related="user_id.login", store=True, readonly=True)
-    password_hash = fields.Char(string="Password Hash", compute="_compute_password_hash", readonly=True)
+    password_hash = fields.Char(string="Password (hash)", compute="_compute_password_hash", readonly=True)
     email = fields.Char(string="Email", store=True, readonly=False)
-    phone_number = fields.Char(string="Số điện thoại", store=True, readonly=False)
+    phone_number = fields.Char(string="Phone Number", store=True, readonly=False)
     role = fields.Selection(
         [("lecturer", "Lecturer")], string="Role", default="lecturer", required=True, readonly=True
     )
@@ -38,25 +38,25 @@ class LmsLecturer(models.Model):
         [("active", "Active"), ("inactive", "Inactive")], compute="_compute_status", store=True
     )
     active = fields.Boolean(string="Active", default=True, store=True, readonly=False)
-    created_at = fields.Datetime(string="Created At", related="create_date", store=False, readonly=True)
-    updated_at = fields.Datetime(string="Updated At", related="write_date", store=False, readonly=True)
+    created_at = fields.Datetime(string="Created Date", related="create_date", store=False, readonly=True)
+    updated_at = fields.Datetime(string="Updated Date", related="write_date", store=False, readonly=True)
     last_login = fields.Datetime(string="Last Login", related="user_id.login_date", store=True, readonly=True)
 
-    full_name = fields.Char(string="Họ và tên", required=True)
+    full_name = fields.Char(string="Full Name", required=True)
     gender = fields.Selection(
-        [("male", "Nam"), ("female", "Nữ"), ("other", "Khác")], string="Giới tính"
+        [("male", "Male"), ("female", "Female"), ("other", "Other")], string="Gender"
     )
-    date_of_birth = fields.Date(string="Ngày sinh")
-    avatar_url = fields.Char(string="Avatar URL")
-    address = fields.Char(string="Địa chỉ")
-    department = fields.Char(string="Bộ môn")
-    specialization = fields.Char(string="Chuyên môn")
-    academic_degree = fields.Char(string="Học vị")
-    years_of_experience = fields.Integer(string="Số năm kinh nghiệm")
+    date_of_birth = fields.Date(string="Date of Birth")
+    avatar_url = fields.Char(string="Avatar (URL)")
+    address = fields.Char(string="Address")
+    department = fields.Char(string="Department")
+    specialization = fields.Char(string="Specialization")
+    academic_degree = fields.Char(string="Academic Degree")
+    years_of_experience = fields.Integer(string="Years of Experience")
 
-    faculty = fields.Char(string="Khoa")
-    subject_expertise = fields.Text(string="Lĩnh vực giảng dạy")
-    certifications = fields.Text(string="Chứng chỉ")
+    faculty = fields.Char(string="Faculty")
+    subject_expertise = fields.Text(string="Teaching Area")
+    certifications = fields.Text(string="Certifications")
     teaching_level = fields.Selection(
         [
             ("beginner", "Beginner"),
@@ -68,38 +68,38 @@ class LmsLecturer(models.Model):
     )
     teaching_type = fields.Selection(
         [("online", "Online"), ("offline", "Offline"), ("hybrid", "Hybrid")],
-        string="Teaching Type",
+        string="Teaching Mode",
         default="hybrid",
     )
 
-    course_assigned = fields.Many2many("lms.course", compute="_compute_operational_relations", string="Khóa học phụ trách")
+    course_assigned = fields.Many2many("lms.course", compute="_compute_operational_relations", string="Assigned Courses")
     class_assigned = fields.Many2many(
-        "lms.student.course", compute="_compute_operational_relations", string="Lớp phụ trách"
+        "lms.student.course", compute="_compute_operational_relations", string="Assigned Classes"
     )
     teaching_schedule = fields.Many2many(
-        "calendar.event", compute="_compute_operational_relations", string="Lịch giảng dạy"
+        "calendar.event", compute="_compute_operational_relations", string="Teaching Schedule"
     )
-    lesson_created = fields.Many2many("lms.lesson", compute="_compute_operational_relations", string="Bài giảng")
-    assignment_created = fields.Integer(string="Bài tập đã tạo", compute="_compute_operational_metrics")
-    exam_created = fields.Integer(string="Đề thi đã tạo", compute="_compute_operational_metrics")
-    student_managed = fields.Many2many("lms.student", compute="_compute_operational_relations", string="Học viên")
+    lesson_created = fields.Many2many("lms.lesson", compute="_compute_operational_relations", string="Lectures")
+    assignment_created = fields.Integer(string="Created Assignments", compute="_compute_operational_metrics")
+    exam_created = fields.Integer(string="Created Exams", compute="_compute_operational_metrics")
+    student_managed = fields.Many2many("lms.student", compute="_compute_operational_relations", string="Students")
 
     total_courses = fields.Integer(string="Total Courses", compute="_compute_activity_metrics")
     total_students = fields.Integer(string="Total Students", compute="_compute_activity_metrics")
     total_lessons_uploaded = fields.Integer(
-        string="Total Lessons Uploaded", compute="_compute_activity_metrics"
+        string="Total Lectures", compute="_compute_activity_metrics"
     )
     total_assignments = fields.Integer(string="Total Assignments", compute="_compute_activity_metrics")
     average_course_rating = fields.Float(
-        string="Average Course Rating", compute="_compute_activity_metrics", digits=(16, 2)
+        string="Average Rating", compute="_compute_activity_metrics", digits=(16, 2)
     )
     login_frequency = fields.Float(
         string="Login Frequency (weekly)", compute="_compute_activity_metrics", digits=(16, 2)
     )
-    last_active_at = fields.Datetime(string="Last Active At", compute="_compute_activity_metrics")
+    last_active_at = fields.Datetime(string="Hoạt động cuối", compute="_compute_activity_metrics")
 
     _sql_constraints = [
-        ("lecturer_user_unique", "unique(user_id)", "Mỗi tài khoản chỉ gắn với một giảng viên."),
+        ("lecturer_user_unique", "unique(user_id)", "Each user account can only be linked to one lecturer."),
     ]
 
     @api.model
@@ -121,11 +121,11 @@ class LmsLecturer(models.Model):
             return
         full_name = (vals.get("full_name") or "").strip()
         if not full_name:
-            raise ValidationError(_("Thiếu họ và tên: bắt buộc để tạo hoặc gán tài khoản đăng nhập."))
+            raise ValidationError(_("Full name is required to create or assign a login account."))
         email_norm = email_normalize(vals.get("email"))
         if not email_norm:
             raise ValidationError(
-                _("Email không hợp lệ hoặc trống. Dùng định dạng email chuẩn (kể cả khi import CSV).")
+                _("Invalid or empty email. Use standard email format (including CSV import).")
             )
         vals["email"] = email_norm
         login = email_norm
@@ -133,7 +133,7 @@ class LmsLecturer(models.Model):
         existing = Users.search([("login", "=", login)], limit=1)
         if existing:
             if self.sudo().search_count([("user_id", "=", existing.id)]):
-                raise ValidationError(_("Email/login đã được dùng cho giảng viên khác: %s") % login)
+                raise ValidationError(_("Email/login is already used by another lecturer: %s") % login)
             vals["user_id"] = existing.id
             return
         instructor_group = self.env.ref("lms.group_lms_instructor", raise_if_not_found=False)

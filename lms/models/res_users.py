@@ -2,7 +2,8 @@
 
 import logging
 
-from odoo import api, fields, models
+from odoo import api, fields, models, _
+from odoo.exceptions import UserError
 from odoo.tools.mail import email_normalize
 
 _logger = logging.getLogger(__name__)
@@ -25,24 +26,39 @@ class ResUsers(models.Model):
     state = fields.Selection(selection_add=[('pending_approval', 'Pending Approval')])
     lms_signup_channel = fields.Selection(
         selection=[
-            ('student', 'Học viên'),
-            ('lecturer', 'Giảng viên'),
+            ('student', 'Student'),
+            ('lecturer', 'Lecturer'),
         ],
-        string='Kênh đăng ký LMS',
+        string='LMS Signup Channel',
         readonly=True,
         copy=False,
     )
     certificate_link = fields.Text(
-        string='Link Document',
+        string='Document Link',
         copy=False,
-        help='Link chứng chỉ, CV, lịch sử công việc,... (đăng ký giảng viên).',
+        help='Link to certificates, CV, work history, etc. (lecturer registration).',
     )
     lms_welcome_mail_sent = fields.Boolean(
         string='LMS Welcome Mail Sent',
         default=False,
         copy=False,
-        help='Đánh dấu đã gửi mail chào mừng giảng viên để tránh gửi lặp.',
+        help='Marks that the lecturer welcome email has been sent to avoid duplicates.',
     )
+    lms_is_pending = fields.Boolean(
+        string='LMS Pending Approval',
+        compute='_compute_lms_is_pending',
+        store=True,
+    )
+
+    @api.depends('groups_id', 'lms_signup_channel')
+    def _compute_lms_is_pending(self):
+        for user in self:
+            if user.lms_signup_channel == 'student':
+                user.lms_is_pending = not user.has_group('lms.group_lms_user')
+            elif user.lms_signup_channel == 'lecturer':
+                user.lms_is_pending = not user.has_group('lms.group_lms_instructor')
+            else:
+                user.lms_is_pending = False
 
     @api.depends_context('lang')
     @api.depends('groups_id', 'lms_signup_channel')
@@ -53,6 +69,56 @@ class ResUsers(models.Model):
                 user.state = 'active' if user.has_group('lms.group_lms_instructor') else 'pending_approval'
             elif user.lms_signup_channel == 'student':
                 user.state = 'active' if user.has_group('lms.group_lms_user') else 'pending_approval'
+
+    def action_bulk_approve_students(self):
+        """Duyệt hàng loạt tài khoản sinh viên đang chờ duyệt."""
+        lecturer_users = self.filtered(lambda u: u.lms_signup_channel == 'lecturer')
+        student_pending = self.filtered(
+            lambda u: u.lms_signup_channel == 'student' and u.lms_is_pending
+        )
+
+        if lecturer_users and not student_pending:
+            raise UserError(_(
+                'This action is only for approving Student accounts.\n'
+                'You selected %(count)s Lecturer accounts — please approve lecturers through a separate process.',
+                count=len(lecturer_users),
+            ))
+
+        if not student_pending:
+            raise UserError(_('No student accounts are pending approval in the selected list.'))
+
+        student_group = self.env.ref('lms.group_lms_user')
+        internal_group = self.env.ref('base.group_user')
+        public_group = self.env.ref('base.group_public')
+
+        for user in student_pending:
+            groups_cmd = [(4, student_group.id), (4, internal_group.id)]
+            if user.has_group('base.group_public'):
+                groups_cmd.append((3, public_group.id))
+            user.sudo().write({'groups_id': groups_cmd})
+
+        msg = _('Successfully approved %(count)s student accounts.', count=len(student_pending))
+        msg_type = 'success'
+
+        if lecturer_users:
+            msg = _(
+                'Approved %(ok)s student accounts.\n'
+                '⚠ Skipped %(skip)s Lecturer accounts — this action is for Students only.',
+                ok=len(student_pending),
+                skip=len(lecturer_users),
+            )
+            msg_type = 'warning'
+
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Approve Student Accounts'),
+                'message': msg,
+                'type': msg_type,
+                'sticky': True,
+            },
+        }
 
     @api.model
     def _signup_create_user(self, values):

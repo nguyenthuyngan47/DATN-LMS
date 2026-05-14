@@ -45,27 +45,27 @@
         <field name="name">lms.course.search</field>
         <field name="model">lms.course</field>
         <field name="arch" type="xml">
-            <search string="Tìm kiếm khóa học">
-                <field name="name" string="Tên khóa học"/>
+            <search string="Search Courses">
+                <field name="name" string="Course Name"/>
                 <field name="category_id"/>
                 <field name="level_id"/>
                 <field name="instructor_id"/>
                 <field name="tag_ids"/>
-                <filter string="Đã xuất bản" name="published" domain="[('state', '=', 'published')]"/>
-                <filter string="Nháp" name="draft" domain="[('state', '=', 'draft')]"/>
-                <filter string="Đang hoạt động" name="active" domain="[('is_active', '=', True)]"/>
+                <filter string="Published" name="published" domain="[('state', '=', 'published')]"/>
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Active" name="active" domain="[('is_active', '=', True)]"/>
                 <separator/>
                 <filter
-                    string="Khóa học của tôi"
+                    string="My Courses"
                     name="my_courses"
                     domain="[('instructor_id', '=', uid)]"
                     groups="lms.group_lms_instructor"
                 />
-                <group expand="0" string="Nhóm theo">
-                    <filter string="Danh mục" name="group_category" context="{'group_by': 'category_id'}"/>
-                    <filter string="Cấp độ" name="group_level" context="{'group_by': 'level_id'}"/>
-                    <filter string="Trạng thái" name="group_state" context="{'group_by': 'state'}"/>
-                    <filter string="Giảng viên" name="group_instructor" context="{'group_by': 'instructor_id'}"/>
+                <group expand="0" string="Group By">
+                    <filter string="Category" name="group_category" context="{'group_by': 'category_id'}"/>
+                    <filter string="Level" name="group_level" context="{'group_by': 'level_id'}"/>
+                    <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Instructor" name="group_instructor" context="{'group_by': 'instructor_id'}"/>
                 </group>
             </search>
         </field>
@@ -80,7 +80,7 @@
                 <header>
                     <button
                         name="%(action_lms_student_ai_chat)d"
-                        string="Tư vấn roadmap cho học viên"
+                        string="Roadmap Consultation for Students"
                         type="action"
                         class="btn-secondary"
                         display="always"
@@ -104,19 +104,19 @@
         <field name="name">lms.course.form</field>
         <field name="model">lms.course</field>
         <field name="arch" type="xml">
-            <form string="Khóa học">
+            <form string="Course">
                 <header>
-                    <!-- <button name="action_publish" string="Xuất bản" type="object" class="btn-primary" modifiers="{'invisible': [('state', '!=', 'draft')]}"/> -->
+                    <!-- <button name="action_publish" string="Publish" type="object" class="btn-primary" modifiers="{'invisible': [('state', '!=', 'draft')]}"/> -->
                     <button
                         name="action_register_courses"
-                        string="Đăng ký khóa học"
+                        string="Enroll in Course"
                         type="object"
                         class="btn-primary"
                         invisible="state != 'published' or not is_active or not show_register_button"
                     />
                     <button
                         name="action_cancel_course_registration"
-                        string="Hủy đăng ký"
+                        string="Cancel Enrollment"
                         type="object"
                         class="btn-secondary"
                         invisible="state != 'published' or not show_cancel_button"
@@ -135,7 +135,7 @@
                             icon="fa-users"
                             context="{'course_id': id, 'from_course_students': 1, 'form_view_initial_mode': 'edit'}"
                         >
-                            <field name="enrolled_students_count" widget="statinfo" string="Học viên"/>
+                            <field name="enrolled_students_count" widget="statinfo" string="Students"/>
                         </button>
                     </div>
                     <widget name="web_ribbon" title="Published" bg_color="text-bg-success" invisible="state != 'published'"/>
@@ -144,8 +144,8 @@
                             <field name="name" readonly="is_student_course_readonly"/>
                             <field name="state" readonly="is_student_course_readonly"/>
                             <field name="is_active" readonly="is_student_course_readonly"/>
-                            <field name="price" string="Chi phí(VND)" readonly="is_student_course_readonly"/>
-                            <field name="contact_payment" readonly="is_student_course_readonly" placeholder="Số điện thoại, Zalo, Facebook, Email…"/>
+                            <field name="price" string="Cost (VND)" readonly="is_student_course_readonly"/>
+                            <field name="contact_payment" readonly="is_student_course_readonly" placeholder="Phone, Zalo, Facebook, Email..."/>
                         </group>
                         <group>
                             <field name="category_id" readonly="is_student_course_readonly"/>
@@ -156,8 +156,8 @@
                         </group>
                     </group>
                     <notebook>
-                        <page string="Bài học" name="lessons" invisible="not show_learning_content_tabs">
-                            <!-- no_open: chỉ mở bài qua nút Chi tiết → action_open_lesson_full (không JS). -->
+                        <page string="Lessons" name="lessons" invisible="not show_learning_content_tabs">
+                            <!-- no_open: only open lesson via Details button → action_open_lesson_full (no JS). -->
                             <field name="lesson_ids" nolabel="1" readonly="is_student_course_readonly">
                                 <list no_open="1">
                                     <field name="sequence" widget="handle"/>
@@ -169,28 +169,28 @@
                                     <field name="is_published"/>
                                     <field
                                         name="current_user_lesson_progress_label"
-                                        string="Trạng thái của tôi"
+                                        string="My Status"
                                         groups="lms.group_lms_user"
                                         optional="show"
                                     />
                                     <button
                                         name="action_open_lesson_full"
                                         type="object"
-                                        string="Chi tiết"
+                                        string="Details"
                                         class="btn-link"
                                         icon="fa-external-link"
-                                        title="Mở bài học toàn màn hình"
+                                        title="Open Lesson Full Screen"
                                     />
                                 </list>
                             </field>
                         </page>
-                        <page string="Mô tả" name="description">
+                        <page string="Description" name="description">
                             <field name="description" readonly="is_student_course_readonly"/>
                         </page>
-                        <page string="Khóa học tiên quyết" name="prerequisites">
+                        <page string="Prerequisites" name="prerequisites">
                             <field name="prerequisite_ids" widget="many2many_tags" readonly="is_student_course_readonly"/>
                         </page>
-                        <page string="Nhãn" name="tags" invisible="not show_learning_content_tabs">
+                        <page string="Tags" name="tags" invisible="not show_learning_content_tabs">
                             <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}" readonly="is_student_course_readonly"/>
                         </page>
                         
@@ -222,8 +222,8 @@
                                 <div class="oe_kanban_details">
                                     <strong><field name="name"/></strong>
                                     <div><field name="category_id"/> - <field name="level_id"/></div>
-                                    <div>Thời lượng: <field name="duration_hours"/> giờ</div>
-                                    <div>Học viên: <field name="enrolled_students_count"/></div>
+                                    <div>Duration: <field name="duration_hours"/> hours</div>
+                                    <div>Students: <field name="enrolled_students_count"/></div>
                                 </div>
                             </div>
                         </div>
@@ -234,7 +234,7 @@
     </record>
 
     <record id="action_lms_course" model="ir.actions.act_window">
-        <field name="name">Khóa học</field>
+        <field name="name">Courses</field>
         <field name="res_model">lms.course</field>
         <field name="view_mode">list,kanban,form</field>
         <field name="search_view_id" ref="view_lms_course_search"/>
@@ -242,7 +242,7 @@
     </record>
 
     <record id="action_lms_course_register" model="ir.actions.server">
-        <field name="name">Đăng ký khóa học</field>
+        <field name="name">Enroll in Course</field>
         <field name="model_id" ref="model_lms_course"/>
         <field name="binding_model_id" ref="model_lms_course"/>
         <field name="binding_view_types">list,form</field>
@@ -251,7 +251,7 @@
     </record>
 
     <record id="action_lms_course_category" model="ir.actions.act_window">
-        <field name="name">Danh mục khóa học</field>
+        <field name="name">Course Categories</field>
         <field name="res_model">lms.course.category</field>
         <field name="view_mode">list,form</field>
     </record>
@@ -273,7 +273,7 @@
     </record>
 
     <record id="action_lms_course_level" model="ir.actions.act_window">
-        <field name="name">Cấp độ khóa học</field>
+        <field name="name">Course Levels</field>
         <field name="res_model">lms.course.level</field>
         <field name="view_mode">list,form</field>
     </record>
@@ -290,36 +290,36 @@
     </record>
 
     <record id="action_lms_course_tag" model="ir.actions.act_window">
-        <field name="name">Nhãn khóa học</field>
+        <field name="name">Course Tags</field>
         <field name="res_model">lms.course.tag</field>
         <field name="view_mode">list,form</field>
     </record>
 
-    <!-- Form bài học khi mở từ tab Khóa học (full trang, không dialog); readonly theo học viên -->
+    <!-- Lesson form when opened from Course tab (full page, no dialog); readonly for students -->
     <record id="view_lms_lesson_course_tab_form" model="ir.ui.view">
         <field name="name">lms.lesson.course.tab.form</field>
         <field name="model">lms.lesson</field>
-        <!-- Ưu tiên thấp (1) = form mặc định khi mở/tạo lesson từ course; tránh chọn view_lms_lesson_student_form (readonly cứng). -->
+        <!-- Low priority (1) = default form when opening/creating lesson from course; avoids view_lms_lesson_student_form (hard readonly). -->
         <field name="priority">1</field>
         <field name="arch" type="xml">
-            <form string="Bài học" delete="0">
+            <form string="Lesson" delete="0">
                 <sheet>
                     <field name="course_form_readonly" invisible="1"/>
                     <field name="video_filename" invisible="1"/>
 
                     <div class="oe_title">
-                        <label for="name" string="Tên bài học"/>
+                        <label for="name" string="Lesson Name"/>
                         <h1>
                             <field
                                 name="name"
-                                placeholder="VD: Bài 1 - Giới thiệu khoá học"
+                                placeholder="E.g.: Lesson 1 - Course Introduction"
                                 readonly="course_form_readonly"
                             />
                         </h1>
                     </div>
 
                     <group>
-                        <group string="Thông tin bài học">
+                        <group string="Lesson Information">
                             <field name="sequence" readonly="course_form_readonly"/>
                             <field name="lesson_type" readonly="course_form_readonly"/>
                             <field name="state" readonly="course_form_readonly"/>
@@ -329,14 +329,14 @@
                                 readonly="course_form_readonly"
                             />
                         </group>
-                        <group string="Lịch học">
+                        <group string="Schedule">
                             <field name="start_datetime" readonly="course_form_readonly"/>
                             <field name="duration_minutes" readonly="course_form_readonly"/>
                             <field name="end_datetime" readonly="1"/>
                         </group>
                     </group>
 
-                    <group string="Buổi học Online" invisible="lesson_type != 'online'">
+                    <group string="Online Session" invisible="lesson_type != 'online'">
                         <group>
                             <field
                                 name="meeting_url"
@@ -356,9 +356,9 @@
                     </group>
 
                     <notebook>
-                        <page string="Tiến độ của tôi" name="my_progress">
+                        <page string="My Progress" name="my_progress">
                             <group>
-                                <group string="Trạng thái học">
+                                <group string="Learning Status">
                                     <field
                                         name="current_user_progress_percent"
                                         widget="progressbar"
@@ -368,12 +368,12 @@
                                     <field
                                         name="current_user_face_checked_in"
                                         readonly="1"
-                                        string="Đã điểm danh khuôn mặt"
+                                        string="Face Attendance Checked"
                                     />
                                 </group>
                             </group>
                             <group
-                                string="Điểm danh khuôn mặt"
+                                string="Face Attendance"
                                 invisible="not course_form_readonly"
                                 groups="lms.group_lms_user"
                             >
@@ -387,9 +387,9 @@
                             </group>
                         </page>
 
-                        <page string="Tài liệu" name="materials">
+                        <page string="Materials" name="materials">
                             <group>
-                                <group string="Video bài giảng" invisible="lesson_type != 'video'">
+                                <group string="Lecture Video" invisible="lesson_type != 'video'">
                                     <field
                                         name="video_upload_hint_html"
                                         widget="html"
@@ -410,7 +410,7 @@
                                         colspan="2"
                                     />
                                 </group>
-                                <group string="Tài liệu PDF">
+                                <group string="PDF Materials">
                                     <field
                                         name="pdf_attachment"
                                         filename="pdf_filename"
@@ -420,12 +420,12 @@
                             </group>
                         </page>
 
-                        <page string="Mô tả" name="description">
+                        <page string="Description" name="description">
                             <field
                                 name="description"
                                 nolabel="1"
                                 readonly="course_form_readonly"
-                                placeholder="Nội dung bài học, mục tiêu, ghi chú dành cho học viên..."
+                                placeholder="Lesson content, objectives, notes for students..."
                             />
                         </page>
                     </notebook>
@@ -440,7 +440,7 @@
         <field name="model">lms.lesson</field>
         <field name="arch" type="xml">
             <calendar
-                string="Lịch học"
+                string="Schedule"
                 date_start="start_datetime"
                 date_stop="end_datetime"
                 color="calendar_color"
@@ -462,36 +462,36 @@
     <record id="view_lms_lesson_student_form" model="ir.ui.view">
         <field name="name">lms.lesson.student.form</field>
         <field name="model">lms.lesson</field>
-        <!-- Chỉ dùng khi action có form_view_ref (lịch); không làm form mặc định cho one2many trên khóa học. -->
+        <!-- Only used when action has form_view_ref (calendar); does not serve as default form for one2many on course. -->
         <field name="priority">100</field>
         <field name="arch" type="xml">
-            <form string="Bài học" create="0" edit="1" delete="0">
+            <form string="Lesson" create="0" edit="1" delete="0">
                 <sheet>
                     <field name="course_form_readonly" invisible="1"/>
                     <field name="video_filename" invisible="1"/>
 
                     <div class="oe_title">
-                        <label for="name" string="Tên bài học"/>
+                        <label for="name" string="Lesson Name"/>
                         <h1>
                             <field name="name" readonly="1"/>
                         </h1>
                     </div>
 
                     <group>
-                        <group string="Thông tin bài học">
+                        <group string="Lesson Information">
                             <field name="sequence" readonly="1"/>
                             <field name="lesson_type" readonly="1"/>
                             <field name="state" readonly="1"/>
                             <field name="is_published" widget="boolean_toggle" readonly="1"/>
                         </group>
-                        <group string="Lịch học">
+                        <group string="Schedule">
                             <field name="start_datetime" readonly="1"/>
                             <field name="duration_minutes" readonly="1"/>
                             <field name="end_datetime" readonly="1"/>
                         </group>
                     </group>
 
-                    <group string="Buổi học Online" invisible="lesson_type != 'online'">
+                    <group string="Online Session" invisible="lesson_type != 'online'">
                         <group>
                             <field name="meeting_url" readonly="1" widget="url"/>
                             <field name="calendar_event_id" readonly="1"/>
@@ -509,9 +509,9 @@
                     </group>
 
                     <notebook>
-                        <page string="Tiến độ của tôi" name="my_progress">
+                        <page string="My Progress" name="my_progress">
                             <group>
-                                <group string="Trạng thái học">
+                                <group string="Learning Status">
                                     <field
                                         name="current_user_progress_percent"
                                         widget="progressbar"
@@ -521,12 +521,12 @@
                                     <field
                                         name="current_user_face_checked_in"
                                         readonly="1"
-                                        string="Đã điểm danh khuôn mặt"
+                                        string="Face Attendance Checked"
                                     />
                                 </group>
                             </group>
                             <group
-                                string="Điểm danh khuôn mặt"
+                                string="Face Attendance"
                                 invisible="not course_form_readonly"
                                 groups="lms.group_lms_user"
                             >
@@ -540,9 +540,9 @@
                             </group>
                         </page>
 
-                        <page string="Tài liệu" name="materials">
+                        <page string="Materials" name="materials">
                             <group>
-                                <group string="Video bài giảng" invisible="lesson_type != 'video'">
+                                <group string="Lecture Video" invisible="lesson_type != 'video'">
                                     <field
                                         name="video_upload_hint_html"
                                         widget="html"
@@ -563,7 +563,7 @@
                                         colspan="2"
                                     />
                                 </group>
-                                <group string="Tài liệu PDF">
+                                <group string="PDF Materials">
                                     <field
                                         name="pdf_attachment"
                                         filename="pdf_filename"
@@ -573,7 +573,7 @@
                             </group>
                         </page>
 
-                        <page string="Mô tả" name="description">
+                        <page string="Description" name="description">
                             <field name="description" nolabel="1" readonly="1"/>
                         </page>
                     </notebook>
@@ -583,7 +583,7 @@
     </record>
 
     <record id="action_lms_student_lesson_calendar" model="ir.actions.act_window">
-        <field name="name">Lịch học</field>
+        <field name="name">Schedule</field>
         <field name="res_model">lms.lesson</field>
         <field name="view_mode">calendar,form</field>
         <field name="view_id" ref="view_lms_lesson_student_calendar"/>
@@ -606,7 +606,7 @@
     </record>
 
     <record id="action_lms_instructor_lesson_calendar" model="ir.actions.act_window">
-        <field name="name">Lịch dạy</field>
+        <field name="name">Teaching Schedule</field>
         <field name="res_model">lms.lesson</field>
         <field name="view_mode">calendar,form</field>
         <field name="view_id" ref="view_lms_lesson_student_calendar"/>

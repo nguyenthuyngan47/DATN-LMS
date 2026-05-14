@@ -5,59 +5,59 @@ from odoo import models, fields, api
 
 class Roadmap(models.Model):
     _name = 'lms.roadmap'
-    _description = 'Roadmap đề xuất học tập'
+    _description = 'Learning Roadmap'
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'create_date desc'
 
-    name = fields.Char(string='Tên roadmap', compute='_compute_name', store=True)
-    student_id = fields.Many2one('lms.student', string='Học viên', required=True, ondelete='cascade', index=True)
+    name = fields.Char(string='Roadmap Name', compute='_compute_name', store=True)
+    student_id = fields.Many2one('lms.student', string='Student', required=True, ondelete='cascade', index=True)
     
     # Thời gian
-    create_date = fields.Datetime(string='Ngày tạo', readonly=True, default=fields.Datetime.now)
-    valid_from = fields.Date(string='Có hiệu lực từ', default=fields.Date.today)
-    valid_to = fields.Date(string='Có hiệu lực đến')
+    create_date = fields.Datetime(string='Created Date', readonly=True, default=fields.Datetime.now)
+    valid_from = fields.Date(string='Valid From', default=fields.Date.today)
+    valid_to = fields.Date(string='Valid To')
     
     # Trạng thái
     state = fields.Selection([
-        ('draft', 'Nháp'),
-        ('suggested', 'Đã đề xuất'),
-        ('approved', 'Đã phê duyệt'),
-        ('locked', 'Đã khóa'),
-        ('rejected', 'Từ chối'),
-    ], string='Trạng thái', default='draft', tracking=True)
+        ('draft', 'Draft'),
+        ('suggested', 'Suggested'),
+        ('approved', 'Approved'),
+        ('locked', 'Locked'),
+        ('rejected', 'Rejected'),
+    ], string='Status', default='draft', tracking=True)
     
     # Roadmap review
     # Who approved/locked/rejected the roadmap.
-    reviewed_by = fields.Many2one('res.users', string='Được xem xét bởi', tracking=True)
-    review_date = fields.Datetime(string='Ngày xem xét', tracking=True)
-    review_notes = fields.Text(string='Ghi chú xem xét')
+    reviewed_by = fields.Many2one('res.users', string='Reviewed By', tracking=True)
+    review_date = fields.Datetime(string='Review Date', tracking=True)
+    review_notes = fields.Text(string='Review Notes')
     
     # Các khóa học đề xuất
-    course_line_ids = fields.One2many('lms.roadmap.course', 'roadmap_id', string='Khóa học đề xuất')
-    total_courses = fields.Integer(string='Tổng số khóa học', compute='_compute_total_courses', store=True)
+    course_line_ids = fields.One2many('lms.roadmap.course', 'roadmap_id', string='Suggested Courses')
+    total_courses = fields.Integer(string='Total Courses', compute='_compute_total_courses', store=True)
     
     # Phân loại theo thời gian
-    short_term_courses = fields.Integer(string='Ngắn hạn', compute='_compute_term_courses', store=True)
-    medium_term_courses = fields.Integer(string='Trung hạn', compute='_compute_term_courses', store=True)
-    long_term_courses = fields.Integer(string='Dài hạn', compute='_compute_term_courses', store=True)
+    short_term_courses = fields.Integer(string='Short Term', compute='_compute_term_courses', store=True)
+    medium_term_courses = fields.Integer(string='Medium Term', compute='_compute_term_courses', store=True)
+    long_term_courses = fields.Integer(string='Long Term', compute='_compute_term_courses', store=True)
     
     # AI Analysis
-    ai_recommendation_reason = fields.Text(string='Lý do đề xuất từ AI')
+    ai_recommendation_reason = fields.Text(string='AI Recommendation Reason')
     recommendation_method = fields.Selection([
         ('content_based', 'Content-Based Filtering'),
         ('rule_based', 'Rule-Based Recommendation'),
-        ('hybrid', 'Hybrid (Kết hợp)'),
-    ], string='Phương pháp đề xuất', tracking=True)
+        ('hybrid', 'Hybrid'),
+    ], string='Recommendation Method', tracking=True)
     
     # Thống kê
-    completed_courses_count = fields.Integer(string='Đã hoàn thành', compute='_compute_completed_courses', store=True)
-    in_progress_courses_count = fields.Integer(string='Đang học', compute='_compute_completed_courses', store=True)
+    completed_courses_count = fields.Integer(string='Completed', compute='_compute_completed_courses', store=True)
+    in_progress_courses_count = fields.Integer(string='In Progress', compute='_compute_completed_courses', store=True)
     
     @api.depends('student_id', 'create_date')
     def _compute_name(self):
         for record in self:
             if record.student_id:
-                record.name = f"Roadmap cho {record.student_id.name} - {fields.Datetime.to_string(record.create_date)[:10]}"
+                record.name = f"Roadmap for {record.student_id.name} - {fields.Datetime.to_string(record.create_date)[:10]}"
             else:
                 record.name = f"Roadmap - {fields.Datetime.to_string(record.create_date)[:10]}"
     
@@ -117,44 +117,44 @@ class Roadmap(models.Model):
 
 class RoadmapCourse(models.Model):
     _name = 'lms.roadmap.course'
-    _description = 'Khóa học trong roadmap'
+    _description = 'Roadmap Course'
     _order = 'priority desc, sequence'
 
     roadmap_id = fields.Many2one('lms.roadmap', string='Roadmap', required=True, ondelete='cascade')
     course_id = fields.Many2one(
-        'lms.course', string='Khóa học', required=True, ondelete='cascade'
+        'lms.course', string='Course', required=True, ondelete='cascade'
     )
     
-    sequence = fields.Integer(string='Thứ tự', default=10)
+    sequence = fields.Integer(string='Sequence', default=10)
     priority = fields.Selection([
-        ('high', 'Cao'),
-        ('medium', 'Trung bình'),
-        ('low', 'Thấp'),
-    ], string='Ưu tiên', default='medium', required=True)
+        ('high', 'High'),
+        ('medium', 'Medium'),
+        ('low', 'Low'),
+    ], string='Priority', default='medium', required=True)
     
     timeframe = fields.Selection([
-        ('short', 'Ngắn hạn (1-2 tuần)'),
-        ('medium', 'Trung hạn (1-3 tháng)'),
-        ('long', 'Dài hạn (3+ tháng)'),
-    ], string='Thời gian', default='medium', required=True)
+        ('short', 'Short Term (1-2 weeks)'),
+        ('medium', 'Medium Term (1-3 months)'),
+        ('long', 'Long Term (3+ months)'),
+    ], string='Timeframe', default='medium', required=True)
     
     status = fields.Selection([
-        ('pending', 'Chưa bắt đầu'),
-        ('in_progress', 'Đang học'),
-        ('completed', 'Đã hoàn thành'),
-        ('skipped', 'Bỏ qua'),
-    ], string='Trạng thái', default='pending', tracking=True)
+        ('pending', 'Not Started'),
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed'),
+        ('skipped', 'Skipped'),
+    ], string='Status', default='pending', tracking=True)
     
     # Lý do đề xuất
-    recommendation_reason = fields.Text(string='Lý do đề xuất')
-    similarity_score = fields.Float(string='Độ tương đồng', digits=(16, 2), help='Điểm tương đồng với khóa học đã học')
+    recommendation_reason = fields.Text(string='Recommendation Reason')
+    similarity_score = fields.Float(string='Similarity Score', digits=(16, 2), help='Similarity score with previously completed courses')
     
     # Tài liệu bổ trợ
-    supplementary_materials = fields.Text(string='Tài liệu bổ trợ')
-    reminder_date = fields.Date(string='Ngày nhắc nhở')
+    supplementary_materials = fields.Text(string='Supplementary Materials')
+    reminder_date = fields.Date(string='Reminder Date')
     
     # Thông tin khóa học (related)
-    course_name = fields.Char(string='Tên khóa học', related='course_id.name', readonly=True)
-    course_category = fields.Char(string='Danh mục', related='course_id.category_id.name', readonly=True)
-    course_level = fields.Char(string='Cấp độ', related='course_id.level_id.name', readonly=True)
+    course_name = fields.Char(string='Course Name', related='course_id.name', readonly=True)
+    course_category = fields.Char(string='Category', related='course_id.category_id.name', readonly=True)
+    course_level = fields.Char(string='Level', related='course_id.level_id.name', readonly=True)
 

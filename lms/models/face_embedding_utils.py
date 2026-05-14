@@ -9,7 +9,7 @@ from typing import Optional
 
 # Phải khớp số chiều sinh ở lms/static/src/js/lms_face_mount.js
 FACE_EMBEDDING_DIM = 128
-COSINE_MATCH_THRESHOLD = 0.88
+COSINE_MATCH_THRESHOLD = 0.80
 
 
 def parse_embedding(json_str: str | bool | None) -> Optional[list[float]]:

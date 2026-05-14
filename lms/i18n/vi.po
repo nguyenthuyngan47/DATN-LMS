@@ -1,10 +1,14 @@
-# Translation for LMS custom overrides
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* lms
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: lms\n"
-"POT-Creation-Date: 2026-04-20 00:00+0000\n"
-"PO-Revision-Date: 2026-04-20 00:00+0000\n"
-"Last-Translator: LMS Team\n"
+"Project-Id-Version: Odoo Server 18.0-20260209\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-14 04:27+0000\n"
+"PO-Revision-Date: 2026-05-14 04:27+0000\n"
+"Last-Translator: \n"
 "Language-Team: Vietnamese\n"
 "Language: vi_VN\n"
 "MIME-Version: 1.0\n"
@@ -12,12 +16,1999 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-# Mail assignment notification
-msgid "Dear %(partner_name)s,"
-msgstr "Kính gửi %(partner_name)s,"
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.signup_pending_approval
+msgid ""
+"<span class=\"lms-badge-dot\"/>\n"
+"                            Status: Pending Approval"
+msgstr ""
+"<span class=\"lms-badge-dot\"/>\n"
+"                            Trạng thái: Chờ duyệt"
 
-msgid "You have been assigned to the %(model_name)s %(record_name)s."
-msgstr "Bạn được phân công phụ trách %(model_name)s %(record_name)s."
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.signup_pending_approval
+msgid ""
+"<span class=\"lms-step-num\">1</span><span>Admin reviews and approves your "
+"account.</span>"
+msgstr ""
+"<span class=\"lms-step-num\">1</span><span>Admin kiểm tra và phê duyệt tài "
+"khoản của bạn.</span>"
 
-msgid "--\n+%(signature)s"
-msgstr "--\n+%(signature)s"
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.signup_pending_approval
+msgid ""
+"<span class=\"lms-step-num\">2</span><span>System sends activation "
+"notification email.</span>"
+msgstr ""
+"<span class=\"lms-step-num\">2</span><span>Hệ thống gửi email thông báo "
+"kích hoạt.</span>"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.signup_pending_approval
+msgid ""
+"<span class=\"lms-step-num\">3</span><span>Return to login to start using "
+"LMS.</span>"
+msgstr ""
+"<span class=\"lms-step-num\">3</span><span>Bạn quay lại đăng nhập để bắt "
+"đầu sử dụng LMS.</span>"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.lms_login_register_links
+msgid "<span> or </span>"
+msgstr "<span> hoặc </span>"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.lms_login_register_links
+msgid "<span>Register as </span>"
+msgstr "<span>Đăng ký </span>"
+
+#. module: lms
+#: model:mail.template,body_html:lms.email_template_lesson_attendance_link
+msgid ""
+"<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;background:#f6f8fb;padding:24px 0;font-family:Arial,sans-serif;color:#1f2937;\">\n"
+"                <tr>\n"
+"                    <td align=\"center\">\n"
+"                        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:640px;max-width:94%;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;\">\n"
+"                            <tr>\n"
+"                                <td style=\"background:#0ea5e9;color:#ffffff;padding:18px 24px;font-size:18px;font-weight:700;\">\n"
+"                                    LMS - Online Lesson Attendance Link\n"
+"                                </td>\n"
+"                            </tr>\n"
+"                            <tr>\n"
+"                                <td style=\"padding:24px;font-size:14px;line-height:1.7;\">\n"
+"                                    <p style=\"margin:0 0 12px 0;\">\n"
+"                                        You have a new online lesson in the course\n"
+"                                        <strong><t t-out=\"object.course_id.name\"/></strong>.\n"
+"                                    </p>\n"
+"                                    <p style=\"margin:0 0 12px 0;\">\n"
+"                                        Lesson: <strong><t t-out=\"object.name\"/></strong>\n"
+"                                    </p>\n"
+"                                    <p style=\"margin:0 0 18px 0;\">\n"
+"                                        Please open the link below to go to the lesson page and mark your attendance:\n"
+"                                    </p>\n"
+"                                    <p style=\"margin:0 0 22px 0;\">\n"
+"                                        <a t-att-href=\"ctx.get('attendance_url')\" style=\"display:inline-block;background:#0ea5e9;color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:600;\">\n"
+"                                            Open Attendance Page\n"
+"                                        </a>\n"
+"                                    </p>\n"
+"                                    <p style=\"margin:0;color:#6b7280;font-size:13px;\">\n"
+"                                        If the button is not displayed, please visit:\n"
+"                                        <a t-att-href=\"ctx.get('attendance_url')\">\n"
+"                                            <t t-out=\"ctx.get('attendance_url')\"/>\n"
+"                                        </a>\n"
+"                                    </p>\n"
+"                                    <p style=\"margin:18px 0 0 0;\">Best regards,<br/>LMS Administration Team</p>\n"
+"                                </td>\n"
+"                            </tr>\n"
+"                        </table>\n"
+"                    </td>\n"
+"                </tr>\n"
+"            </table>\n"
+"        "
+msgstr ""
+"<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;background:#f6f8fb;padding:24px 0;font-family:Arial,sans-serif;color:#1f2937;\">\n"
+"                <tr>\n"
+"                    <td align=\"center\">\n"
+"                        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:640px;max-width:94%;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;\">\n"
+"                            <tr>\n"
+"                                <td style=\"background:#0ea5e9;color:#ffffff;padding:18px 24px;font-size:18px;font-weight:700;\">\n"
+"                                    LMS - Link điểm danh buổi học online\n"
+"                                </td>\n"
+"                            </tr>\n"
+"                            <tr>\n"
+"                                <td style=\"padding:24px;font-size:14px;line-height:1.7;\">\n"
+"                                    <p style=\"margin:0 0 12px 0;\">\n"
+"                                        Bạn có buổi học online mới trong khóa\n"
+"                                        <strong><t t-out=\"object.course_id.name\"/></strong>.\n"
+"                                    </p>\n"
+"                                    <p style=\"margin:0 0 12px 0;\">\n"
+"                                        Bài học: <strong><t t-out=\"object.name\"/></strong>\n"
+"                                    </p>\n"
+"                                    <p style=\"margin:0 0 18px 0;\">\n"
+"                                        Vui lòng mở link bên dưới để vào trang bài học và điểm danh:\n"
+"                                    </p>\n"
+"                                    <p style=\"margin:0 0 22px 0;\">\n"
+"                                        <a t-att-href=\"ctx.get('attendance_url')\" style=\"display:inline-block;background:#0ea5e9;color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:600;\">\n"
+"                                            Mở trang điểm danh\n"
+"                                        </a>\n"
+"                                    </p>\n"
+"                                    <p style=\"margin:0;color:#6b7280;font-size:13px;\">\n"
+"                                        Nếu nút không hiển thị, vui lòng truy cập:\n"
+"                                        <a t-att-href=\"ctx.get('attendance_url')\">\n"
+"                                            <t t-out=\"ctx.get('attendance_url')\"/>\n"
+"                                        </a>\n"
+"                                    </p>\n"
+"                                    <p style=\"margin:18px 0 0 0;\">Trân trọng,<br/>Ban quản trị LMS</p>\n"
+"                                </td>\n"
+"                            </tr>\n"
+"                        </table>\n"
+"                    </td>\n"
+"                </tr>\n"
+"            </table>\n"
+"        "
+
+#. module: lms
+#: model:mail.template,body_html:lms.email_template_student_welcome
+msgid ""
+"<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;background:#f6f8fb;padding:24px 0;font-family:Arial,sans-serif;color:#1f2937;\">\n"
+"                <tr>\n"
+"                    <td align=\"center\">\n"
+"                        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:640px;max-width:94%;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;\">\n"
+"                            <tr>\n"
+"                                <td style=\"background:#0ea5e9;color:#ffffff;padding:18px 24px;font-size:18px;font-weight:700;\">\n"
+"                                    LMS - Student Account Activation Notice\n"
+"                                </td>\n"
+"                            </tr>\n"
+"                            <tr>\n"
+"                                <td style=\"padding:24px;font-size:14px;line-height:1.7;\">\n"
+"                                    <p style=\"margin:0 0 12px 0;\">Dear <strong><t t-out=\"object.name or object.login\"/></strong>,</p>\n"
+"                                    <p style=\"margin:0 0 12px 0;\">\n"
+"                                        Your student account has been approved and successfully activated on the LMS system.\n"
+"                                    </p>\n"
+"                                    <p style=\"margin:0 0 18px 0;\">\n"
+"                                        You can log in to start learning today.\n"
+"                                    </p>\n"
+"                                    <p style=\"margin:0 0 22px 0;\">\n"
+"                                        <a t-att-href=\"(object.get_base_url() or '').rstrip('/') + '/web/login?login=%s' % (object.login or object.email or '')\" style=\"display:inline-block;background:#0ea5e9;color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:600;\">\n"
+"                                            Log In to System\n"
+"                                        </a>\n"
+"                                    </p>\n"
+"                                    <p style=\"margin:0;color:#6b7280;font-size:13px;\">\n"
+"                                        If the button is not displayed, please visit:\n"
+"                                        <a t-att-href=\"(object.get_base_url() or '').rstrip('/') + '/web/login?login=%s' % (object.login or object.email or '')\">\n"
+"                                            <t t-out=\"(object.get_base_url() or '').rstrip('/') + '/web/login?login=%s' % (object.login or object.email or '')\"/>\n"
+"                                        </a>\n"
+"                                    </p>\n"
+"                                    <p style=\"margin:18px 0 0 0;\">Best regards,<br/>LMS Administration Team</p>\n"
+"                                </td>\n"
+"                            </tr>\n"
+"                        </table>\n"
+"                    </td>\n"
+"                </tr>\n"
+"            </table>\n"
+"        "
+msgstr ""
+"<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;background:#f6f8fb;padding:24px 0;font-family:Arial,sans-serif;color:#1f2937;\">\n"
+"                <tr>\n"
+"                    <td align=\"center\">\n"
+"                        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:640px;max-width:94%;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;\">\n"
+"                            <tr>\n"
+"                                <td style=\"background:#0ea5e9;color:#ffffff;padding:18px 24px;font-size:18px;font-weight:700;\">\n"
+"                                    LMS - Thông báo kích hoạt tài khoản học viên\n"
+"                                </td>\n"
+"                            </tr>\n"
+"                            <tr>\n"
+"                                <td style=\"padding:24px;font-size:14px;line-height:1.7;\">\n"
+"                                    <p style=\"margin:0 0 12px 0;\">Kính chào <strong><t t-out=\"object.name or object.login\"/></strong>,</p>\n"
+"                                    <p style=\"margin:0 0 12px 0;\">\n"
+"                                        Tài khoản học viên của bạn đã được phê duyệt và kích hoạt thành công trên hệ thống LMS.\n"
+"                                    </p>\n"
+"                                    <p style=\"margin:0 0 18px 0;\">\n"
+"                                        Bạn có thể đăng nhập để bắt đầu học tập ngay hôm nay.\n"
+"                                    </p>\n"
+"                                    <p style=\"margin:0 0 22px 0;\">\n"
+"                                        <a t-att-href=\"(object.get_base_url() or '').rstrip('/') + '/web/login?login=%s' % (object.login or object.email or '')\" style=\"display:inline-block;background:#0ea5e9;color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:600;\">\n"
+"                                            Đăng nhập hệ thống\n"
+"                                        </a>\n"
+"                                    </p>\n"
+"                                    <p style=\"margin:0;color:#6b7280;font-size:13px;\">\n"
+"                                        Nếu nút không hiển thị, vui lòng truy cập:\n"
+"                                        <a t-att-href=\"(object.get_base_url() or '').rstrip('/') + '/web/login?login=%s' % (object.login or object.email or '')\">\n"
+"                                            <t t-out=\"(object.get_base_url() or '').rstrip('/') + '/web/login?login=%s' % (object.login or object.email or '')\"/>\n"
+"                                        </a>\n"
+"                                    </p>\n"
+"                                    <p style=\"margin:18px 0 0 0;\">Trân trọng,<br/>Ban quản trị LMS</p>\n"
+"                                </td>\n"
+"                            </tr>\n"
+"                        </table>\n"
+"                    </td>\n"
+"                </tr>\n"
+"            </table>\n"
+"        "
+
+#. module: lms
+#: model:mail.template,body_html:lms.email_template_lecturer_welcome
+msgid ""
+"<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;background:#f6f8fb;padding:24px 0;font-family:Arial,sans-serif;color:#1f2937;\">\n"
+"                <tr>\n"
+"                    <td align=\"center\">\n"
+"                        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:640px;max-width:94%;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;\">\n"
+"                            <tr>\n"
+"                                <td style=\"background:#4f46e5;color:#ffffff;padding:18px 24px;font-size:18px;font-weight:700;\">\n"
+"                                    LMS - Instructor Account Activation Notice\n"
+"                                </td>\n"
+"                            </tr>\n"
+"                            <tr>\n"
+"                                <td style=\"padding:24px;font-size:14px;line-height:1.7;\">\n"
+"                                    <p style=\"margin:0 0 12px 0;\">Dear <strong><t t-out=\"object.name or object.login\"/></strong>,</p>\n"
+"                                    <p style=\"margin:0 0 12px 0;\">\n"
+"                                        Your account has been approved and activated with the role of\n"
+"                                        <strong>Instructor</strong> on the LMS system.\n"
+"                                    </p>\n"
+"                                    <p style=\"margin:0 0 18px 0;\">\n"
+"                                        You can log in to start managing your classes and teaching content.\n"
+"                                    </p>\n"
+"                                    <p style=\"margin:0 0 22px 0;\">\n"
+"                                        <a t-att-href=\"(object.get_base_url() or '').rstrip('/') + '/web/login?login=%s' % (object.login or object.email or '')\" style=\"display:inline-block;background:#4f46e5;color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:600;\">\n"
+"                                            Log In to System\n"
+"                                        </a>\n"
+"                                    </p>\n"
+"                                    <p style=\"margin:0;color:#6b7280;font-size:13px;\">\n"
+"                                        If the button is not displayed, please visit:\n"
+"                                        <a t-att-href=\"(object.get_base_url() or '').rstrip('/') + '/web/login?login=%s' % (object.login or object.email or '')\">\n"
+"                                            <t t-out=\"(object.get_base_url() or '').rstrip('/') + '/web/login?login=%s' % (object.login or object.email or '')\"/>\n"
+"                                        </a>\n"
+"                                    </p>\n"
+"                                    <p style=\"margin:18px 0 0 0;\">Best regards,<br/>LMS Administration Team</p>\n"
+"                                </td>\n"
+"                            </tr>\n"
+"                        </table>\n"
+"                    </td>\n"
+"                </tr>\n"
+"            </table>\n"
+"        "
+msgstr ""
+"<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;background:#f6f8fb;padding:24px 0;font-family:Arial,sans-serif;color:#1f2937;\">\n"
+"                <tr>\n"
+"                    <td align=\"center\">\n"
+"                        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:640px;max-width:94%;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;\">\n"
+"                            <tr>\n"
+"                                <td style=\"background:#4f46e5;color:#ffffff;padding:18px 24px;font-size:18px;font-weight:700;\">\n"
+"                                    LMS - Thông báo kích hoạt tài khoản giảng viên\n"
+"                                </td>\n"
+"                            </tr>\n"
+"                            <tr>\n"
+"                                <td style=\"padding:24px;font-size:14px;line-height:1.7;\">\n"
+"                                    <p style=\"margin:0 0 12px 0;\">Kính chào <strong><t t-out=\"object.name or object.login\"/></strong>,</p>\n"
+"                                    <p style=\"margin:0 0 12px 0;\">\n"
+"                                        Tài khoản của bạn đã được phê duyệt và kích hoạt với vai trò\n"
+"                                        <strong>Giảng viên</strong> trên hệ thống LMS.\n"
+"                                    </p>\n"
+"                                    <p style=\"margin:0 0 18px 0;\">\n"
+"                                        Bạn có thể đăng nhập để bắt đầu quản lý lớp học và nội dung giảng dạy.\n"
+"                                    </p>\n"
+"                                    <p style=\"margin:0 0 22px 0;\">\n"
+"                                        <a t-att-href=\"(object.get_base_url() or '').rstrip('/') + '/web/login?login=%s' % (object.login or object.email or '')\" style=\"display:inline-block;background:#4f46e5;color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:600;\">\n"
+"                                            Đăng nhập hệ thống\n"
+"                                        </a>\n"
+"                                    </p>\n"
+"                                    <p style=\"margin:0;color:#6b7280;font-size:13px;\">\n"
+"                                        Nếu nút không hiển thị, vui lòng truy cập:\n"
+"                                        <a t-att-href=\"(object.get_base_url() or '').rstrip('/') + '/web/login?login=%s' % (object.login or object.email or '')\">\n"
+"                                            <t t-out=\"(object.get_base_url() or '').rstrip('/') + '/web/login?login=%s' % (object.login or object.email or '')\"/>\n"
+"                                        </a>\n"
+"                                    </p>\n"
+"                                    <p style=\"margin:18px 0 0 0;\">Trân trọng,<br/>Ban quản trị LMS</p>\n"
+"                                </td>\n"
+"                            </tr>\n"
+"                        </table>\n"
+"                    </td>\n"
+"                </tr>\n"
+"            </table>\n"
+"        "
+
+#. module: lms
+#: model:ir.model,name:lms.model_lms_ai_analysis
+msgid "AI Analysis and Recommendations"
+msgstr "Phân tích và đề xuất AI"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap__ai_recommendation_reason
+msgid "AI Recommendation Reason"
+msgstr "Lý do đề xuất từ AI"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "AI Roadmap Counseling"
+msgstr "Tư vấn Roadmap AI"
+
+#. module: lms
+#: model:ir.model,name:lms.model_lms_student_ai_chat
+msgid "AI Roadmap Counseling for Students"
+msgstr "Tư vấn Roadmap AI cho học viên"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_form
+msgid "AI recommendation reason..."
+msgstr "Lý do đề xuất từ AI..."
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "AI returned empty response."
+msgstr "AI trả về phản hồi rỗng."
+
+#. module: lms
+#: model:ir.model.fields,help:lms.field_res_config_settings__lms_gemini_api_key
+msgid ""
+"API Key from Google Gemini for AI course recommendations. Get it at "
+"https://makersuite.google.com/app/apikey"
+msgstr ""
+"API Key từ Google Gemini để sử dụng AI đề xuất khóa học. Lấy tại "
+"https://makersuite.google.com/app/apikey"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__academic_degree
+msgid "Academic Degree"
+msgstr "Bằng cấp"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_course__message_needaction
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap__message_needaction
+#: model:ir.model.fields,field_description:lms.field_lms_student__message_needaction
+msgid "Action Needed"
+msgstr "Cần xử lý"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_course__is_active
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__active
+#: model:ir.model.fields,field_description:lms.field_lms_student__is_active
+#: model:ir.model.fields.selection,name:lms.selection__lms_lecturer__status__active
+#: model:ir.model.fields.selection,name:lms.selection__lms_student__learning_status__in_progress
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_search
+msgid "Active"
+msgstr "Đang hoạt động"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_course__activity_ids
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap__activity_ids
+#: model:ir.model.fields,field_description:lms.field_lms_student__activity_ids
+msgid "Activities"
+msgstr "Hoạt động"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__address
+#: model:ir.model.fields,field_description:lms.field_lms_student__address
+msgid "Address"
+msgstr "Địa chỉ"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_lecturer__teaching_level__advanced
+#: model:ir.model.fields.selection,name:lms.selection__lms_student__current_level__advanced
+msgid "Advanced"
+msgstr "Nâng cao"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_users_search_lms
+msgid "All Instructors"
+msgstr "Tất cả giảng viên"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_users_search_lms
+msgid "All Students"
+msgstr "Tất cả sinh viên"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_student_ai_chat__allow_personal_data
+msgid "Allow AI to Read Personal Data"
+msgstr "Cho phép AI đọc dữ liệu cá nhân"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_ai_chat_form
+msgid ""
+"Allowing AI to access personal data will improve analysis quality and "
+"provide a more suitable roadmap."
+msgstr ""
+"Cho phép AI đọc dữ liệu cá nhân sẽ cải thiện chất lượng phân tích và đưa ra "
+"roadmap phù hợp hơn."
+
+#. module: lms
+#: model:ir.ui.menu,name:lms.menu_lms_analytics_root
+msgid "Analytics"
+msgstr "Phân tích"
+
+#. module: lms
+#: model:ir.actions.act_window,name:lms.action_lms_analytics_student_course
+msgid "Analytics - Enrollments"
+msgstr "Analytics - Đăng ký học"
+
+#. module: lms
+#: model:ir.actions.act_window,name:lms.action_lms_analytics_learning_history
+msgid "Analytics - Learning History"
+msgstr "Analytics - Lịch sử học tập"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_learning_history__analytics_count
+msgid "Analytics Count"
+msgstr "Số lượt phân tích"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_form
+msgid "Approve"
+msgstr "Phê duyệt"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/res_users.py:0
+#: model:ir.actions.server,name:lms.action_approve_pending_students
+msgid "Approve Student Accounts"
+msgstr "Duyệt tài khoản sinh viên"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_roadmap__state__approved
+#: model:ir.model.fields.selection,name:lms.selection__lms_student__current_course_registration_status__approved
+#: model:ir.model.fields.selection,name:lms.selection__lms_student_course__status__approved
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_form
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_course_search_analytics
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_search
+msgid "Approved"
+msgstr "Đã duyệt"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_course__state__archived
+msgid "Archived"
+msgstr "Đã lưu trữ"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__class_assigned
+msgid "Assigned Classes"
+msgstr "Lớp phụ trách"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__course_assigned
+msgid "Assigned Courses"
+msgstr "Khóa học phụ trách"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lesson__attendance_notice_sent
+msgid "Attendance Notice Sent"
+msgstr "Đã gửi thông báo điểm danh"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_student__image_1920
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_kanban
+msgid "Avatar"
+msgstr "Ảnh đại diện"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__avatar_url
+msgid "Avatar (URL)"
+msgstr "Ảnh đại diện (URL)"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_course__average_rating
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__average_course_rating
+msgid "Average Rating"
+msgstr "Đánh giá trung bình"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_student__average_score
+msgid "Average Score"
+msgstr "Điểm trung bình"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_kanban
+msgid "Avg Score:"
+msgstr "Điểm TB:"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.signup_pending_approval
+msgid "Back to Login"
+msgstr "Quay lại đăng nhập"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_lecturer__teaching_level__beginner
+#: model:ir.model.fields.selection,name:lms.selection__lms_student__current_level__beginner
+msgid "Beginner"
+msgstr "Mới bắt đầu"
+
+#. module: lms
+#: model:ir.model,name:lms.model_calendar_event
+msgid "Calendar Event"
+msgstr "Sự kiện trên lịch"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_form
+msgid "Cancel Enrollment"
+msgstr "Hủy đăng ký"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_lesson__state__cancelled
+#: model:ir.model.fields.selection,name:lms.selection__lms_student__current_course_registration_status__cancelled
+#: model:ir.model.fields.selection,name:lms.selection__lms_student_course__status__cancelled
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_search
+msgid "Cancelled"
+msgstr "Đã hủy"
+
+#. module: lms
+#: model:ir.ui.menu,name:lms.menu_lms_course_categories
+msgid "Categories"
+msgstr "Danh mục"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_course__category_id
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap_course__course_category
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_search
+msgid "Category"
+msgstr "Danh mục"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_course_category__name
+msgid "Category Name"
+msgstr "Tên danh mục"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__certifications
+msgid "Certifications"
+msgstr "Chứng chỉ"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_ai_chat_form
+msgid "Chat"
+msgstr "Trò chuyện"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_student_ai_chat__is_chat_locked
+msgid "Chat Locked"
+msgstr "Chat đã khóa"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_student_ai_chat__session_state__chatting
+msgid "Chatting"
+msgstr "Đang trò chuyện"
+
+#. module: lms
+#: model:ir.ui.menu,name:lms.menu_lms_lession
+msgid "Class Schedule"
+msgstr "Lịch học"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_ai_chat_form
+msgid "Close"
+msgstr "Đóng"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_course_tag__color
+msgid "Color"
+msgstr "Màu"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap__completed_courses_count
+#: model:ir.model.fields.selection,name:lms.selection__lms_learning_history__status__completed
+#: model:ir.model.fields.selection,name:lms.selection__lms_lesson__current_user_status__done
+#: model:ir.model.fields.selection,name:lms.selection__lms_lesson__state__done
+#: model:ir.model.fields.selection,name:lms.selection__lms_roadmap_course__status__completed
+#: model:ir.model.fields.selection,name:lms.selection__lms_student__current_course_registration_status__completed
+#: model:ir.model.fields.selection,name:lms.selection__lms_student__learning_status__completed
+#: model:ir.model.fields.selection,name:lms.selection__lms_student_ai_chat__session_state__done
+#: model:ir.model.fields.selection,name:lms.selection__lms_student_course__status__completed
+#: model:ir.model.fields.selection,name:lms.selection__lms_student_lesson_progress__status__done
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_learning_history_search
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_course_search_analytics
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_search
+msgid "Completed"
+msgstr "Hoàn thành"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_student__completed_courses
+msgid "Completed Courses"
+msgstr "Khóa học đã hoàn thành"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_student_course__completion_date
+msgid "Completion Date"
+msgstr "Ngày hoàn thành"
+
+#. module: lms
+#: model:ir.model,name:lms.model_res_config_settings
+msgid "Config Settings"
+msgstr "Cài đặt cấu hình"
+
+#. module: lms
+#: model:ir.ui.menu,name:lms.menu_lms_config
+msgid "Configuration"
+msgstr "Cấu hình"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.signup_pending_approval
+msgid "Contact Support"
+msgstr "Liên hệ hỗ trợ"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_course__price
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_form
+msgid "Cost (VND)"
+msgstr "Chi phí (VND)"
+
+#. module: lms
+#: model:ir.model,name:lms.model_lms_course
+#: model:ir.model.fields,field_description:lms.field_lms_learning_history__course_id
+#: model:ir.model.fields,field_description:lms.field_lms_lesson__course_id
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap_course__course_id
+#: model:ir.model.fields,field_description:lms.field_lms_student_course__course_id
+#: model:ir.model.fields,field_description:lms.field_lms_student_lesson_progress__course_id
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_form
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_kanban
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_learning_history_search
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_course_search_analytics
+msgid "Course"
+msgstr "Khóa học"
+
+#. module: lms
+#: model:ir.actions.act_window,name:lms.action_lms_course_category
+msgid "Course Categories"
+msgstr "Danh mục khóa học"
+
+#. module: lms
+#: model:ir.model,name:lms.model_lms_course_category
+msgid "Course Category"
+msgstr "Danh mục khóa học"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_course__image_1920
+msgid "Course Image"
+msgstr "Hình ảnh khóa học"
+
+#. module: lms
+#: model:ir.model,name:lms.model_lms_course_level
+msgid "Course Level"
+msgstr "Cấp độ khóa học"
+
+#. module: lms
+#: model:ir.actions.act_window,name:lms.action_lms_course_level
+msgid "Course Levels"
+msgstr "Cấp độ khóa học"
+
+#. module: lms
+#: model:ir.ui.menu,name:lms.menu_lms_courses_list
+msgid "Course List"
+msgstr "Danh sách khóa học"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_course__name
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap_course__course_name
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_search
+msgid "Course Name"
+msgstr "Tên khóa học"
+
+#. module: lms
+#: model:ir.actions.act_window,name:lms.action_lms_student_by_course
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_tree_by_course
+msgid "Course Students"
+msgstr "Học viên của khóa học"
+
+#. module: lms
+#: model:ir.model,name:lms.model_lms_course_tag
+msgid "Course Tag"
+msgstr "Nhãn khóa học"
+
+#. module: lms
+#: model:ir.actions.act_window,name:lms.action_lms_course_tag
+msgid "Course Tags"
+msgstr "Nhãn khóa học"
+
+#. module: lms
+#: model:ir.actions.act_window,name:lms.action_lms_course
+#: model:ir.model.fields,field_description:lms.field_lms_course_category__course_ids
+#: model:ir.model.fields,field_description:lms.field_lms_course_level__course_ids
+#: model:ir.model.fields,field_description:lms.field_lms_course_tag__course_ids
+#: model:ir.ui.menu,name:lms.menu_lms_courses
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_tree
+msgid "Courses"
+msgstr "Khóa học"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_kanban
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_kanban
+msgid "Courses:"
+msgstr "Khóa học:"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__assignment_created
+msgid "Created Assignments"
+msgstr "Bài tập đã tạo"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__created_at
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap__create_date
+msgid "Created Date"
+msgstr "Ngày tạo"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__exam_created
+msgid "Created Exams"
+msgstr "Bài thi đã tạo"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_student__current_level
+msgid "Current Level"
+msgstr "Trình độ hiện tại"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__date_of_birth
+#: model:ir.model.fields,field_description:lms.field_lms_student__date_of_birth
+msgid "Date of Birth"
+msgstr "Ngày sinh"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__department
+msgid "Department"
+msgstr "Phòng ban"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_course__description
+#: model:ir.model.fields,field_description:lms.field_lms_course_category__description
+#: model:ir.model.fields,field_description:lms.field_lms_course_level__description
+#: model:ir.model.fields,field_description:lms.field_lms_lesson__description
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_form
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_course_tab_form
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_student_form
+msgid "Description"
+msgstr "Mô tả"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_student__desired_skills
+msgid "Desired Skills"
+msgstr "Kỹ năng mong muốn"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_form
+msgid "Details"
+msgstr "Chi tiết"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_res_users__certificate_link
+#: model_terms:ir.ui.view,arch_db:lms.lms_auth_signup_lecturer_document
+msgid "Document Link"
+msgstr "Link tài liệu"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_course__state__draft
+#: model:ir.model.fields.selection,name:lms.selection__lms_lesson__state__draft
+#: model:ir.model.fields.selection,name:lms.selection__lms_roadmap__state__draft
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_search
+msgid "Draft"
+msgstr "Nháp"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_course__duration_hours
+msgid "Duration (hours)"
+msgstr "Thời lượng (giờ)"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lesson__duration_minutes
+msgid "Duration (minutes)"
+msgstr "Thời lượng (phút)"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_kanban
+msgid "Duration:"
+msgstr "Thời lượng:"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_course_tab_form
+msgid "E.g.: Lesson 1 - Course Introduction"
+msgstr "VD: Bài 1 - Giới thiệu khoá học"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__email
+#: model:ir.model.fields,field_description:lms.field_lms_student__email
+#: model_terms:ir.ui.view,arch_db:lms.signup_pending_approval
+msgid "Email"
+msgstr "Email"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_course__end_date
+msgid "End Date"
+msgstr "Ngày kết thúc"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lesson__end_datetime
+msgid "End Time"
+msgstr "Giờ kết thúc"
+
+#. module: lms
+#: model:ir.actions.server,name:lms.action_lms_course_register
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_form
+msgid "Enroll in Course"
+msgstr "Đăng ký khóa học"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_student__enrolled_courses_ids
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_form
+msgid "Enrolled Courses"
+msgstr "Khóa học đã đăng ký"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_course__enrolled_students_count
+#: model:ir.model.fields,field_description:lms.field_lms_course__student_course_ids
+msgid "Enrolled Students"
+msgstr "Học viên đã đăng ký"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_course_search_analytics
+msgid "Enrollment Analysis"
+msgstr "Phân tích đăng ký học"
+
+#. module: lms
+#: model:ir.ui.menu,name:lms.menu_lms_analytics_enrollments
+msgid "Enrollment Analytics (Pivot/Graph)"
+msgstr "Đăng ký học (Pivot/Graph)"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_student_course__enrollment_date
+msgid "Enrollment Date"
+msgstr "Ngày đăng ký"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_course_tree_analytics
+msgid "Enrollments"
+msgstr "Đăng ký học"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.res_config_settings_view_form_lms
+msgid "Enter Google Gemini API Key to use AI for course recommendations."
+msgstr "Nhập API Key từ Google Gemini để sử dụng AI đề xuất khóa học."
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_form
+msgid "Enter desired skills..."
+msgstr "Nhập kỹ năng mong muốn..."
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_form
+msgid "Enter learning goals..."
+msgstr "Nhập mục tiêu học tập..."
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_lecturer__teaching_level__expert
+msgid "Expert"
+msgstr "Chuyên gia"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_form
+msgid "Face (Attendance)"
+msgstr "Khuôn mặt (điểm danh)"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lesson__face_lesson_attendance_mount_html
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_course_tab_form
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_student_form
+msgid "Face Attendance"
+msgstr "Điểm danh khuôn mặt"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_course_tab_form
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_student_form
+msgid "Face Attendance Checked"
+msgstr "Đã điểm danh khuôn mặt"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__faculty
+msgid "Faculty"
+msgstr "Khoa"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_lecturer__gender__female
+#: model:ir.model.fields.selection,name:lms.selection__lms_student__gender__female
+msgid "Female"
+msgstr "Nữ"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_student_course__final_score
+msgid "Final Score"
+msgstr "Điểm cuối kỳ"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__full_name
+msgid "Full Name"
+msgstr "Họ và tên"
+
+#. module: lms
+#: model:res.groups,comment:lms.group_lms_manager
+msgid "Full admin access: students, courses, roadmaps, AI analytics"
+msgstr "Toàn quyền quản trị: học viên, khóa học, roadmap, phân tích AI"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_res_config_settings__lms_gemini_api_key
+msgid "Gemini API Key"
+msgstr "Gemini API Key"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__gender
+#: model:ir.model.fields,field_description:lms.field_lms_student__gender
+msgid "Gender"
+msgstr "Giới tính"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.res_config_settings_view_form_lms
+msgid "Get API key at:"
+msgstr "Lấy API key tại:"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.lms_auth_signup_lecturer_document
+msgid ""
+"Google Drive link containing practice certificates, CV, work history,..."
+msgstr "Link Google Drive chứa chứng chỉ hành nghề, CV, lịch sử công việc,..."
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_course_graph_analytics
+msgid "Graph - Enrollments"
+msgstr "Graph - Đăng ký học"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_learning_history_graph_analytics
+msgid "Graph - Learning History"
+msgstr "Graph - Lịch sử học tập"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_search
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_learning_history_search
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_course_search_analytics
+msgid "Group By"
+msgstr "Nhóm theo"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_roadmap_course__priority__high
+msgid "High"
+msgstr "Cao"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap__in_progress_courses_count
+#: model:ir.model.fields.selection,name:lms.selection__lms_learning_history__status__in_progress
+#: model:ir.model.fields.selection,name:lms.selection__lms_lesson__current_user_status__in_progress
+#: model:ir.model.fields.selection,name:lms.selection__lms_roadmap_course__status__in_progress
+#: model:ir.model.fields.selection,name:lms.selection__lms_student_lesson_progress__status__in_progress
+msgid "In Progress"
+msgstr "Đang thực hiện"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_lecturer__status__inactive
+#: model:ir.model.fields.selection,name:lms.selection__lms_student__learning_status__inactive
+msgid "Inactive"
+msgstr "Không hoạt động"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_student__inactive_days
+msgid "Inactive Days"
+msgstr "Số ngày không hoạt động"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_course__instructor_id
+#: model:ir.model.fields,field_description:lms.field_lms_learning_history__instructor_id
+#: model:res.groups,name:lms.group_lms_instructor
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_search
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_learning_history_search
+msgid "Instructor"
+msgstr "Giảng viên"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_course__contact_payment
+msgid "Instructor Contact"
+msgstr "Liên hệ giảng viên"
+
+#. module: lms
+#: model:res.groups,comment:lms.group_lms_instructor
+msgid "Instructor: create and manage course content (courses and lessons)"
+msgstr "Giảng viên: tạo và quản lý nội dung khóa học (khóa học và bài học)"
+
+#. module: lms
+#: model:ir.actions.act_window,name:lms.action_lms_lecturer
+#: model:ir.ui.menu,name:lms.menu_lms_lecturers
+msgid "Instructors"
+msgstr "Giảng viên"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_users_search_lms
+msgid "Instructors Pending Approval"
+msgstr "Giảng viên chờ duyệt"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_lecturer__teaching_level__intermediate
+#: model:ir.model.fields.selection,name:lms.selection__lms_student__current_level__intermediate
+msgid "Intermediate"
+msgstr "Trung cấp"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_student__last_activity_date
+msgid "Last Activity"
+msgstr "Hoạt động cuối"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__last_login
+#: model:ir.model.fields,field_description:lms.field_lms_student__last_login
+msgid "Last Login"
+msgstr "Đăng nhập cuối"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_student__current_course_registration_status__learning
+#: model:ir.model.fields.selection,name:lms.selection__lms_student_course__status__learning
+#: model:ir.ui.menu,name:lms.menu_lms_learning
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_course_search_analytics
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_search
+msgid "Learning"
+msgstr "Đang học"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_student__learning_goals
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_form
+msgid "Learning Goals"
+msgstr "Mục tiêu học tập"
+
+#. module: lms
+#: model:ir.actions.act_window,name:lms.action_lms_learning_history
+#: model:ir.model,name:lms.model_lms_learning_history
+#: model:ir.model.fields,field_description:lms.field_lms_student__learning_history_ids
+#: model:ir.model.fields,field_description:lms.field_lms_student_course__learning_history_ids
+#: model:ir.ui.menu,name:lms.menu_lms_learning_history
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_learning_history_form
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_learning_history_tree
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_form
+msgid "Learning History"
+msgstr "Lịch sử học tập"
+
+#. module: lms
+#: model:ir.ui.menu,name:lms.menu_lms_analytics_learning_history
+msgid "Learning History (Pivot/Graph)"
+msgstr "Lịch sử học tập (Pivot/Graph)"
+
+#. module: lms
+#: model:ir.module.category,description:lms.module_category_lms
+#: model_terms:ir.ui.view,arch_db:lms.res_config_settings_view_form_lms
+msgid "Learning Management System"
+msgstr "Hệ thống quản lý học tập"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_student__learning_progress
+msgid "Learning Progress (%)"
+msgstr "Tiến độ học tập (%)"
+
+#. module: lms
+#: model:ir.model,name:lms.model_lms_roadmap
+msgid "Learning Roadmap"
+msgstr "Lộ trình học tập"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_student__learning_status
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_course_tab_form
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_student_form
+msgid "Learning Status"
+msgstr "Trạng thái học"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.res_config_settings_view_form_lms
+msgid ""
+"Leave blank if you don't want to use AI (Rule-Based and Content-Based will "
+"be used)."
+msgstr ""
+"Để trống nếu không muốn sử dụng AI (sẽ dùng Rule-Based và Content-Based)."
+
+#. module: lms
+#: model:ir.model.fields,help:lms.field_lms_lecturer__user_id
+#: model:ir.model.fields,help:lms.field_lms_student__user_id
+msgid ""
+"Leave empty: each time a record is created (including CSV import), the "
+"system auto-creates a res.users with login = email."
+msgstr ""
+"Để trống: mỗi lần tạo bản ghi (kể cả import CSV), hệ thống tự tạo res.users "
+"với login = email."
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_course_tab_form
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_student_form
+msgid "Lecture Video"
+msgstr "Video bài giảng"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_lecturer__role__lecturer
+#: model:ir.model.fields.selection,name:lms.selection__res_users__lms_signup_channel__lecturer
+msgid "Lecturer"
+msgstr "Giảng viên"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__lecturer_id
+msgid "Lecturer ID"
+msgstr "Mã giảng viên"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__lesson_created
+msgid "Lectures"
+msgstr "Bài giảng"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/course.py:0 model:ir.model,name:lms.model_lms_lesson
+#: model:ir.model.fields,field_description:lms.field_lms_learning_history__lesson_id
+#: model:ir.model.fields,field_description:lms.field_lms_student_lesson_progress__lesson_id
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_course_tab_form
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_student_form
+msgid "Lesson"
+msgstr "Bài học"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_course_tab_form
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_student_form
+msgid "Lesson Information"
+msgstr "Thông tin bài học"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lesson__name
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_course_tab_form
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_student_form
+msgid "Lesson Name"
+msgstr "Tên bài học"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lesson__lesson_type
+msgid "Lesson Type"
+msgstr "Loại bài học"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_course_tab_form
+msgid "Lesson content, objectives, notes for students..."
+msgstr "Nội dung bài học, mục tiêu, ghi chú dành cho học viên..."
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_course__lesson_ids
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_form
+msgid "Lessons"
+msgstr "Bài học"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_course__level_id
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap_course__course_level
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_search
+msgid "Level"
+msgstr "Cấp độ"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_course_level__name
+msgid "Level Name"
+msgstr "Tên cấp độ"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_kanban
+msgid "Level:"
+msgstr "Trình độ:"
+
+#. module: lms
+#: model:ir.ui.menu,name:lms.menu_lms_course_levels
+msgid "Levels"
+msgstr "Cấp độ"
+
+#. module: lms
+#: model:ir.model.fields,help:lms.field_res_users__certificate_link
+msgid "Link to certificates, CV, work history, etc. (lecturer registration)."
+msgstr "Link chứng chỉ, CV, lịch sử công việc,... (đăng ký giảng viên)."
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_form
+msgid "Lock"
+msgstr "Khóa"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_student__manual_level_lock
+msgid "Lock Level Manually"
+msgstr "Khóa trình độ thủ công"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_roadmap__state__locked
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_form
+msgid "Locked"
+msgstr "Đã khóa"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__login_frequency
+msgid "Login Frequency (weekly)"
+msgstr "Tần suất đăng nhập (tuần)"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_roadmap_course__priority__low
+msgid "Low"
+msgstr "Thấp"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_lecturer__gender__male
+#: model:ir.model.fields.selection,name:lms.selection__lms_student__gender__male
+msgid "Male"
+msgstr "Nam"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_learning_history_form
+msgid "Mark as Completed"
+msgstr "Đánh dấu hoàn thành"
+
+#. module: lms
+#: model:ir.model.fields,help:lms.field_res_users__lms_welcome_mail_sent
+msgid ""
+"Marks that the lecturer welcome email has been sent to avoid duplicates."
+msgstr "Đánh dấu đã gửi mail chào mừng giảng viên để tránh gửi lặp."
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_course_tab_form
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_student_form
+msgid "Materials"
+msgstr "Tài liệu"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_course__max_student
+msgid "Max Students"
+msgstr "Số học viên tối đa"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_roadmap_course__priority__medium
+msgid "Medium"
+msgstr "Trung bình"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_search
+msgid "My Courses"
+msgstr "Khóa học của tôi"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_course_tab_form
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_student_form
+msgid "My Progress"
+msgstr "Tiến độ của tôi"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lesson__current_user_lesson_progress_label
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_form
+msgid "My Status"
+msgstr "Trạng thái của tôi"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.signup_pending_approval
+msgid "Next Steps"
+msgstr "Các bước tiếp theo"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_lesson__current_user_status__not_started
+#: model:ir.model.fields.selection,name:lms.selection__lms_roadmap_course__status__pending
+#: model:ir.model.fields.selection,name:lms.selection__lms_student__learning_status__not_started
+#: model:ir.model.fields.selection,name:lms.selection__lms_student_ai_chat__session_state__draft
+#: model:ir.model.fields.selection,name:lms.selection__lms_student_lesson_progress__status__not_started
+msgid "Not Started"
+msgstr "Chưa bắt đầu"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_learning_history__notes
+msgid "Notes"
+msgstr "Ghi chú"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_learning_history_form
+msgid "Notes..."
+msgstr "Ghi chú..."
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_course_graph_analytics
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_course_pivot_analytics
+msgid "Number of Enrollments"
+msgstr "Số lượt đăng ký"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_learning_history_graph_analytics
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_learning_history_pivot_analytics
+msgid "Number of Study Sessions"
+msgstr "Số lượt học"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_lesson__lesson_type__online
+msgid "Online"
+msgstr "Trực tuyến"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_course_tab_form
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_student_form
+msgid "Online Session"
+msgstr "Buổi học Online"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_form
+msgid "Open Lesson Full Screen"
+msgstr "Mở bài học toàn màn hình"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_lecturer__gender__other
+#: model:ir.model.fields.selection,name:lms.selection__lms_student__gender__other
+msgid "Other"
+msgstr "Khác"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_form
+msgid "Overview"
+msgstr "Tổng quan"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_course_tab_form
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_student_form
+msgid "PDF Materials"
+msgstr "Tài liệu PDF"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__password_hash
+msgid "Password (hash)"
+msgstr "Mật khẩu (hash)"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_student__current_course_registration_status__pending
+#: model:ir.model.fields.selection,name:lms.selection__lms_student_course__status__pending
+msgid "Pending"
+msgstr "Chờ xử lý"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__res_users__state__pending_approval
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_course_search_analytics
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_search
+#: model_terms:ir.ui.view,arch_db:lms.view_users_tree_lms
+msgid "Pending Approval"
+msgstr "Chờ duyệt"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.signup_pending_approval
+msgid "Person in Charge"
+msgstr "Phụ trách"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lecturer_form
+msgid "Personal Information"
+msgstr "Thông tin cá nhân"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_student__phone
+#: model_terms:ir.ui.view,arch_db:lms.signup_pending_approval
+msgid "Phone"
+msgstr "Điện thoại"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__phone_number
+msgid "Phone Number"
+msgstr "Số điện thoại"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_form
+msgid "Phone, Zalo, Facebook, Email..."
+msgstr "Số điện thoại, Zalo, Facebook, Email…"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_course_pivot_analytics
+msgid "Pivot - Enrollments"
+msgstr "Pivot - Đăng ký học"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_learning_history_pivot_analytics
+msgid "Pivot - Learning History"
+msgstr "Pivot - Lịch sử học tập"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_users_form_lms_signup
+msgid "Practice certificate link, CV, work history,..."
+msgstr "Link chứng chỉ hành nghề, CV, lịch sử công việc,..."
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_course__prerequisite_ids
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_form
+msgid "Prerequisites"
+msgstr "Khóa học tiên quyết"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap_course__priority
+msgid "Priority"
+msgstr "Ưu tiên"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lecturer_form
+msgid "Professional Information"
+msgstr "Thông tin chuyên môn"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_form
+msgid "Progress"
+msgstr "Tiến độ"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_student_course__progress
+#: model:ir.model.fields,field_description:lms.field_lms_student_lesson_progress__progress_percent
+msgid "Progress (%)"
+msgstr "Tiến độ (%)"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_course__state__published
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_form
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_search
+msgid "Published"
+msgstr "Đã xuất bản"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_student_ai_chat__asked_count
+msgid "Questions Asked"
+msgstr "Số câu hỏi đã hỏi"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap__recommendation_method
+msgid "Recommendation Method"
+msgstr "Phương pháp đề xuất"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap_course__recommendation_reason
+msgid "Recommendation Reason"
+msgstr "Lý do đề xuất"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_form
+msgid "Recommendation reason..."
+msgstr "Lý do đề xuất..."
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_form
+msgid "Recommended Courses"
+msgstr "Khóa học đề xuất"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_form
+msgid "Recommended Roadmap"
+msgstr "Roadmap đề xuất"
+
+#. module: lms
+#: model:ir.actions.act_window,name:lms.action_lms_roadmap
+#: model:ir.ui.menu,name:lms.menu_lms_roadmap
+msgid "Recommended Roadmaps"
+msgstr "Roadmap đề xuất"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_form
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_tree_by_course
+msgid "Registration Status"
+msgstr "Trạng thái đăng ký"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.signup_pending_approval
+msgid "Registration Successful!"
+msgstr "Đăng ký thành công!"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_users_tree_lms
+msgid "Registration Type"
+msgstr "Loại đăng ký"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_form
+msgid "Reject"
+msgstr "Từ chối"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_roadmap__state__rejected
+#: model:ir.model.fields.selection,name:lms.selection__lms_student__current_course_registration_status__rejected
+#: model:ir.model.fields.selection,name:lms.selection__lms_student_course__status__rejected
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_form
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_search
+msgid "Rejected"
+msgstr "Từ chối"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap_course__reminder_date
+msgid "Reminder Date"
+msgstr "Ngày nhắc nhở"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_form
+msgid "Review"
+msgstr "Xem xét"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap__review_date
+msgid "Review Date"
+msgstr "Ngày xem xét"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap__review_notes
+msgid "Review Notes"
+msgstr "Ghi chú xem xét"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_form
+msgid "Review notes..."
+msgstr "Ghi chú xem xét..."
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap__reviewed_by
+msgid "Reviewed By"
+msgstr "Xem xét bởi"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap_course__roadmap_id
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_form
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_tree
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_form
+msgid "Roadmap"
+msgstr "Roadmap"
+
+#. module: lms
+#: model:ir.actions.act_window,name:lms.action_lms_student_ai_chat
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_tree
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_ai_chat_form
+msgid "Roadmap Consultation for Students"
+msgstr "Tư vấn roadmap cho học viên"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap__name
+msgid "Roadmap Name"
+msgstr "Tên Roadmap"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_ai_chat_form
+msgid "Roadmap Options to Choose"
+msgstr "Danh sách roadmap để chọn"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__role
+msgid "Role"
+msgstr "Vai trò"
+
+#. module: lms
+#: model:ir.actions.act_window,name:lms.action_lms_student_lesson_calendar
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_course_tab_form
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_student_calendar
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lesson_student_form
+msgid "Schedule"
+msgstr "Lịch học"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_lesson__state__scheduled
+msgid "Scheduled"
+msgstr "Đã lên lịch"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_search
+msgid "Search Courses"
+msgstr "Tìm kiếm khóa học"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_learning_history_search
+msgid "Search Learning Schedule"
+msgstr "Tìm kiếm lịch học"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_search
+msgid "Search Students"
+msgstr "Tìm kiếm học viên"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_ai_chat_form
+msgid "Select Roadmap 1"
+msgstr "Chọn roadmap 1"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_ai_chat_form
+msgid "Select Roadmap 2"
+msgstr "Chọn roadmap 2"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_ai_chat_form
+msgid "Select Roadmap 3"
+msgstr "Chọn roadmap 3"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_ai_chat_form
+msgid "Send (Enter)"
+msgstr "Gửi (Enter)"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_course_category__sequence
+#: model:ir.model.fields,field_description:lms.field_lms_course_level__sequence
+#: model:ir.model.fields,field_description:lms.field_lms_lesson__sequence
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap_course__sequence
+msgid "Sequence"
+msgstr "Thứ tự"
+
+#. module: lms
+#: model:ir.actions.server,name:lms.action_lms_student_set_status_approved
+msgid "Set Status: Approved"
+msgstr "Đặt trạng thái: Đã duyệt"
+
+#. module: lms
+#: model:ir.actions.server,name:lms.action_lms_student_set_status_cancelled
+msgid "Set Status: Cancelled"
+msgstr "Đặt trạng thái: Đã hủy"
+
+#. module: lms
+#: model:ir.actions.server,name:lms.action_lms_student_set_status_completed
+msgid "Set Status: Completed"
+msgstr "Đặt trạng thái: Hoàn thành"
+
+#. module: lms
+#: model:ir.actions.server,name:lms.action_lms_student_set_status_learning
+msgid "Set Status: Learning"
+msgstr "Đặt trạng thái: Đang học"
+
+#. module: lms
+#: model:ir.actions.server,name:lms.action_lms_student_set_status_pending
+msgid "Set Status: Pending Approval"
+msgstr "Đặt trạng thái: Chờ duyệt"
+
+#. module: lms
+#: model:ir.actions.server,name:lms.action_lms_student_set_status_rejected
+msgid "Set Status: Rejected"
+msgstr "Đặt trạng thái: Từ chối"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_ai_chat_form
+msgid "Setup Consultation Session"
+msgstr "Thiết lập phiên tư vấn"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap_course__similarity_score
+msgid "Similarity Score"
+msgstr "Điểm tương đồng"
+
+#. module: lms
+#: model:ir.model.fields,help:lms.field_lms_roadmap_course__similarity_score
+msgid "Similarity score with previously completed courses"
+msgstr "Điểm tương đồng với khóa học đã học"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_learning_history__status__skipped
+#: model:ir.model.fields.selection,name:lms.selection__lms_roadmap_course__status__skipped
+msgid "Skipped"
+msgstr "Bỏ qua"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__specialization
+msgid "Specialization"
+msgstr "Chuyên ngành"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_ai_chat_form
+msgid "Start Consultation"
+msgstr "Bắt đầu tư vấn"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_course__start_date
+#: model:ir.model.fields,field_description:lms.field_lms_student_course__start_date
+msgid "Start Date"
+msgstr "Ngày bắt đầu"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lesson__start_datetime
+msgid "Start Time"
+msgstr "Giờ bắt đầu"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_learning_history__status__started
+msgid "Started"
+msgstr "Đã bắt đầu"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_form
+msgid "Statistics"
+msgstr "Thống kê"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_course__state
+#: model:ir.model.fields,field_description:lms.field_lms_learning_history__status
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__status
+#: model:ir.model.fields,field_description:lms.field_lms_lesson__state
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap__state
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap_course__status
+#: model:ir.model.fields,field_description:lms.field_lms_student_ai_chat__session_state
+#: model:ir.model.fields,field_description:lms.field_lms_student_course__status
+#: model:ir.model.fields,field_description:lms.field_lms_student_lesson_progress__status
+#: model:ir.model.fields,field_description:lms.field_res_users__state
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_search
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lecturer_list
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_course_search_analytics
+msgid "Status"
+msgstr "Trạng thái"
+
+#. module: lms
+#: model:ir.model,name:lms.model_lms_student
+#: model:ir.model.fields,field_description:lms.field_lms_learning_history__student_id
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap__student_id
+#: model:ir.model.fields,field_description:lms.field_lms_student_ai_chat__student_id
+#: model:ir.model.fields,field_description:lms.field_lms_student_course__student_id
+#: model:ir.model.fields,field_description:lms.field_lms_student_lesson_progress__student_id
+#: model:ir.model.fields.selection,name:lms.selection__res_users__lms_signup_channel__student
+#: model:res.groups,name:lms.group_lms_user
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_course_search_analytics
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_form
+msgid "Student"
+msgstr "Học viên"
+
+#. module: lms
+#: model:ir.model,name:lms.model_lms_student_course
+msgid "Student Course Enrollment"
+msgstr "Đăng ký khóa học của học viên"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_student__name
+msgid "Student Name"
+msgstr "Tên học viên"
+
+#. module: lms
+#: model:res.groups,comment:lms.group_lms_user
+msgid "Student: view and manage own courses, learning history, and roadmaps"
+msgstr "Học viên: xem và quản lý khóa học, lịch sử học tập, roadmap của mình"
+
+#. module: lms
+#: model:ir.actions.act_window,name:lms.action_lms_student
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__student_managed
+#: model:ir.ui.menu,name:lms.menu_lms_students
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_form
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_tree
+msgid "Students"
+msgstr "Học viên"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_users_search_lms
+msgid "Students Pending Approval"
+msgstr "Sinh viên chờ duyệt"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_kanban
+msgid "Students:"
+msgstr "Học viên:"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_learning_history__date
+msgid "Study Date"
+msgstr "Ngày học"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_learning_history__study_duration
+msgid "Study Duration (hours)"
+msgstr "Thời gian học (giờ)"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap__course_line_ids
+msgid "Suggested Courses"
+msgstr "Khóa học đề xuất"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_student__roadmap_ids
+msgid "Suggested Roadmaps"
+msgstr "Roadmap đề xuất"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap_course__supplementary_materials
+msgid "Supplementary Materials"
+msgstr "Tài liệu bổ trợ"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_form
+msgid "Supplementary materials..."
+msgstr "Tài liệu bổ trợ..."
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_course_tag__name
+msgid "Tag Name"
+msgstr "Tên nhãn"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_course__tag_ids
+#: model:ir.ui.menu,name:lms.menu_lms_course_tags
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_form
+msgid "Tags"
+msgstr "Nhãn"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__subject_expertise
+msgid "Teaching Area"
+msgstr "Lĩnh vực giảng dạy"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__teaching_level
+msgid "Teaching Level"
+msgstr "Trình độ giảng dạy"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__teaching_type
+msgid "Teaching Mode"
+msgstr "Hình thức giảng dạy"
+
+#. module: lms
+#: model:ir.actions.act_window,name:lms.action_lms_instructor_lesson_calendar
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__teaching_schedule
+#: model:ir.ui.menu,name:lms.menu_lms_teaching_schedule
+msgid "Teaching Schedule"
+msgstr "Lịch dạy"
+
+#. module: lms
+#: model:ir.model.fields,help:lms.field_lms_learning_history__analytics_count
+msgid "Technical field used to count records in pivot/graph (SUM)."
+msgstr "Field kỹ thuật dùng để đếm record trong pivot/graph (SUM)."
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_ai_chat_form
+msgid "The consultation session is complete; chat has been locked."
+msgstr "Phiên tư vấn đã hoàn tất, chat đã được khóa."
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_ai_chat_form
+msgid ""
+"The system currently has no courses; the roadmap consultation feature cannot"
+" be used."
+msgstr ""
+"Hiện hệ thống chưa có khóa học nào, chưa thể dùng chức năng tư vấn roadmap."
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap_course__timeframe
+msgid "Timeframe"
+msgstr "Khung thời gian"
+
+#. module: lms
+#: model:ir.actions.act_window,name:lms.action_lms_learning_timetable
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_learning_history_calendar
+msgid "Timetable"
+msgstr "Thời khóa biểu"
+
+#. module: lms
+#: model:ir.ui.menu,name:lms.menu_lms_learning_timetable
+msgid "Timetable (Calendar)"
+msgstr "Thời khóa biểu (Calendar)"
+
+#. module: lms
+#: model:ir.actions.act_window,name:lms.action_lms_learning_timetable_by_course
+#: model:ir.ui.menu,name:lms.menu_lms_learning_timetable_by_course
+msgid "Timetable by Course"
+msgstr "TKB theo khóa học"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_learning_history__name
+msgid "Title"
+msgstr "Tiêu đề"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__total_courses
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap__total_courses
+#: model:ir.model.fields,field_description:lms.field_lms_student__total_courses
+msgid "Total Courses"
+msgstr "Tổng số khóa học"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_course__total_lessons
+msgid "Total Lessons"
+msgstr "Tổng số bài học"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__total_students
+msgid "Total Students"
+msgstr "Tổng số học viên"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_student__total_study_time
+msgid "Total Study Time (hours)"
+msgstr "Tổng thời gian học (giờ)"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_ai_chat_form
+msgid "Type your answer here then press Send (Enter)..."
+msgstr "Nhập câu trả lời của bạn tại đây rồi nhấn Gửi (Enter)..."
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__updated_at
+msgid "Updated Date"
+msgstr "Ngày cập nhật"
+
+#. module: lms
+#: model:ir.model,name:lms.model_res_users
+msgid "User"
+msgstr "Người dùng"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__user_id
+#: model:ir.model.fields,field_description:lms.field_lms_student__user_id
+msgid "User Account"
+msgstr "Tài khoản người dùng"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__username
+#: model:ir.model.fields,field_description:lms.field_lms_student__username
+msgid "Username"
+msgstr "Tên đăng nhập"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap__valid_from
+msgid "Valid From"
+msgstr "Hiệu lực từ"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap__valid_to
+msgid "Valid To"
+msgstr "Hiệu lực đến"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_lesson__lesson_type__video
+msgid "Video Lecture"
+msgstr "Bài giảng video"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lesson__is_published
+msgid "Visible to Students"
+msgstr "Hiển thị cho học viên"
+
+#. module: lms
+#: model:ir.model.fields,help:lms.field_lms_student__manual_level_lock
+msgid ""
+"When enabled, the system will not auto-override current_level from "
+"average_score."
+msgstr "Khi bật, hệ thống không tự ghi đè current_level từ average_score."
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_lecturer__years_of_experience
+msgid "Years of Experience"
+msgstr "Số năm kinh nghiệm"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_ai_chat_form
+msgid ""
+"You have selected a roadmap for this session. The system has processed "
+"course registration based on your choice."
+msgstr ""
+"Bạn đã chọn roadmap cho phiên này. Hệ thống đã xử lý đăng ký khóa học theo "
+"lựa chọn."
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.signup_pending_approval
+msgid "Your"
+msgstr "Tài khoản"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_student_ai_chat__user_message
+msgid "Your Message"
+msgstr "Tin nhắn của bạn"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.signup_pending_approval
+msgid "Your request has been recorded successfully."
+msgstr "Yêu cầu của bạn đã được ghi nhận thành công."
+
+#. module: lms
+#: model:mail.template,subject:lms.email_template_lecturer_welcome
+msgid "[LMS] Congratulations, your instructor account has been activated"
+msgstr "[LMS] Chúc mừng bạn đã được kích hoạt tài khoản giảng viên"
+
+#. module: lms
+#: model:mail.template,subject:lms.email_template_student_welcome
+msgid "[LMS] Congratulations, your student account has been activated"
+msgstr "[LMS] Chúc mừng bạn đã được kích hoạt tài khoản học viên"
+
+#. module: lms
+#: model:mail.template,subject:lms.email_template_lesson_attendance_link
+msgid "[LMS] Online lesson attendance link: {{ object.name }}"
+msgstr "[LMS] Link điểm danh buổi học online: {{ object.name }}"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.signup_pending_approval
+msgid ""
+"account is pending admin approval.\n"
+"                            We will send an email notification once your account is activated."
+msgstr ""
+"của bạn đang chờ admin phê duyệt.\n"
+"                            Chúng tôi sẽ gửi email thông báo ngay khi tài khoản được kích hoạt."
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_kanban
+msgid "hours"
+msgstr "giờ"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.lms_login_register_links
+msgid "instructor"
+msgstr "giảng viên"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.lms_login_register_links
+msgid "student"
+msgstr "học viên"

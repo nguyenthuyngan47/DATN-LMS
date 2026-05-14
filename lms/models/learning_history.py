@@ -10,44 +10,44 @@ SKIP_RELINK = 'skip_lms_student_course_relink'
 
 class LearningHistory(models.Model):
     _name = 'lms.learning.history'
-    _description = 'Lịch sử học tập'
+    _description = 'Learning History'
     _order = 'date desc, create_date desc'
 
-    student_id = fields.Many2one('lms.student', string='Học viên', required=True, ondelete='cascade', index=True)
-    student_course_id = fields.Many2one('lms.student.course', string='Khóa học của học viên', ondelete='cascade')
-    course_id = fields.Many2one('lms.course', string='Khóa học', related='student_course_id.course_id', store=True)
-    lesson_id = fields.Many2one('lms.lesson', string='Bài học', required=True, ondelete='cascade')
+    student_id = fields.Many2one('lms.student', string='Student', required=True, ondelete='cascade', index=True)
+    student_course_id = fields.Many2one('lms.student.course', string='Student Course', ondelete='cascade')
+    course_id = fields.Many2one('lms.course', string='Course', related='student_course_id.course_id', store=True)
+    lesson_id = fields.Many2one('lms.lesson', string='Lesson', required=True, ondelete='cascade')
     instructor_id = fields.Many2one(
         'res.users',
-        string='Giảng viên',
+        string='Instructor',
         related='course_id.instructor_id',
         store=True,
         readonly=True,
     )
     
-    date = fields.Datetime(string='Ngày học', default=fields.Datetime.now, required=True, index=True)
-    study_duration = fields.Float(string='Thời gian học (giờ)', digits=(16, 2), default=0.0)
+    date = fields.Datetime(string='Study Date', default=fields.Datetime.now, required=True, index=True)
+    study_duration = fields.Float(string='Study Duration (hours)', digits=(16, 2), default=0.0)
 
     analytics_count = fields.Integer(
         string='Analytics Count',
         default=1,
-        help='Field kỹ thuật dùng để đếm record trong pivot/graph (SUM).',
+        help='Technical field used to count records in pivot/graph (SUM).',
     )
 
     # Dùng cho calendar: hiển thị đủ thông tin (GV + SV) theo yêu cầu
-    name = fields.Char(string='Tiêu đề', compute='_compute_event_title', store=True)
+    name = fields.Char(string='Title', compute='_compute_event_title', store=True)
     
     # Trạng thái
     status = fields.Selection([
-        ('started', 'Đã bắt đầu'),
-        ('in_progress', 'Đang học'),
-        ('completed', 'Đã hoàn thành'),
-        ('skipped', 'Bỏ qua'),
-    ], string='Trạng thái', default='started', required=True, tracking=True)
+        ('started', 'Started'),
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed'),
+        ('skipped', 'Skipped'),
+    ], string='Status', default='started', required=True, tracking=True)
 
-    is_at_risk = fields.Boolean(string='Có nguy cơ bỏ cuộc', compute='_compute_is_at_risk')
+    is_at_risk = fields.Boolean(string='At Risk', compute='_compute_is_at_risk')
     
-    notes = fields.Text(string='Ghi chú')
+    notes = fields.Text(string='Notes')
     
     @api.depends('student_id', 'course_id', 'lesson_id', 'instructor_id')
     def _compute_event_title(self):
@@ -68,7 +68,7 @@ class LearningHistory(models.Model):
         """Kiểm tra thời gian học không được âm"""
         for record in self:
             if record.study_duration and record.study_duration < 0:
-                raise ValueError('Thời gian học không được âm')
+                raise ValueError('Study duration cannot be negative')
 
     @api.depends('student_id', 'date')
     def _compute_is_at_risk(self):

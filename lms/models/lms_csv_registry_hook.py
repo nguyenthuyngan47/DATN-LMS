@@ -11,7 +11,7 @@ _logger = logging.getLogger(__name__)
 
 class LmsCsvRegistryHook(models.AbstractModel):
     _name = "lms.csv.registry.hook"
-    _description = "Hook đồng bộ CSV khi Odoo load registry (khởi động)"
+    _description = "CSV Sync Hook on Odoo Registry Load"
 
     def _register_hook(self):
         super()._register_hook()

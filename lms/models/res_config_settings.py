@@ -9,7 +9,7 @@ class ResConfigSettings(models.TransientModel):
     lms_gemini_api_key = fields.Char(
         string='Gemini API Key',
         config_parameter='gemini.api_key',
-        help='API Key từ Google Gemini để sử dụng AI đề xuất khóa học. Lấy tại https://makersuite.google.com/app/apikey'
+        help='API Key from Google Gemini for AI course recommendations. Get it at https://makersuite.google.com/app/apikey'
     )
 
 

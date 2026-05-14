@@ -12,7 +12,7 @@ _logger = logging.getLogger(__name__)
 
 class AIAnalysis(models.Model):
     _name = 'lms.ai.analysis'
-    _description = 'AI Phân tích và đề xuất'
+    _description = 'AI Analysis and Recommendations'
     
     def _call_gemini_api(self, prompt, max_retries=3, retry_delay=1):
         """

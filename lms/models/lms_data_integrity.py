@@ -6,7 +6,7 @@ from odoo import api, models
 
 class LmsDataIntegrity(models.AbstractModel):
     _name = 'lms.data.integrity'
-    _description = 'Đồng bộ toàn bộ liên kết dữ liệu LMS'
+    _description = 'LMS Data Integrity Sync'
 
     @api.model
     def run_full_repair(self):

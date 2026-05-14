@@ -3,7 +3,7 @@
     <data noupdate="0">
         <!-- Sinh viên: xem toàn bộ danh sách; ghi chỉ bản ghi có user_id = user đang đăng nhập (OR với rule dưới). -->
         <record id="rule_lms_student_self_profile" model="ir.rule">
-            <field name="name">LMS Student User - View All Students</field>
+            <field name="name">LMS Student - View All Students</field>
             <field name="model_id" ref="model_lms_student"/>
             <field name="domain_force">[(1, '=', 1)]</field>
             <field name="groups" eval="[(4, ref('lms.group_lms_user'))]"/>
@@ -13,7 +13,7 @@
             <field name="perm_unlink" eval="0"/>
         </record>
         <record id="rule_lms_student_user_edit_own" model="ir.rule">
-            <field name="name">LMS Student User - Edit Own Profile</field>
+            <field name="name">LMS Student - Edit Own Profile</field>
             <field name="model_id" ref="model_lms_student"/>
             <field name="domain_force">[('user_id', '=', user.id)]</field>
             <field name="groups" eval="[(4, ref('lms.group_lms_user'))]"/>
@@ -47,7 +47,7 @@
 
         <!-- Học sinh: chỉ xem bài học thuộc khóa đã đăng ký (approved/learning), đã publish -->
         <record id="rule_lms_lesson_student_attendee_only" model="ir.rule">
-            <field name="name">LMS Student - Lessons Of Enrolled Courses</field>
+            <field name="name">LMS Student - Lessons of Enrolled Courses</field>
             <field name="model_id" ref="model_lms_lesson"/>
             <field name="domain_force">
                 [
@@ -96,7 +96,7 @@
             <field name="perm_unlink" eval="0"/>
         </record>
         <record id="rule_lms_lesson_instructor_edit_own_course" model="ir.rule">
-            <field name="name">LMS Instructor - Edit Lessons Of Assigned Courses</field>
+            <field name="name">LMS Instructor - Edit Lessons in Assigned Courses</field>
             <field name="model_id" ref="model_lms_lesson"/>
             <field name="domain_force">[('course_id.instructor_id', '=', user.id)]</field>
             <field name="groups" eval="[(4, ref('lms.group_lms_instructor'))]"/>
@@ -108,7 +108,7 @@
 
         <!-- Giảng viên: chỉ bản ghi đăng ký thuộc khóa học do chính user đó làm instructor_id -->
         <record id="rule_lms_student_course_instructor_owned_course" model="ir.rule">
-            <field name="name">LMS Instructor - Enrollments Of Own Courses</field>
+            <field name="name">LMS Instructor - Enrollments in Assigned Courses</field>
             <field name="model_id" ref="model_lms_student_course"/>
             <field name="domain_force">[('course_id.instructor_id', '=', user.id)]</field>
             <field name="groups" eval="[(4, ref('lms.group_lms_instructor'))]"/>
@@ -120,7 +120,7 @@
 
         <!-- Giảng viên: chỉ sửa hồ sơ lms.lecturer gắn user_id = user đang đăng nhập -->
         <record id="rule_lms_lecturer_instructor_own" model="ir.rule">
-            <field name="name">LMS Instructor - Own Lecturer Profile</field>
+            <field name="name">LMS Instructor - Own Profile</field>
             <field name="model_id" ref="model_lms_lecturer"/>
             <field name="domain_force">[('user_id', '=', user.id)]</field>
             <field name="groups" eval="[(4, ref('lms.group_lms_instructor'))]"/>
@@ -132,7 +132,7 @@
 
         <!-- Manager: full access -->
         <record id="rule_lms_manager_all_student" model="ir.rule">
-            <field name="name">LMS Manager - Students All</field>
+            <field name="name">LMS Admin - All Students</field>
             <field name="model_id" ref="model_lms_student"/>
             <field name="domain_force">[(1, '=', 1)]</field>
             <field name="groups" eval="[(4, ref('lms.group_lms_manager'))]"/>
@@ -142,7 +142,7 @@
             <field name="perm_unlink" eval="1"/>
         </record>
         <record id="rule_lms_manager_all_course" model="ir.rule">
-            <field name="name">LMS Manager - Courses All</field>
+            <field name="name">LMS Admin - All Courses</field>
             <field name="model_id" ref="model_lms_course"/>
             <field name="domain_force">[(1, '=', 1)]</field>
             <field name="groups" eval="[(4, ref('lms.group_lms_manager'))]"/>
@@ -152,7 +152,7 @@
             <field name="perm_unlink" eval="1"/>
         </record>
         <record id="rule_lms_manager_all_history" model="ir.rule">
-            <field name="name">LMS Manager - History All</field>
+            <field name="name">LMS Admin - All History</field>
             <field name="model_id" ref="model_lms_learning_history"/>
             <field name="domain_force">[(1, '=', 1)]</field>
             <field name="groups" eval="[(4, ref('lms.group_lms_manager'))]"/>

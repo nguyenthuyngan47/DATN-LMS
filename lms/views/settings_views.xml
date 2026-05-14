@@ -17,9 +17,9 @@
                             <div class="o_setting_right_pane">
                                 <label for="lms_gemini_api_key"/>
                                 <div class="text-muted">
-                                    <p>Nhập API Key từ Google Gemini để sử dụng AI đề xuất khóa học.</p>
-                                    <p>Lấy API key tại: <a href="https://makersuite.google.com/app/apikey" target="_blank">https://makersuite.google.com/app/apikey</a></p>
-                                    <p>Để trống nếu không muốn sử dụng AI (sẽ dùng Rule-Based và Content-Based).</p>
+                                    <p>Enter Google Gemini API Key to use AI for course recommendations.</p>
+                                    <p>Get API key at: <a href="https://makersuite.google.com/app/apikey" target="_blank">https://makersuite.google.com/app/apikey</a></p>
+                                    <p>Leave blank if you don't want to use AI (Rule-Based and Content-Based will be used).</p>
                                 </div>
                             </div>
                         </div>

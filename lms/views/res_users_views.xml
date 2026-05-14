@@ -1,5 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Server action: Duyệt hàng loạt sinh viên chờ duyệt -->
+    <record id="action_approve_pending_students" model="ir.actions.server">
+        <field name="name">Approve Student Accounts</field>
+        <field name="model_id" ref="base.model_res_users"/>
+        <field name="binding_model_id" ref="base.model_res_users"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">action = records.action_bulk_approve_students()</field>
+    </record>
+
+    <!-- Thêm cột LMS vào list view Users -->
+    <record id="view_users_tree_lms" model="ir.ui.view">
+        <field name="name">res.users.list.lms</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='login']" position="after">
+                <field name="lms_signup_channel" string="Registration Type"
+                       optional="show"
+                       decoration-info="lms_signup_channel == 'student'"
+                       decoration-warning="lms_signup_channel == 'lecturer'"/>
+                <field name="lms_is_pending" string="Pending Approval"
+                       optional="show"
+                       widget="boolean"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Thêm filter tìm kiếm theo loại đăng ký LMS -->
+    <record id="view_users_search_lms" model="ir.ui.view">
+        <field name="name">res.users.search.lms</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <separator/>
+                <filter name="filter_pending_student"
+                        string="Students Pending Approval"
+                        domain="[('lms_signup_channel', '=', 'student'), ('lms_is_pending', '=', True)]"/>
+                <filter name="filter_pending_lecturer"
+                        string="Instructors Pending Approval"
+                        domain="[('lms_signup_channel', '=', 'lecturer'), ('lms_is_pending', '=', True)]"/>
+                <separator/>
+                <filter name="filter_all_student"
+                        string="All Students"
+                        domain="[('lms_signup_channel', '=', 'student')]"/>
+                <filter name="filter_all_lecturer"
+                        string="All Instructors"
+                        domain="[('lms_signup_channel', '=', 'lecturer')]"/>
+            </xpath>
+        </field>
+    </record>
+
     <!-- Settings → Users (base.action_res_users) dùng base.view_users_form -->
     <record id="view_users_form_lms_signup" model="ir.ui.view">
         <field name="name">res.users.form.lms.signup</field>
@@ -8,11 +61,11 @@
         <field name="arch" type="xml">
             <xpath expr="//notebook[1]" position="inside">
                 <page string="LMS" name="lms_signup_info" invisible="not lms_signup_channel">
-                    <group string="Đăng ký LMS" name="lms_signup_group">
+                    <group string="LMS Registration" name="lms_signup_group">
                         <field name="lms_signup_channel"/>
                         <field name="certificate_link"
                             invisible="lms_signup_channel != 'lecturer'"
-                            placeholder="Link chứng chỉ hành nghề, CV, lịch sử công việc,..."/>
+                            placeholder="Practice certificate link, CV, work history,..."/>
                     </group>
                 </page>
             </xpath>
