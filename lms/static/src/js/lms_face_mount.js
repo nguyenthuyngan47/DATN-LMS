@@ -1,8 +1,8 @@
 /** @odoo-module **/
 
 /**
- * Gắn UI webcam + nút lên các mount div từ Html compute (học viên / điểm danh bài học).
- * Embedding: 16x8 grayscale chuẩn hóa = 128 chiều (khớp face_embedding_utils.FACE_EMBEDDING_DIM).
+ * Webcam UI for face enrollment (student profile) and lesson check-in.
+ * Embedding: 16x8 grayscale normalized = 128 dims (face_embedding_utils.FACE_EMBEDDING_DIM).
  */
 const EMBEDDING_DIM = 128;
 
@@ -29,6 +29,27 @@ function buildEmbedding128FromVideo(videoEl) {
     const mean = vec.reduce((a, b) => a + b, 0) / vec.length;
     const dev = Math.sqrt(vec.reduce((s, x) => s + (x - mean) ** 2, 0) / vec.length) || 1;
     return vec.map((x) => (x - mean) / dev);
+}
+
+/** Full-frame JPEG base64 for avatar (student + res.users). */
+function capturePhotoBase64FromVideo(videoEl) {
+    if (!videoEl.videoWidth) {
+        return null;
+    }
+    const maxW = 640;
+    const w = Math.min(maxW, videoEl.videoWidth);
+    const h = Math.round((videoEl.videoHeight / videoEl.videoWidth) * w);
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+        return null;
+    }
+    ctx.drawImage(videoEl, 0, 0, w, h);
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+    const parts = dataUrl.split(",");
+    return parts.length > 1 ? parts[1] : null;
 }
 
 async function rpcCallKw(model, method, args) {
@@ -88,9 +109,9 @@ function ensureUi(el) {
 
     const role = el.dataset.lmsRole;
     if (role === "enroll") {
-        btn.textContent = "Chụp và lưu mẫu khuôn mặt";
+        btn.textContent = "Capture and Save Face Template";
     } else {
-        btn.textContent = "Điểm danh (chụp ảnh)";
+        btn.textContent = "Check In (Take Photo)";
     }
 
     let stream;
@@ -100,7 +121,7 @@ function ensureUi(el) {
             video.srcObject = stream;
             status.textContent = "";
         } catch (e) {
-            status.textContent = "Không mở được camera: " + (e.message || e);
+            status.textContent = "Could not open camera: " + (e.message || e);
         }
     };
     startCam();
@@ -108,21 +129,30 @@ function ensureUi(el) {
     btn.addEventListener("click", async () => {
         const vec = buildEmbedding128FromVideo(video);
         if (!vec) {
-            status.textContent = "Chưa có hình từ camera. Đợi video hiển thị rồi thử lại.";
+            status.textContent = "No frame from camera yet. Wait for the video feed, then try again.";
             return;
         }
+        const photoB64 = capturePhotoBase64FromVideo(video);
         const json = JSON.stringify(vec);
         btn.disabled = true;
-        status.textContent = "Đang xử lý…";
+        status.textContent = "Processing…";
         try {
             if (role === "enroll") {
                 const sid = parseInt(el.dataset.studentId, 10);
-                await rpcCallKw("lms.student", "action_save_face_embedding_json", [[sid], json]);
+                await rpcCallKw("lms.student", "action_save_face_embedding_json", [
+                    [sid],
+                    json,
+                    photoB64 || false,
+                ]);
             } else {
                 const lid = parseInt(el.dataset.lessonId, 10);
-                await rpcCallKw("lms.lesson", "action_lesson_face_attendance", [[lid], json]);
+                await rpcCallKw("lms.lesson", "action_lesson_face_attendance", [
+                    [lid],
+                    json,
+                    photoB64 || false,
+                ]);
             }
-            status.textContent = "Thành công. Đang tải lại trang…";
+            status.textContent = "Success. Reloading page…";
             window.setTimeout(() => window.location.reload(), 600);
         } catch (e) {
             status.textContent = (e && e.message) || String(e);

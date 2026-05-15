@@ -236,8 +236,31 @@ class Student(models.Model):
                     '<p class="text-muted">Save the student profile first, then return to this tab to register the face template.</p>'
                 )
 
-    def action_save_face_embedding_json(self, embedding_json):
-        """RPC/JS: lưu embedding (chỉ chính học viên)."""
+    def _normalize_face_image_base64(self, image_base64):
+        """Strip data-URL prefix; return raw base64 for Image fields."""
+        if not image_base64 or not isinstance(image_base64, str):
+            return False
+        raw = image_base64.strip()
+        if raw.startswith('data:'):
+            raw = raw.split(',', 1)[-1].strip()
+        return raw or False
+
+    def _sync_user_avatar_from_face_image(self):
+        """Copy student avatar to linked Odoo user (navbar / profile)."""
+        for student in self:
+            if student.user_id and student.image_1920:
+                student.user_id.sudo().write({'image_1920': student.image_1920})
+
+    def _apply_face_capture_image(self, image_base64):
+        """Save webcam JPEG as student avatar and sync to res.users."""
+        image_b64 = self._normalize_face_image_base64(image_base64)
+        if not image_b64:
+            return
+        self.write({'image_1920': image_b64})
+        self._sync_user_avatar_from_face_image()
+
+    def action_save_face_embedding_json(self, embedding_json, image_base64=None):
+        """RPC/JS: save face embedding (student only); optional photo → avatar."""
         self.ensure_one()
         if self.user_id != self.env.user:
             raise AccessError(_('Only students can register their own face template.'))
@@ -249,6 +272,7 @@ class Student(models.Model):
                 'face_embedding_registered_at': fields.Datetime.now(),
             }
         )
+        self._apply_face_capture_image(image_base64)
         return {'lms_face_result': True, 'message': _('Face template saved.')}
 
     def write(self, vals):

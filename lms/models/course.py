@@ -682,8 +682,8 @@ class Lesson(models.Model):
         progress.write(vals)
         return True
 
-    def action_lesson_face_attendance(self, embedding_json):
-        """Điểm danh khuôn mặt (1 lần / bài / học viên). Cần đã đăng ký embedding trên hồ sơ."""
+    def action_lesson_face_attendance(self, embedding_json, image_base64=None):
+        """Face check-in (once per lesson per student). Optional photo syncs to user avatar."""
         self.ensure_one()
         if self.lesson_type != 'online':
             raise UserError(_('Only online lessons require face attendance.'))
@@ -722,6 +722,7 @@ class Lesson(models.Model):
                 'face_checked_in_at': fields.Datetime.now(),
             }
         )
+        student._apply_face_capture_image(image_base64)
         try:
             self._google_calendar_add_attendee_after_attendance(student)
         except Exception as e:  # noqa: BLE001
