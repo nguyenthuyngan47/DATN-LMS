@@ -52,14 +52,15 @@ def build_event_payload(lesson):
         instructor_email = (course.instructor_id.email or course.instructor_id.login or '').strip()
         attendees_raw.append((instructor_email, course.instructor_id.name))
 
+    # Students are NOT added here. They are added individually via
+    # add_lesson_attendee() after successful face attendance check-in.
     if config['include_students']:
-        enrollments = lesson.env['lms.student.course'].sudo().search(
-            [
-                ('course_id', '=', course.id),
-                ('status', 'in', config['student_statuses']),
-            ]
-        )
-        for student in enrollments.mapped('student_id'):
+        Progress = lesson.env['lms.student.lesson.progress'].sudo()
+        checked_in = Progress.search([
+            ('lesson_id', '=', lesson.id),
+            ('face_checked_in', '=', True),
+        ])
+        for student in checked_in.mapped('student_id'):
             attendees_raw.append((student.email or student.user_id.email or student.user_id.login, student.name))
 
     description_parts = [
