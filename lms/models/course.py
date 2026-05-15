@@ -226,7 +226,7 @@ class Course(models.Model):
             self.env['lms.student.course'].sudo().search([
                 ('student_id', '=', student.id),
                 ('course_id', 'in', self.ids),
-                ('status', '!=', 'cancelled'),
+                ('status', '!=', 'rejected'),
             ]).mapped('course_id').ids
         )
         for record in self:
@@ -238,14 +238,14 @@ class Course(models.Model):
                 and record.is_active
             )
             record.show_cancel_button = is_enrolled
-            approved_or_learning = self.env['lms.student.course'].sudo().search_count(
+            is_learning = self.env['lms.student.course'].sudo().search_count(
                 [
                     ('student_id', '=', student.id),
                     ('course_id', '=', record.id),
-                    ('status', 'in', ['approved', 'learning']),
+                    ('status', '=', 'learning'),
                 ]
             )
-            record.show_learning_content_tabs = bool(approved_or_learning)
+            record.show_learning_content_tabs = bool(is_learning)
 
     @api.depends()
     def _compute_is_student_course_readonly(self):
@@ -698,11 +698,11 @@ class Lesson(models.Model):
             [
                 ('student_id', '=', student.id),
                 ('course_id', '=', self.course_id.id),
-                ('status', 'in', ('approved', 'learning')),
+                ('status', '=', 'learning'),
             ]
         )
         if not enrolled:
-            raise UserError(_('Your course registration has not been approved.'))
+            raise UserError(_('Your course registration is not in Learning status.'))
         ref = face_embedding_utils.parse_embedding(student.face_embedding_json)
         probe = face_embedding_utils.parse_embedding(embedding_json)
         if not ref or not probe:
@@ -1021,7 +1021,7 @@ class StudentLessonProgress(models.Model):
             [
                 ('student_id', '=', student.id),
                 ('course_id', '=', lesson.course_id.id),
-                ('status', '!=', 'cancelled'),
+                ('status', '!=', 'rejected'),
             ],
             limit=1,
         )

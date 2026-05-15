@@ -177,7 +177,7 @@ class LearningHistory(models.Model):
                     if not sc.final_score or sc.final_score <= 0:
                         vals['final_score'] = round(random.uniform(5.5, 9.2), 2)
                     sc.write(vals)
-            elif sc.progress > 0 and sc.status in ('pending', 'approved'):
+            elif sc.progress > 0 and sc.status == 'pending':
                 sc.write({'status': 'learning'})
         students = wrong.mapped('student_id')
         if students:

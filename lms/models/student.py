@@ -12,6 +12,14 @@ from odoo.tools.mail import email_normalize
 
 _DEFAULT_STUDENT_AUTO_PASSWORD = "123456"
 
+# Trạng thái đăng ký khóa (lms.student.course) — thứ tự theo luồng nghiệp vụ.
+ENROLLMENT_STATUS_SELECTION = [
+    ('pending', 'Pending'),
+    ('learning', 'Learning'),
+    ('completed', 'Completed'),
+    ('rejected', 'Rejected'),
+]
+
 
 class Student(models.Model):
     _name = 'lms.student'
@@ -85,14 +93,7 @@ class Student(models.Model):
         'lms.roadmap', 'student_id', string='Suggested Roadmaps'
     )
     current_course_registration_status = fields.Selection(
-        [
-            ('pending', 'Pending'),
-            ('approved', 'Approved'),
-            ('rejected', 'Rejected'),
-            ('learning', 'Learning'),
-            ('completed', 'Completed'),
-            ('cancelled', 'Cancelled'),
-        ],
+        ENROLLMENT_STATUS_SELECTION,
         string='Registration Status (Current Course)',
         compute='_compute_current_course_registration_status',
         compute_sudo=True,
@@ -406,9 +407,6 @@ class Student(models.Model):
     def action_set_course_status_pending(self):
         return self._set_current_course_status('pending')
 
-    def action_set_course_status_approved(self):
-        return self._set_current_course_status('approved')
-
     def action_set_course_status_rejected(self):
         return self._set_current_course_status('rejected')
 
@@ -417,9 +415,6 @@ class Student(models.Model):
 
     def action_set_course_status_completed(self):
         return self._set_current_course_status('completed')
-
-    def action_set_course_status_cancelled(self):
-        return self._set_current_course_status('cancelled')
 
     @api.depends(
         'learning_history_ids',
@@ -570,14 +565,12 @@ class StudentCourse(models.Model):
     start_date = fields.Date(string='Start Date')
     completion_date = fields.Date(string='Completion Date')
     
-    status = fields.Selection([
-        ('pending', 'Pending'),
-        ('approved', 'Approved'),
-        ('rejected', 'Rejected'),
-        ('learning', 'Learning'),
-        ('completed', 'Completed'),
-        ('cancelled', 'Cancelled'),
-    ], string='Status', default='pending', tracking=True)
+    status = fields.Selection(
+        ENROLLMENT_STATUS_SELECTION,
+        string='Status',
+        default='pending',
+        tracking=True,
+    )
 
     _sql_constraints = [
         ('student_course_unique', 'unique(student_id, course_id)', 'Student has already enrolled in this course!'),
@@ -641,12 +634,10 @@ class StudentCourse(models.Model):
         History = self.env['lms.learning.history'].sudo()
         skip_ctx = {'skip_lms_statistics_refresh': True, 'skip_lms_student_course_relink': True}
         status_rank = {
-            'completed': 6,
-            'learning': 5,
-            'approved': 4,
-            'pending': 3,
-            'rejected': 2,
-            'cancelled': 1,
+            'completed': 4,
+            'learning': 3,
+            'pending': 2,
+            'rejected': 1,
         }
 
         def pick_status(a, b):

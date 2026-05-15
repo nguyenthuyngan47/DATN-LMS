@@ -9,11 +9,9 @@
                 <field name="email"/>
                 <separator/>
                 <filter string="Pending Approval" name="status_pending" domain="[('current_course_registration_status', '=', 'pending')]" invisible="not context.get('from_course_students')"/>
-                <filter string="Approved" name="status_approved" domain="[('current_course_registration_status', '=', 'approved')]" invisible="not context.get('from_course_students')"/>
-                <filter string="Rejected" name="status_rejected" domain="[('current_course_registration_status', '=', 'rejected')]" invisible="not context.get('from_course_students')"/>
                 <filter string="Learning" name="status_learning" domain="[('current_course_registration_status', '=', 'learning')]" invisible="not context.get('from_course_students')"/>
                 <filter string="Completed" name="status_completed" domain="[('current_course_registration_status', '=', 'completed')]" invisible="not context.get('from_course_students')"/>
-                <filter string="Cancelled" name="status_cancelled" domain="[('current_course_registration_status', '=', 'cancelled')]" invisible="not context.get('from_course_students')"/>
+                <filter string="Rejected" name="status_rejected" domain="[('current_course_registration_status', '=', 'rejected')]" invisible="not context.get('from_course_students')"/>
             </search>
         </field>
     </record>
@@ -92,6 +90,7 @@
                                 string="Registration Status"
                                 invisible="not context.get('from_course_students')"
                                 readonly="not context.get('from_course_students')"
+                                required="context.get('from_course_students')"
                             />
                         </group>
                     </group>
@@ -208,15 +207,6 @@
         <field name="code">action = records.action_set_course_status_pending()</field>
     </record>
 
-    <record id="action_lms_student_set_status_approved" model="ir.actions.server">
-        <field name="name">Set Status: Approved</field>
-        <field name="model_id" ref="model_lms_student"/>
-        <field name="binding_model_id" ref="model_lms_student"/>
-        <field name="binding_view_types">list</field>
-        <field name="state">code</field>
-        <field name="code">action = records.action_set_course_status_approved()</field>
-    </record>
-
     <record id="action_lms_student_set_status_rejected" model="ir.actions.server">
         <field name="name">Set Status: Rejected</field>
         <field name="model_id" ref="model_lms_student"/>
@@ -244,12 +234,4 @@
         <field name="code">action = records.action_set_course_status_completed()</field>
     </record>
 
-    <record id="action_lms_student_set_status_cancelled" model="ir.actions.server">
-        <field name="name">Set Status: Cancelled</field>
-        <field name="model_id" ref="model_lms_student"/>
-        <field name="binding_model_id" ref="model_lms_student"/>
-        <field name="binding_view_types">list</field>
-        <field name="state">code</field>
-        <field name="code">action = records.action_set_course_status_cancelled()</field>
-    </record>
 </odoo>

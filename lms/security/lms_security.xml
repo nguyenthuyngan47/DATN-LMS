@@ -45,7 +45,7 @@
             <field name="perm_unlink" eval="0"/>
         </record>
 
-        <!-- Học sinh: chỉ xem bài học thuộc khóa đã đăng ký (approved/learning), đã publish -->
+        <!-- Học sinh: chỉ xem bài học thuộc khóa đã đăng ký (learning), đã publish -->
         <record id="rule_lms_lesson_student_attendee_only" model="ir.rule">
             <field name="name">LMS Student - Lessons of Enrolled Courses</field>
             <field name="model_id" ref="model_lms_lesson"/>

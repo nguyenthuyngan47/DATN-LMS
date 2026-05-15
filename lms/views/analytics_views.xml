@@ -13,10 +13,10 @@
                 <field name="course_id"/>
                 <field name="status"/>
                 <field name="enrollment_date"/>
-                <filter string="Completed" name="status_completed" domain="[('status', '=', 'completed')]"/>
-                <filter string="Learning" name="status_learning" domain="[('status', '=', 'learning')]"/>
-                <filter string="Approved" name="status_approved" domain="[('status', '=', 'approved')]"/>
                 <filter string="Pending Approval" name="status_pending" domain="[('status', '=', 'pending')]"/>
+                <filter string="Learning" name="status_learning" domain="[('status', '=', 'learning')]"/>
+                <filter string="Completed" name="status_completed" domain="[('status', '=', 'completed')]"/>
+                <filter string="Rejected" name="status_rejected" domain="[('status', '=', 'rejected')]"/>
                 <group expand="0" string="Group By">
                     <filter string="Course" name="group_course" context="{'group_by': 'course_id'}"/>
                     <filter string="Status" name="group_status" context="{'group_by': 'status'}"/>

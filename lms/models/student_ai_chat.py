@@ -637,7 +637,7 @@ class LmsStudentAiChat(models.TransientModel):
                 [
                     ('student_id', '=', self.student_id.id),
                     ('course_id', '=', course.id),
-                    ('status', '!=', 'cancelled'),
+                    ('status', '!=', 'rejected'),
                 ],
                 limit=1,
             )
