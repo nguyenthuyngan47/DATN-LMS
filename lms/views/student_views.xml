@@ -9,6 +9,7 @@
                 <field name="email"/>
                 <separator/>
                 <filter string="Pending Approval" name="status_pending" domain="[('current_course_registration_status', '=', 'pending')]" invisible="not context.get('from_course_students')"/>
+                <filter string="Approved" name="status_approved" domain="[('current_course_registration_status', '=', 'approved')]" invisible="not context.get('from_course_students')"/>
                 <filter string="Learning" name="status_learning" domain="[('current_course_registration_status', '=', 'learning')]" invisible="not context.get('from_course_students')"/>
                 <filter string="Completed" name="status_completed" domain="[('current_course_registration_status', '=', 'completed')]" invisible="not context.get('from_course_students')"/>
                 <filter string="Rejected" name="status_rejected" domain="[('current_course_registration_status', '=', 'rejected')]" invisible="not context.get('from_course_students')"/>
@@ -38,10 +39,18 @@
         <field name="name">lms.student.list.by.course</field>
         <field name="model">lms.student</field>
         <field name="arch" type="xml">
-            <list string="Course Students" create="0">
+            <list string="Course Students" create="0" delete="0" editable="bottom">
                 <field name="id"/>
                 <field name="name"/>
-                <field name="current_course_registration_status" string="Registration Status"/>
+                <field
+                    name="current_course_registration_status"
+                    string="Registration Status"
+                    widget="selection"
+                    decoration-success="current_course_registration_status in ('approved', 'learning', 'completed')"
+                    decoration-info="current_course_registration_status == 'pending'"
+                    decoration-danger="current_course_registration_status == 'rejected'"
+                    decoration-muted="current_course_registration_status == 'cancelled'"
+                />
                 <field name="email"/>
                 <field name="phone"/>
                 <field name="username"/>
@@ -196,6 +205,7 @@
         <field name="view_id" ref="view_lms_student_tree_by_course"/>
         <field name="search_view_id" ref="view_lms_student_search"/>
         <field name="domain">[('enrolled_courses_ids.course_id', '=', (context.get('course_id') or context.get('active_id')))]</field>
+        <field name="context">{'from_course_students': 1}</field>
     </record>
 
     <record id="action_lms_student_set_status_pending" model="ir.actions.server">
@@ -205,6 +215,15 @@
         <field name="binding_view_types">list</field>
         <field name="state">code</field>
         <field name="code">action = records.action_set_course_status_pending()</field>
+    </record>
+
+    <record id="action_lms_student_set_status_approved" model="ir.actions.server">
+        <field name="name">Set Status: Approved</field>
+        <field name="model_id" ref="model_lms_student"/>
+        <field name="binding_model_id" ref="model_lms_student"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">action = records.action_set_course_status_approved()</field>
     </record>
 
     <record id="action_lms_student_set_status_rejected" model="ir.actions.server">

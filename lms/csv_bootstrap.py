@@ -209,15 +209,20 @@ def _ensure_many_to_many_enrollments(env, per_course: int = 5) -> None:
     existing = SC.search([])
     existing_pairs = {(r.student_id.id, r.course_id.id): r for r in existing}
 
+    course_by_id = {c.id: c for c in courses}
+
     to_create: list[dict[str, Any]] = []
     for sid, cid in sorted(target_pairs, key=lambda x: (x[1], x[0])):
         if (sid, cid) not in existing_pairs:
+            co = course_by_id[cid]
             to_create.append(
                 {
                     "student_id": sid,
                     "course_id": cid,
                     "enrollment_date": fields.Date.today(),
                     "status": "pending",
+                    "start_date": co.start_date,
+                    "end_date": co.end_date,
                 }
             )
     if to_create:
@@ -612,6 +617,7 @@ def import_lms_from_csv_directory(
             "course_id": map_course[int(r["course_id"])],
             "enrollment_date": _norm_date(r.get("enrollment_date")),
             "start_date": _norm_date(r.get("start_date")),
+            "end_date": _norm_date(r.get("end_date")),
             "completion_date": _norm_date(r.get("completion_date")),
             "status": (r.get("status") or "pending").strip(),
             "final_score": _to_float(fs) if fs not in (None, "") else False,
@@ -709,8 +715,8 @@ def import_lecturers_from_csv_directory(env, base: Path) -> int:
     sau đó gán ``lms.course.instructor_id`` luân phiên cho khớp dataset hiện có.
 
     Cột CSV (UTF-8-SIG): id, login, password, full_name, email, phone, gender,
-    date_of_birth, address, department, specialization, academic_degree,
-    years_of_experience, faculty, subject_expertise, certifications,
+    date_of_birth, address, specialization, academic_degree,
+    years_of_experience, subject_expertise, certifications,
     teaching_level, teaching_type, active
     """
     path = base / "lms_lecturer.csv"
@@ -781,11 +787,9 @@ def import_lecturers_from_csv_directory(env, base: Path) -> int:
             "date_of_birth": _norm_date(r.get("date_of_birth")),
             "avatar_url": ((r.get("avatar_url") or "").strip()[:2048]) or False,
             "address": ((r.get("address") or "").strip()[:500]) or False,
-            "department": ((r.get("department") or "").strip()[:255]) or False,
             "specialization": ((r.get("specialization") or "").strip()[:255]) or False,
             "academic_degree": ((r.get("academic_degree") or "").strip()[:255]) or False,
             "years_of_experience": int(float(r.get("years_of_experience") or 0)),
-            "faculty": ((r.get("faculty") or "").strip()[:255]) or False,
             "subject_expertise": ((r.get("subject_expertise") or "").strip()[:65535]) or False,
             "certifications": ((r.get("certifications") or "").strip()[:65535]) or False,
             "teaching_level": teaching_level or False,

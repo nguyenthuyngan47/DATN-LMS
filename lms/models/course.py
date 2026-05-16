@@ -9,6 +9,7 @@ from odoo.exceptions import UserError, ValidationError
 
 from ..services import google_calendar_sync
 from . import face_embedding_utils
+from .student import ENROLLMENT_STATUSES_EXCLUDED_FROM_CAPACITY
 
 
 class CourseCategory(models.Model):
@@ -61,9 +62,14 @@ class Course(models.Model):
     # Thông tin khóa học
     instructor_id = fields.Many2one('res.users', string='Instructor', tracking=True)
     duration_hours = fields.Float(string='Duration (hours)', digits=(16, 2), tracking=True)
-    max_student = fields.Integer(string='Max Students')
-    start_date = fields.Date(string='Start Date')
-    end_date = fields.Date(string='End Date')
+    max_student = fields.Integer(
+        string='Max Students',
+        default=15,
+        help='Maximum concurrent enrollments counting pending, approved, learning, and completed '
+             '(rejected/cancelled do not use a seat).',
+    )
+    start_date = fields.Date(string='Start Date', tracking=True)
+    end_date = fields.Date(string='End Date', tracking=True)
     # VND không dùng phần thập phân -> lưu số nguyên để tránh hiển thị 100,000.00
     price = fields.Integer(string='Cost (VND)', default=0, tracking=True)
     contact_payment = fields.Text(string='Instructor Contact', tracking=True)
@@ -149,12 +155,46 @@ class Course(models.Model):
             if record.duration_hours and record.duration_hours < 0:
                 raise ValueError('Course duration cannot be negative')
 
+    @api.constrains('start_date', 'end_date')
+    def _check_course_start_end_dates(self):
+        for record in self:
+            if record.start_date and record.end_date and record.start_date > record.end_date:
+                raise ValidationError(_('Course start date must be on or before the end date.'))
+
     @api.constrains('price')
     def _check_price_non_negative(self):
         for record in self:
             if record.price is not None and record.price < 0:
                 raise ValueError('Course cost cannot be negative')
-    
+
+    @api.constrains('max_student')
+    def _check_max_student_minimum(self):
+        for record in self:
+            if record.max_student in (False, None):
+                continue
+            if record.max_student < 1:
+                raise ValidationError(_('When set, max students must be at least 1.'))
+
+    @api.constrains('max_student', 'student_course_ids', 'student_course_ids.status')
+    def _check_max_student_vs_occupied(self):
+        for record in self:
+            cap = record.max_student
+            if not cap:
+                continue
+            occupied = len(
+                record.student_course_ids.filtered(
+                    lambda e: e.status not in ENROLLMENT_STATUSES_EXCLUDED_FROM_CAPACITY
+                )
+            )
+            if occupied > cap:
+                raise ValidationError(
+                    _(
+                        'This course already has %(occ)s active student(s); max students '
+                        'cannot be set below %(occ)s.',
+                    )
+                    % {'occ': occupied}
+                )
+
     @api.constrains('prerequisite_ids')
     def _check_prerequisite_cycle(self):
         """Kiểm tra prerequisite không được tạo vòng lặp"""
@@ -180,12 +220,31 @@ class Course(models.Model):
         for record in self:
             record.total_lessons = len(record.lesson_ids)
     
-    @api.depends('student_course_ids')
+    @api.depends('student_course_ids', 'student_course_ids.status')
     def _compute_enrolled_students(self):
         for record in self:
-            record.enrolled_students_count = len(record.student_course_ids)
+            record.enrolled_students_count = len(
+                record.student_course_ids.filtered(
+                    lambda e: e.status not in ENROLLMENT_STATUSES_EXCLUDED_FROM_CAPACITY
+                )
+            )
 
-    @api.depends('state', 'is_active', 'student_course_ids', 'instructor_id')
+    def _get_occupied_seat_count(self):
+        self.ensure_one()
+        return len(
+            self.student_course_ids.filtered(
+                lambda e: e.status not in ENROLLMENT_STATUSES_EXCLUDED_FROM_CAPACITY
+            )
+        )
+
+    @api.depends(
+        'state',
+        'is_active',
+        'student_course_ids',
+        'student_course_ids.status',
+        'instructor_id',
+        'max_student',
+    )
     def _compute_current_user_registration_state(self):
         """Điều khiển hiển thị nút đăng ký/hủy theo user hiện tại trên form course."""
         user = self.env.user
@@ -231,11 +290,15 @@ class Course(models.Model):
         )
         for record in self:
             is_enrolled = record.id in enrolled_ids
+            cap = record.max_student or 0
+            occupied = record._get_occupied_seat_count()
+            has_available_seats = not cap or occupied < cap
             # Khớp action_register_courses: chỉ published + đang hoạt động mới cho đăng ký mới.
             record.show_register_button = (
                 not is_enrolled
                 and record.state == 'published'
                 and record.is_active
+                and has_available_seats
             )
             record.show_cancel_button = is_enrolled
             is_learning = self.env['lms.student.course'].sudo().search_count(
@@ -303,11 +366,16 @@ class Course(models.Model):
         created_names = []
         duplicate_names = []
         blocked_names = []
+        full_names = []
 
         for course in self:
             # Chỉ cho đăng ký khóa học đang hoạt động và đã xuất bản.
             if course.state != 'published' or not course.is_active:
                 blocked_names.append(course.name)
+                continue
+            cap = course.max_student or 0
+            if cap and course._get_occupied_seat_count() >= cap:
+                full_names.append(course.name)
                 continue
             existed = StudentCourse.search(
                 [('student_id', '=', student.id), ('course_id', '=', course.id)],
@@ -322,6 +390,8 @@ class Course(models.Model):
                     'course_id': course.id,
                     'status': 'pending',
                     'enrollment_date': fields.Date.today(),
+                    'start_date': course.start_date,
+                    'end_date': course.end_date,
                     'final_score': False,
                 }
             )
@@ -338,10 +408,19 @@ class Course(models.Model):
                 _('Cannot register (not published or inactive): %s')
                 % ', '.join(blocked_names)
             )
+        if full_names:
+            lines.append(
+                _('Cannot register because the following course(s) are full (max students reached): %s')
+                % ', '.join(full_names)
+            )
         if not lines:
             lines.append(_('No courses were processed.'))
 
-        notif_type = 'success' if created_names and not (duplicate_names or blocked_names) else 'warning'
+        notif_type = (
+            'success'
+            if created_names and not (duplicate_names or blocked_names or full_names)
+            else 'warning'
+        )
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',

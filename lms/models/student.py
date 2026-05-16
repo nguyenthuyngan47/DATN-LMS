@@ -15,10 +15,14 @@ _DEFAULT_STUDENT_AUTO_PASSWORD = "123456"
 # Trạng thái đăng ký khóa (lms.student.course) — thứ tự theo luồng nghiệp vụ.
 ENROLLMENT_STATUS_SELECTION = [
     ('pending', 'Pending'),
+    ('approved', 'Approved'),
     ('learning', 'Learning'),
     ('completed', 'Completed'),
     ('rejected', 'Rejected'),
 ]
+
+# Trạng thái không chiếm chỗ trong lớp (đồng bộ khái niệm với schema ERD / giới hạn max_student).
+ENROLLMENT_STATUSES_EXCLUDED_FROM_CAPACITY = frozenset({'rejected', 'cancelled'})
 
 
 class Student(models.Model):
@@ -407,6 +411,9 @@ class Student(models.Model):
     def action_set_course_status_pending(self):
         return self._set_current_course_status('pending')
 
+    def action_set_course_status_approved(self):
+        return self._set_current_course_status('approved')
+
     def action_set_course_status_rejected(self):
         return self._set_current_course_status('rejected')
 
@@ -563,6 +570,10 @@ class StudentCourse(models.Model):
     
     enrollment_date = fields.Date(string='Enrollment Date', default=fields.Date.today, required=True)
     start_date = fields.Date(string='Start Date')
+    end_date = fields.Date(
+        string='End Date',
+        help='Planned end of the study period for this enrollment (often copied from the course).',
+    )
     completion_date = fields.Date(string='Completion Date')
     
     status = fields.Selection(
@@ -598,6 +609,43 @@ class StudentCourse(models.Model):
         'lms.learning.history', 'student_course_id', string='Learning History'
     )
 
+    @api.model
+    def _enrollment_status_counts_toward_capacity(cls, status):
+        return status not in ENROLLMENT_STATUSES_EXCLUDED_FROM_CAPACITY
+
+    @api.constrains('start_date', 'end_date')
+    def _check_enrollment_start_before_end(self):
+        for rec in self:
+            if rec.start_date and rec.end_date and rec.start_date > rec.end_date:
+                raise ValidationError(_('Enrollment start date must be on or before the end date.'))
+
+    @api.constrains('start_date', 'completion_date')
+    def _check_enrollment_start_before_completion(self):
+        for rec in self:
+            if rec.start_date and rec.completion_date and rec.start_date > rec.completion_date:
+                raise ValidationError(_('Enrollment start date must be on or before the completion date.'))
+
+    @api.constrains('course_id', 'status')
+    def _check_course_seat_capacity(self):
+        for rec in self:
+            if not rec.course_id:
+                continue
+            cap = rec.course_id.max_student
+            if not cap or cap < 1:
+                continue
+            domain = [
+                ('course_id', '=', rec.course_id.id),
+                ('status', 'not in', list(ENROLLMENT_STATUSES_EXCLUDED_FROM_CAPACITY)),
+            ]
+            if rec.id:
+                domain.append(('id', '!=', rec.id))
+            other = self.search_count(domain)
+            need_seat = self._enrollment_status_counts_toward_capacity(rec.status)
+            if need_seat and other + 1 > cap:
+                raise ValidationError(
+                    _('Course "%s" is full (maximum %s students).') % (rec.course_id.name, cap)
+                )
+
     @api.model_create_multi
     def create(self, vals_list):
         records = super().create(vals_list)
@@ -617,6 +665,42 @@ class StudentCourse(models.Model):
             students.action_refresh_statistics()
         return res
 
+    def action_bulk_approve_pending(self):
+        """Duyệt hàng loạt đăng ký đang chờ (pending → approved)."""
+        pending = self.filtered(lambda r: r.status == 'pending')
+        if not pending:
+            raise ValidationError(_('No pending enrollments in the selected list.'))
+        pending.write({'status': 'approved'})
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Approve Enrollments'),
+                'message': _('Approved %(count)s enrollment(s).', count=len(pending)),
+                'type': 'success',
+                'sticky': False,
+                'next': {'type': 'ir.actions.client', 'tag': 'reload'},
+            },
+        }
+
+    def action_bulk_set_learning(self):
+        """Chuyển đăng ký đã duyệt sang đang học (approved → learning)."""
+        approved = self.filtered(lambda r: r.status == 'approved')
+        if not approved:
+            raise ValidationError(_('No approved enrollments in the selected list.'))
+        approved.write({'status': 'learning'})
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Start Learning'),
+                'message': _('Set %(count)s enrollment(s) to Learning.', count=len(approved)),
+                'type': 'success',
+                'sticky': False,
+                'next': {'type': 'ir.actions.client', 'tag': 'reload'},
+            },
+        }
+
     @api.model
     def action_merge_duplicate_enrollments(self):
         """
@@ -634,10 +718,11 @@ class StudentCourse(models.Model):
         History = self.env['lms.learning.history'].sudo()
         skip_ctx = {'skip_lms_statistics_refresh': True, 'skip_lms_student_course_relink': True}
         status_rank = {
-            'completed': 4,
-            'learning': 3,
-            'pending': 2,
-            'rejected': 1,
+            'completed': 6,
+            'learning': 5,
+            'approved': 4,
+            'pending': 3,
+            'rejected': 2,
         }
 
         def pick_status(a, b):
@@ -657,6 +742,8 @@ class StudentCourse(models.Model):
                     vals['enrollment_date'] = dup.enrollment_date
                 if dup.start_date and (not keep.start_date or dup.start_date < keep.start_date):
                     vals['start_date'] = dup.start_date
+                if dup.end_date and (not keep.end_date or dup.end_date > keep.end_date):
+                    vals['end_date'] = dup.end_date
                 if dup.completion_date and (not keep.completion_date or dup.completion_date > keep.completion_date):
                     vals['completion_date'] = dup.completion_date
                 fs_keep = keep.final_score or 0

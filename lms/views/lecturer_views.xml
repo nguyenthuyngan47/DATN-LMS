@@ -9,8 +9,6 @@
                 <field name="full_name"/>
                 <field name="email"/>
                 <field name="phone_number"/>
-                <field name="department"/>
-                <field name="faculty"/>
                 <field name="academic_degree"/>
                 <field name="years_of_experience"/>
                 <field name="status" string="Status"/>
@@ -24,51 +22,47 @@
         <field name="arch" type="xml">
             <form create="0">
                 <sheet>
-                    <group>
-                        <group>
+                    <group string="Identity &amp; account">
+                        <group string="Profile">
                             <field name="lecturer_id" readonly="1"/>
                             <field name="full_name"/>
                             <field name="role" readonly="1"/>
                             <field name="status" readonly="1"/>
                             <field name="active"/>
                         </group>
-                        <group>
+                        <group string="Contact &amp; login">
                             <field name="username" readonly="1"/>
                             <field name="email"/>
                             <field name="phone_number"/>
                             <field name="last_login" readonly="1"/>
                         </group>
                     </group>
-                    <notebook>
-                        <page string="Personal Information">
-                            <group>
-                                <group>
-                                    <field name="gender"/>
-                                    <field name="date_of_birth"/>
-                                    <field name="address"/>
-                                </group>
-                                <group>
-                                    <field name="department"/>
-                                    <field name="specialization"/>
-                                    <field name="academic_degree"/>
-                                    <field name="years_of_experience"/>
-                                </group>
-                            </group>
-                        </page>
-                        <page string="Professional Information">
-                            <group>
-                                <group>
-                                    <field name="faculty"/>
-                                    <field name="subject_expertise"/>
-                                </group>
-                                <group>
-                                    <field name="certifications"/>
-                                    <field name="teaching_level"/>
-                                    <field name="teaching_type"/>
-                                </group>
-                            </group>
-                        </page>
-                        <!-- <page string="LMS Operations">
+                    <group string="Personal details">
+                        <group string="Demographics">
+                            <field name="gender"/>
+                            <field name="date_of_birth"/>
+                        </group>
+                        <group string="Address">
+                            <field name="address"/>
+                        </group>
+                    </group>
+                    <group string="Academic background">
+                        <group>
+                            <field name="specialization"/>
+                            <field name="academic_degree"/>
+                            <field name="years_of_experience"/>
+                        </group>
+                        <group string="Teaching mode">
+                            <field name="teaching_level"/>
+                            <field name="teaching_type"/>
+                        </group>
+                    </group>
+                    <group string="Teaching profile">
+                        <field name="subject_expertise" colspan="2"/>
+                        <field name="certifications" colspan="2"/>
+                    </group>
+                    <!-- <notebook>
+                        <page string="LMS Operations">
                             <group>
                                 <field name="course_assigned">
                                     <list>
@@ -100,7 +94,6 @@
                                 <field name="updated_at" readonly="1"/>
                             </group>
                         </page> -->
-                    </notebook>
                 </sheet>
             </form>
         </field>

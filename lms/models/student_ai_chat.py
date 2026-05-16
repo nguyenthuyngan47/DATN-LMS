@@ -8,6 +8,7 @@ from html import escape
 
 from odoo import _, fields, models
 from odoo.exceptions import UserError
+from odoo.tools import format_date
 
 from ..services import groq_client
 from ..services.groq_client import GroqConfigError
@@ -89,13 +90,16 @@ class LmsStudentAiChat(models.TransientModel):
     roadmap_option_2_label = fields.Char(string='Roadmap 2 Label', compute='_compute_roadmap_choice_ui')
     roadmap_option_3_label = fields.Char(string='Roadmap 3 Label', compute='_compute_roadmap_choice_ui')
 
-    @staticmethod
-    def _no_course_message():
-        return 'No courses available in the system. Roadmap counseling cannot be used yet.'
+    def _no_course_message(self):
+        return _(
+            'No courses available in the system. Roadmap counseling cannot be used yet.'
+        )
 
-    @staticmethod
-    def _chat_ephemeral_notice():
-        return 'Note: Please save this roadmap suggestion. If you leave this screen, the entire conversation will be deleted.'
+    def _chat_ephemeral_notice(self):
+        return _(
+            'Note: Please save this roadmap suggestion. If you leave this screen, the entire '
+            'conversation will be deleted.'
+        )
 
     def _get_available_courses_count(self):
         return self.env['lms.course'].sudo().search_count([])
@@ -107,6 +111,16 @@ class LmsStudentAiChat(models.TransientModel):
         except (TypeError, ValueError):
             value = 0
         return f'{value:,}'.replace(',', '.') + 'VND'
+
+    def _format_course_period_plain(self, course):
+        """Localized start/end for roadmap text (plain, not HTML)."""
+        if not course:
+            return ''
+        if course.start_date or course.end_date:
+            sd = format_date(self.env, course.start_date) if course.start_date else '—'
+            ed = format_date(self.env, course.end_date) if course.end_date else '—'
+            return _('from %(start)s to %(end)s') % {'start': sd, 'end': ed}
+        return _('(course dates not set)')
 
     def _reopen_chat_form_action(self):
         self.ensure_one()
@@ -181,9 +195,9 @@ class LmsStudentAiChat(models.TransientModel):
             rec.roadmap_option_1_available = 1 in by_index
             rec.roadmap_option_2_available = 2 in by_index
             rec.roadmap_option_3_available = 3 in by_index
-            rec.roadmap_option_1_label = by_index.get(1, {}).get('title') or 'Option A'
-            rec.roadmap_option_2_label = by_index.get(2, {}).get('title') or 'Option B'
-            rec.roadmap_option_3_label = by_index.get(3, {}).get('title') or 'Option C'
+            rec.roadmap_option_1_label = by_index.get(1, {}).get('title') or _('Option A')
+            rec.roadmap_option_2_label = by_index.get(2, {}).get('title') or _('Option B')
+            rec.roadmap_option_3_label = by_index.get(3, {}).get('title') or _('Option C')
 
     def _compute_roadmap_options_html(self):
         for rec in self:
@@ -191,7 +205,7 @@ class LmsStudentAiChat(models.TransientModel):
             if not options:
                 rec.roadmap_options_html = (
                     '<div style="padding:8px 10px;border:1px dashed #d1d5db;border-radius:8px;color:#6b7280;">'
-                    'No roadmaps to choose from.</div>'
+                    '%s</div>' % escape(_('No roadmaps to choose from.'))
                 )
                 rec.roadmap_option_1_html = False
                 rec.roadmap_option_2_html = False
@@ -203,7 +217,8 @@ class LmsStudentAiChat(models.TransientModel):
                 is_selected = rec.selected_roadmap_index == opt['index']
                 title = escape(opt['title'])
                 badge = (
-                    '<span style="margin-left:8px;color:#166534;background:#dcfce7;padding:2px 8px;border-radius:999px;">Selected</span>'
+                    '<span style="margin-left:8px;color:#166534;background:#dcfce7;padding:2px 8px;border-radius:999px;">'
+                    '%s</span>' % escape(_('Selected'))
                     if is_selected
                     else ''
                 )
@@ -212,22 +227,42 @@ class LmsStudentAiChat(models.TransientModel):
                     '<div style="border:1px solid #d1d5db;border-radius:10px;padding:10px;background:#fff;">'
                     '<div style="font-weight:600;">%s%s</div>' % (title, badge)
                 )
-                if opt['strategy']:
-                    opt_lines.append('<div><b>Strategy:</b> %s</div>' % escape(opt['strategy']))
                 if opt['summary']:
-                    opt_lines.append('<div><b>Summary:</b> %s</div>' % escape(opt['summary']))
+                    opt_lines.append(
+                        '<div><b>%s</b> %s</div>'
+                        % (escape(_('Summary:')), escape(opt['summary']))
+                    )
                 if opt['courses']:
-                    opt_lines.append('<div><b>Suggested Courses:</b><ul style="margin:4px 0 0 18px;">')
+                    opt_lines.append(
+                        '<div><b>%s</b><ul style="margin:4px 0 0 18px;">' % escape(_('Suggested Courses:'))
+                    )
                     for course_name in opt['courses']:
                         course = rec.env['lms.course'].sudo().search([('name', '=', course_name)], limit=1)
                         price_text = self._format_vnd(course.price) if course else '0VND'
-                        opt_lines.append('<li>%s (%s)</li>' % (escape(course_name), escape(price_text)))
+                        period = ''
+                        if course:
+                            ptxt = rec._format_course_period_plain(course)
+                            if ptxt:
+                                period = ' — %s' % escape(ptxt)
+                        opt_lines.append(
+                            '<li>%s (%s)%s</li>'
+                            % (escape(course_name), escape(price_text), period)
+                        )
                     opt_lines.append('</ul></div>')
-                opt_lines.append('<div><b>Total Roadmap Cost:</b> %s</div>' % escape(self._format_vnd(opt['total_cost_vnd'])))
+                opt_lines.append(
+                    '<div><b>%s</b> %s</div>'
+                    % (escape(_('Total Roadmap Cost:')), escape(self._format_vnd(opt['total_cost_vnd'])))
+                )
                 if opt['difference']:
-                    opt_lines.append('<div><b>Key Difference:</b> %s</div>' % escape(opt['difference']))
+                    opt_lines.append(
+                        '<div><b>%s</b> %s</div>'
+                        % (escape(_('Key Difference:')), escape(opt['difference']))
+                    )
                 if opt['fit_when']:
-                    opt_lines.append('<div><b>Suitable When:</b> %s</div>' % escape(opt['fit_when']))
+                    opt_lines.append(
+                        '<div><b>%s</b> %s</div>'
+                        % (escape(_('Suitable When:')), escape(opt['fit_when']))
+                    )
                 opt_lines.append('</div>')
                 opt_html = ''.join(opt_lines)
                 individual_htmls[opt['index']] = opt_html
@@ -591,30 +626,35 @@ class LmsStudentAiChat(models.TransientModel):
 
     def _build_roadmap_result_text(self, options):
         if not options:
-            return (
+            return _(
                 'Could not create valid roadmap options from the current data. '
                 'Please try again with more detailed answers.'
             )
-        lines = ['I have created roadmap suggestions for you to choose from:']
+        lines = [_('I have created roadmap suggestions for you to choose from:')]
         for opt in options:
             lines.append('')
             lines.append('%s' % opt['title'])
-            if opt['strategy']:
-                lines.append('Strategy: %s' % opt['strategy'])
             if opt['summary']:
-                lines.append('Summary: %s' % opt['summary'])
-            lines.append('Suggested Courses:')
+                lines.append('%s %s' % (_('Summary:'), opt['summary']))
+            lines.append(_('Suggested Courses:'))
             for course_name in opt['courses']:
                 course = self.env['lms.course'].sudo().search([('name', '=', course_name)], limit=1)
                 price_text = self._format_vnd(course.price if course else 0)
-                lines.append('- %s (%s)' % (course_name, price_text))
-            lines.append('Total Roadmap Cost: %s' % self._format_vnd(opt['total_cost_vnd']))
+                period = ''
+                if course:
+                    ptxt = self._format_course_period_plain(course)
+                    if ptxt:
+                        period = ' — %s' % ptxt
+                lines.append('- %s (%s)%s' % (course_name, price_text, period))
+            lines.append('%s %s' % (_('Total Roadmap Cost:'), self._format_vnd(opt['total_cost_vnd'])))
             if opt['difference']:
-                lines.append('Key Difference: %s' % opt['difference'])
+                lines.append('%s %s' % (_('Key Difference:'), opt['difference']))
             if opt['fit_when']:
-                lines.append('Suitable When: %s' % opt['fit_when'])
+                lines.append('%s %s' % (_('Suitable When:'), opt['fit_when']))
         lines.append('')
-        lines.append('Please select exactly one roadmap using the "Select Roadmap" button.')
+        lines.append(
+            _('Please select exactly one roadmap using the "Select Roadmap" button.')
+        )
         return '\n'.join(lines)
 
     def _enroll_courses_from_option(self, option):
@@ -644,12 +684,18 @@ class LmsStudentAiChat(models.TransientModel):
             if existed:
                 skipped += 1
                 continue
+            cap = course.max_student
+            if cap and cap >= 1 and course._get_occupied_seat_count() >= cap:
+                skipped += 1
+                continue
             Enrollment.create(
                 {
                     'student_id': self.student_id.id,
                     'course_id': course.id,
                     'status': 'pending',
                     'enrollment_date': fields.Date.today(),
+                    'start_date': course.start_date,
+                    'end_date': course.end_date,
                     'final_score': False,
                 }
             )
@@ -672,8 +718,11 @@ class LmsStudentAiChat(models.TransientModel):
         conv.append(
             {
                 'role': 'assistant',
-                'content': 'You selected "%s". Created %s new enrollments, skipped %s courses (already enrolled or invalid).'
-                % (option['title'], created, skipped),
+                'content': _(
+                    'You selected "%(title)s". Created %(created)s new enrollments, skipped %(skipped)s courses '
+                    '(already enrolled or invalid).'
+                )
+                % {'title': option['title'], 'created': created, 'skipped': skipped},
             }
         )
         self._set_conversation(conv)
@@ -691,7 +740,7 @@ class LmsStudentAiChat(models.TransientModel):
     def action_start_session(self):
         self.ensure_one()
         if self._get_available_courses_count() <= 0:
-            raise UserError(_(self._no_course_message()))
+            raise UserError(self._no_course_message())
         first_question = self._generate_first_question()
         self.write(
             {
@@ -734,7 +783,9 @@ class LmsStudentAiChat(models.TransientModel):
             self.write({'session_state': 'done', 'user_message': False})
             self._set_conversation(conv)
             return self._reopen_chat_form_action()
-        next_question = eval_result['next_question'] or 'Could you share more about your specific learning goals?'
+        next_question = eval_result['next_question'] or _(
+            'Could you share more about your specific learning goals?'
+        )
         conv.append({'role': 'assistant', 'content': next_question})
         self.write({'asked_count': self.asked_count + 1, 'user_message': False})
         self._set_conversation(conv)

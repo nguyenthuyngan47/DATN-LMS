@@ -113,10 +113,13 @@ class LearningHistory(models.Model):
             ('course_id', '=', lesson.course_id.id),
         ], limit=1)
         if not sc:
+            course = lesson.course_id
             sc = StudentCourse.with_context(skip_lms_statistics_refresh=True).create({
                 'student_id': sid,
-                'course_id': lesson.course_id.id,
+                'course_id': course.id,
                 'status': 'learning',
+                'start_date': course.start_date,
+                'end_date': course.end_date,
             })
         out = dict(vals)
         out['student_course_id'] = sc.id
@@ -245,10 +248,13 @@ class LearningHistory(models.Model):
         ], limit=1)
         
         if not student_course:
+            course = lesson_id.course_id
             student_course = self.env['lms.student.course'].create({
                 'student_id': student_id,
-                'course_id': lesson_id.course_id.id,
+                'course_id': course.id,
                 'status': 'learning',
+                'start_date': course.start_date,
+                'end_date': course.end_date,
             })
         
         return self.create({

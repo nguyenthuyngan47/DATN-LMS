@@ -2012,3 +2012,269 @@ msgstr "giảng viên"
 #: model_terms:ir.ui.view,arch_db:lms.lms_login_register_links
 msgid "student"
 msgstr "học viên"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap_course__enrollment_status
+msgid "Enrollment Status"
+msgstr "Trạng thái đăng ký"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.field_lms_roadmap_course__enrollment_status__not_enrolled
+msgid "Not Enrolled"
+msgstr "Chưa đăng ký"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.field_lms_roadmap_course__enrollment_status__learning
+msgid "Learning"
+msgstr "Đang học"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap__state__archived
+msgid "Archived"
+msgstr "Đã lưu trữ"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.field_lms_roadmap_course__timeframe__short
+msgid "Short Term (1-2 weeks)"
+msgstr "Ngắn hạn (1-2 tuần)"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.field_lms_roadmap_course__timeframe__medium
+msgid "Medium Term (1-3 months)"
+msgstr "Trung hạn (1-3 tháng)"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.field_lms_roadmap_course__timeframe__long
+msgid "Long Term (3+ months)"
+msgstr "Dài hạn (3+ tháng)"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/roadmap.py:0
+msgid "Remove from Roadmap"
+msgstr "Gỡ khỏi roadmap"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/roadmap.py:0
+msgid "You can only remove courses from your own roadmap."
+msgstr "Bạn chỉ có thể gỡ khóa học khỏi roadmap của chính mình."
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/roadmap.py:0
+msgid "Course \"%s\" has already been removed from this roadmap."
+msgstr "Khóa học \"%s\" đã được gỡ khỏi roadmap này."
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/roadmap.py:0
+msgid "Cannot remove course \"%s\" while enrollment status is \"%s\"."
+msgstr "Không thể gỡ khóa \"%s\" khi trạng thái đăng ký là \"%s\"."
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/roadmap.py:0
+msgid "Removed %s course(s) from the roadmap."
+msgstr "Đã gỡ %s khóa học khỏi roadmap."
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_form
+msgid "Remove"
+msgstr "Gỡ bỏ"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_form
+msgid "Remove from roadmap"
+msgstr "Gỡ khỏi roadmap"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/roadmap.py:0
+msgid "Removed %s course(s) from the roadmap and cancelled pending enrollment."
+msgstr "Đã gỡ %s khóa học khỏi roadmap và hủy đăng ký chờ duyệt."
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.field_lms_roadmap__state__active
+msgid "Active"
+msgstr "Đang theo"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.field_lms_roadmap_course__step_state__locked
+msgid "Locked"
+msgstr "Chưa mở"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.field_lms_roadmap_course__step_state__available
+msgid "Available"
+msgstr "Được đăng ký"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.field_lms_roadmap_course__step_state__completed
+msgid "Completed"
+msgstr "Đã hoàn thành"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap_course__step_state
+msgid "Progress"
+msgstr "Tiến độ lộ trình"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/roadmap.py:0
+msgid "Student \"%s\" already has an active roadmap. Archive it before activating another."
+msgstr "Học viên \"%s\" đã có lộ trình đang theo. Hãy lưu trữ lộ trình cũ trước khi kích hoạt lộ trình mới."
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/roadmap.py:0
+msgid "Course \"%s\" is not available yet. Complete previous courses first."
+msgstr "Khóa \"%s\" chưa mở. Hãy hoàn thành các khóa trước đó."
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/roadmap.py:0
+msgid "no active roadmap"
+msgstr "chưa có lộ trình đang theo"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/roadmap.py:0
+msgid "not available on your roadmap yet"
+msgstr "chưa mở trên lộ trình của bạn"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_form
+msgid "Activate Roadmap"
+msgstr "Kích hoạt lộ trình"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_switch_wizard_form
+msgid "Switch Learning Roadmap"
+msgstr "Đổi lộ trình học tập"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_switch_wizard_form
+msgid "Confirm"
+msgstr "Xác nhận"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_form
+msgid "Course period"
+msgstr "Thời gian khóa học"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "(course dates not set)"
+msgstr "(chưa có ngày bắt đầu/kết thúc khóa)"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "Could not create valid roadmap options from the current data. Please try again with more detailed answers."
+msgstr "Không tạo được phương án roadmap hợp lệ từ dữ liệu hiện tại. Hãy thử lại với câu trả lời chi tiết hơn."
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "Could you share more about your specific learning goals?"
+msgstr "Bạn có thể chia sẻ thêm về mục tiêu học tập cụ thể của bạn không?"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "from %(start)s to %(end)s"
+msgstr "từ %(start)s đến %(end)s"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "I have created roadmap suggestions for you to choose from:"
+msgstr "Hệ thống đã tạo các phương án roadmap để bạn lựa chọn:"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "Key Difference:"
+msgstr "Khác biệt chính:"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "No courses available in the system. Roadmap counseling cannot be used yet."
+msgstr "Hiện chưa có khóa học trong hệ thống. Chưa thể dùng tư vấn roadmap."
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "No roadmaps to choose from."
+msgstr "Không có roadmap nào để chọn."
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "Note: Please save this roadmap suggestion. If you leave this screen, the entire conversation will be deleted."
+msgstr "Lưu ý: Hãy lưu gợi ý roadmap này. Nếu bạn rời màn hình này, toàn bộ cuộc trò chuyện sẽ bị xóa."
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "Option A"
+msgstr "Phương án A"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "Option B"
+msgstr "Phương án B"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "Option C"
+msgstr "Phương án C"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "Please select exactly one roadmap using the \"Select Roadmap\" button."
+msgstr "Vui lòng chọn đúng một roadmap bằng nút \"Chọn roadmap\"."
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "Selected"
+msgstr "Đã chọn"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "Suggested Courses:"
+msgstr "Khóa học đề xuất:"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "Summary:"
+msgstr "Tóm tắt:"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "Suitable When:"
+msgstr "Phù hợp khi:"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "Total Roadmap Cost:"
+msgstr "Tổng chi phí roadmap:"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid ""
+"You selected \"%(title)s\". Created %(created)s new enrollments, skipped %(skipped)s courses (already enrolled or invalid)."
+msgstr ""
+"Bạn đã chọn \"%(title)s\". Đã tạo %(created)s đăng ký mới, bỏ qua %(skipped)s khóa (đã đăng ký hoặc không hợp lệ)."

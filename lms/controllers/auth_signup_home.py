@@ -42,18 +42,14 @@ class AuthSignupHome(AuthSignupHomeBase):
                     public_user = request.env.ref('base.public_user')
                     request.update_env(user=public_user)
 
-                # Sau đăng ký: về trang đăng nhập, điền sẵn email (query `login`) và gắn cờ chờ duyệt LMS nếu có.
+                # Sinh viên / giảng viên: màn hình chờ duyệt tài khoản (không về login ngay).
                 pending_channel = (qcontext.get('lms_register') or '').strip()
-                login_email = (qcontext.get('login') or '').strip()
-                query = {}
-                if login_email:
-                    query['login'] = login_email
                 if pending_channel in ('student', 'lecturer'):
-                    query['lms_signup_pending'] = pending_channel
-                login_url = '/web/login'
-                if query:
-                    login_url += '?' + url_encode(query)
-                return request.redirect(login_url, local=True)
+                    return request.redirect(
+                        '/lms/signup/pending?channel=%s' % pending_channel,
+                        local=True,
+                    )
+                return request.redirect('/web/login', local=True)
             except UserError as e:
                 qcontext['error'] = e.args[0]
             except (SignupError, AssertionError) as e:

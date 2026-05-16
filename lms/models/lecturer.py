@@ -49,12 +49,10 @@ class LmsLecturer(models.Model):
     date_of_birth = fields.Date(string="Date of Birth")
     avatar_url = fields.Char(string="Avatar (URL)")
     address = fields.Char(string="Address")
-    department = fields.Char(string="Department")
     specialization = fields.Char(string="Specialization")
     academic_degree = fields.Char(string="Academic Degree")
     years_of_experience = fields.Integer(string="Years of Experience")
 
-    faculty = fields.Char(string="Faculty")
     subject_expertise = fields.Text(string="Teaching Area")
     certifications = fields.Text(string="Certifications")
     teaching_level = fields.Selection(

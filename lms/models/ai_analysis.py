@@ -174,7 +174,6 @@ Chỉ trả về JSON, không có text thêm.
                 if course:
                     recommendations.append({
                         'course_id': course.id,
-                        'similarity_score': 0.9 if rec.get('priority') == 'high' else 0.7,
                         'reason': f"AI đề xuất: {rec.get('reason', '')}",
                         'priority': rec.get('priority', 'medium'),
                     })
@@ -248,12 +247,12 @@ Chỉ trả về JSON, không có text thêm.
             if similarity_score > 0.2:  # Ngưỡng tối thiểu
                 recommendations.append({
                     'course_id': course.id,
-                    'similarity_score': similarity_score,
                     'reason': ' | '.join(reasons),
+                    'priority': 'high' if similarity_score >= 0.7 else 'medium' if similarity_score >= 0.4 else 'low',
                 })
         
-        # Sắp xếp theo điểm tương đồng
-        recommendations.sort(key=lambda x: x['similarity_score'], reverse=True)
+        priority_rank = {'high': 3, 'medium': 2, 'low': 1}
+        recommendations.sort(key=lambda x: priority_rank.get(x.get('priority', 'medium'), 0), reverse=True)
         return recommendations[:10]  # Top 10
     
     @api.model
@@ -288,7 +287,6 @@ Chỉ trả về JSON, không có text thêm.
                 if python_intermediate:
                     recommendations.append({
                         'course_id': python_intermediate.id,
-                        'similarity_score': 1.0,
                         'reason': 'Luật: Đã hoàn thành Python Beginner → Gợi ý Python Intermediate',
                         'priority': 'high',
                     })
@@ -304,7 +302,6 @@ Chỉ trả về JSON, không có text thêm.
             for course in easy_courses:
                 recommendations.append({
                     'course_id': course.id,
-                    'similarity_score': 0.7,
                     'reason': f'Luật: Không hoạt động {student.inactive_days} ngày → Gợi ý khóa học dễ để khởi động lại',
                     'priority': 'medium',
                 })
@@ -324,7 +321,6 @@ Chỉ trả về JSON, không có text thêm.
             for next_course in next_courses:
                 recommendations.append({
                     'course_id': next_course.id,
-                    'similarity_score': 0.9,
                     'reason': f'Luật: Đã hoàn thành {course.name} → Gợi ý khóa học tiếp theo',
                     'priority': 'high',
                 })
@@ -342,8 +338,8 @@ Chỉ trả về JSON, không có text thêm.
         
         return [{
             'course_id': course.id,
-            'similarity_score': 0.5,
             'reason': f'Đề xuất theo trình độ: {level}',
+            'priority': 'medium',
         } for course in courses]
     
     @api.model

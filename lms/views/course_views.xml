@@ -61,6 +61,15 @@
                     domain="[('instructor_id', '=', uid)]"
                     groups="lms.group_lms_instructor"
                 />
+                <filter
+                    string="My Courses"
+                    name="my_enrolled_courses"
+                    domain="[
+                        ('student_course_ids.student_id.user_id', '=', uid),
+                        ('student_course_ids.status', '!=', 'rejected'),
+                    ]"
+                    groups="lms.group_lms_user"
+                />
                 <group expand="0" string="Group By">
                     <filter string="Category" name="group_category" context="{'group_by': 'category_id'}"/>
                     <filter string="Level" name="group_level" context="{'group_by': 'level_id'}"/>
@@ -87,15 +96,13 @@
                         groups="lms.group_lms_user"
                     />
                 </header>
+                <field name="state" column_invisible="1"/>
                 <field name="name"/>
                 <field name="instructor_id"/>
                 <field name="category_id"/>
-                <field name="level_id"/>
-                <field name="state"/>
                 <field name="start_date"/>
                 <field name="end_date"/>
                 <field name="enrolled_students_count"/>
-                <field name="average_rating"/>
             </list>
         </field>
     </record>
@@ -155,6 +162,10 @@
                             <field name="total_lessons" readonly="is_student_course_readonly"/>
                         </group>
                     </group>
+                    <group string="Course period" name="course_period">
+                        <field name="start_date" readonly="is_student_course_readonly"/>
+                        <field name="end_date" readonly="is_student_course_readonly"/>
+                    </group>
                     <notebook>
                         <page string="Lessons" name="lessons" invisible="not show_learning_content_tabs">
                             <!-- no_open: only open lesson via Details button → action_open_lesson_full (no JS). -->
@@ -211,6 +222,8 @@
                 <field name="category_id"/>
                 <field name="level_id"/>
                 <field name="duration_hours"/>
+                <field name="start_date"/>
+                <field name="end_date"/>
                 <field name="enrolled_students_count"/>
                 <templates>
                     <t t-name="kanban-box">
@@ -223,6 +236,7 @@
                                     <strong><field name="name"/></strong>
                                     <div><field name="category_id"/> - <field name="level_id"/></div>
                                     <div>Duration: <field name="duration_hours"/> hours</div>
+                                    <div><field name="start_date"/> – <field name="end_date"/></div>
                                     <div>Students: <field name="enrolled_students_count"/></div>
                                 </div>
                             </div>
@@ -234,6 +248,21 @@
     </record>
 
     <record id="action_lms_course" model="ir.actions.act_window">
+        <field name="name">Courses</field>
+        <field name="res_model">lms.course</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="search_view_id" ref="view_lms_course_search"/>
+    </record>
+
+    <record id="action_lms_course_student" model="ir.actions.act_window">
+        <field name="name">Courses</field>
+        <field name="res_model">lms.course</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="search_view_id" ref="view_lms_course_search"/>
+        <field name="context">{'search_default_my_enrolled_courses': 1}</field>
+    </record>
+
+    <record id="action_lms_course_instructor" model="ir.actions.act_window">
         <field name="name">Courses</field>
         <field name="res_model">lms.course</field>
         <field name="view_mode">list,kanban,form</field>
