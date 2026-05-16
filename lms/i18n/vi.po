@@ -1953,11 +1953,11 @@ msgstr "Số năm kinh nghiệm"
 #. module: lms
 #: model_terms:ir.ui.view,arch_db:lms.view_lms_student_ai_chat_form
 msgid ""
-"You have selected a roadmap for this session. The system has processed "
-"course registration based on your choice."
+"You have selected a roadmap. Open it to register for each course (pending "
+"instructor/admin approval)."
 msgstr ""
-"Bạn đã chọn roadmap cho phiên này. Hệ thống đã xử lý đăng ký khóa học theo "
-"lựa chọn."
+"Bạn đã chọn lộ trình. Mở lộ trình để đăng ký từng khóa (chờ giảng viên/"
+"quản trị duyệt)."
 
 #. module: lms
 #: model_terms:ir.ui.view,arch_db:lms.signup_pending_approval
@@ -2238,8 +2238,13 @@ msgstr "Phương án C"
 #. module: lms
 #. odoo-python
 #: code:addons/lms/models/student_ai_chat.py:0
-msgid "Please select exactly one roadmap using the \"Select Roadmap\" button."
-msgstr "Vui lòng chọn đúng một roadmap bằng nút \"Chọn roadmap\"."
+msgid ""
+"Please select exactly one roadmap option. The system will save your roadmap "
+"and open it so you can register for each course individually (pending "
+"approval)."
+msgstr ""
+"Vui lòng chọn đúng một phương án lộ trình. Hệ thống sẽ lưu lộ trình và mở "
+"để bạn đăng ký từng khóa riêng lẻ (chờ duyệt)."
 
 #. module: lms
 #. odoo-python
@@ -2275,6 +2280,200 @@ msgstr "Tổng chi phí roadmap:"
 #. odoo-python
 #: code:addons/lms/models/student_ai_chat.py:0
 msgid ""
-"You selected \"%(title)s\". Created %(created)s new enrollments, skipped %(skipped)s courses (already enrolled or invalid)."
+"You selected \"%(title)s\". Your learning roadmap has been saved (%(count)s "
+"courses).\n"
+"\n"
+"Next step: on the roadmap screen (opening now), go to the \"Recommended "
+"Courses\" tab and click **Enroll** for each course you want to take. Each "
+"registration will be **Pending approval** until an instructor or "
+"administrator approves it.\n"
+"\n"
+"You can reopen this roadmap anytime from your student profile → Roadmap."
 msgstr ""
-"Bạn đã chọn \"%(title)s\". Đã tạo %(created)s đăng ký mới, bỏ qua %(skipped)s khóa (đã đăng ký hoặc không hợp lệ)."
+"Bạn đã chọn \"%(title)s\". Lộ trình học tập đã được lưu (%(count)s khóa).\n"
+"\n"
+"Bước tiếp theo: trên màn hình lộ trình (đang mở), vào tab \"Khóa học đề "
+"xuất\" và bấm **Đăng ký** cho từng khóa bạn muốn học. Mỗi đăng ký sẽ ở "
+"trạng thái **Chờ duyệt** cho đến khi giảng viên hoặc quản trị phê duyệt.\n"
+"\n"
+"Bạn có thể mở lại lộ trình này bất cứ lúc nào từ hồ sơ sinh viên → Lộ trình."
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_student_ai_chat__created_roadmap_id
+msgid "Created Roadmap"
+msgstr "Lộ trình đã tạo"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_ai_chat_form
+msgid "Open My Roadmap"
+msgstr "Mở lộ trình của tôi"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_form
+msgid ""
+"Register for each course in the <b>Recommended Courses</b> tab using the "
+"<b>Enroll</b> button."
+msgstr ""
+"Đăng ký từng khóa trong tab <b>Khóa học đề xuất</b> bằng nút <b>Đăng "
+"ký</b>."
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_form
+msgid ""
+"Each registration stays <b>Pending approval</b> until an instructor or "
+"administrator approves it."
+msgstr ""
+"Mỗi đăng ký ở trạng thái <b>Chờ duyệt</b> cho đến khi giảng viên hoặc "
+"quản trị phê duyệt."
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_form
+msgid "Enroll"
+msgstr "Đăng ký"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "Student profile not found."
+msgstr "Không tìm thấy hồ sơ sinh viên."
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "Selected roadmap has no valid courses."
+msgstr "Lộ trình đã chọn không có khóa học hợp lệ."
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "Strategy: %s"
+msgstr "Chiến lược: %s"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "Suitable when: %s"
+msgstr "Phù hợp khi: %s"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid ""
+"Could not create roadmap: no matching courses in the system. Please contact "
+"an administrator."
+msgstr ""
+"Không thể tạo lộ trình: không có khóa học khớp trong hệ thống. Vui lòng "
+"liên hệ quản trị viên."
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "No roadmap has been created for this session yet."
+msgstr "Phiên tư vấn này chưa tạo lộ trình nào."
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "You can only select a roadmap after the counseling session ends."
+msgstr "Bạn chỉ có thể chọn lộ trình sau khi phiên tư vấn kết thúc."
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "You have already selected a roadmap. Each session allows only one selection."
+msgstr "Bạn đã chọn lộ trình. Mỗi phiên chỉ được chọn một lần."
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student_ai_chat.py:0
+msgid "Roadmap does not exist or is invalid."
+msgstr "Lộ trình không tồn tại hoặc không hợp lệ."
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/roadmap.py:0
+msgid "You can only register for courses on your own roadmap."
+msgstr "Bạn chỉ có thể đăng ký khóa trên lộ trình của chính mình."
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/roadmap.py:0
+msgid "Roadmap has no linked student."
+msgstr "Lộ trình chưa liên kết sinh viên."
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/roadmap.py:0
+msgid "No course linked to this roadmap line."
+msgstr "Dòng lộ trình chưa liên kết khóa học."
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/roadmap.py:0
+msgid "Course \"%s\" is full."
+msgstr "Khóa \"%s\" đã đầy."
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/roadmap.py:0
+msgid "Course \"%s\" is not open for enrollment (unpublished or inactive)."
+msgstr "Khóa \"%s\" chưa mở đăng ký (chưa xuất bản hoặc không hoạt động)."
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/roadmap.py:0
+msgid "You have already registered for \"%(course)s\" (%(status)s)."
+msgstr "Bạn đã đăng ký \"%(course)s\" (%(status)s)."
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/roadmap.py:0
+msgid "Course Registration"
+msgstr "Đăng ký khóa học"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/roadmap.py:0
+msgid "Registered for \"%(course)s\". Status: Pending approval."
+msgstr "Đã đăng ký \"%(course)s\". Trạng thái: Chờ duyệt."
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_roadmap_course__show_enroll_button
+msgid "Show Enroll Button"
+msgstr "Hiện nút đăng ký"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_roadmap_course__enrollment_status__full
+msgid "Course Full"
+msgstr "Khóa đã đầy"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_roadmap_course__enrollment_status__unavailable
+msgid "Not Available"
+msgstr "Không khả dụng"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_roadmap__state__suggested
+msgid "Suggested"
+msgstr "Đề xuất"
+
+#. module: lms
+#: model:ir.model.fields.selection,name:lms.selection__lms_roadmap_course__enrollment_status__prerequisite_blocked
+msgid "Prerequisites Not Met"
+msgstr "Chưa đủ tiên quyết"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/course.py:0
+msgid ""
+"You must complete the following prerequisite course(s) before taking "
+"\"%(course)s\": %(prereqs)s"
+msgstr ""
+"Bạn cần hoàn thành các khóa tiên quyết sau trước khi học \"%(course)s\": "
+"%(prereqs)s"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/course.py:0
+msgid "Cannot register — complete prerequisite course(s) first: %s"
+msgstr "Không thể đăng ký — hoàn thành khóa tiên quyết trước: %s"

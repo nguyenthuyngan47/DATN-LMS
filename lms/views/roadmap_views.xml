@@ -21,11 +21,15 @@
         <field name="arch" type="xml">
             <form string="Recommended Roadmap">
                 <header>
-                    <button name="action_approve" string="Approve" type="object" class="btn-primary" modifiers="{'invisible': [('state', 'in', ['approved', 'locked', 'rejected'])]}"/>
-                    <button name="action_lock" string="Lock" type="object" modifiers="{'invisible': [('state', 'in', ['locked', 'rejected'])]}"/>
-                    <button name="action_reject" string="Reject" type="object" modifiers="{'invisible': [('state', 'in', ['rejected', 'locked'])]}"/>
+                    <button name="action_approve" string="Approve" type="object" class="btn-primary" modifiers="{'invisible': [('state', 'in', ['approved', 'locked', 'rejected'])]}" groups="lms.group_lms_manager,lms.group_lms_instructor,base.group_system"/>
+                    <button name="action_lock" string="Lock" type="object" modifiers="{'invisible': [('state', 'in', ['locked', 'rejected'])]}" groups="lms.group_lms_manager,lms.group_lms_instructor,base.group_system"/>
+                    <button name="action_reject" string="Reject" type="object" modifiers="{'invisible': [('state', 'in', ['rejected', 'locked'])]}" groups="lms.group_lms_manager,lms.group_lms_instructor,base.group_system"/>
                 </header>
                 <sheet>
+                    <div class="alert alert-info mb-3" role="alert" invisible="state != 'suggested'">
+                        Register for each course in the <b>Recommended Courses</b> tab using the <b>Enroll</b> button.
+                        Each registration stays <b>Pending approval</b> until an instructor or administrator approves it.
+                    </div>
                     <widget name="web_ribbon" title="Approved" bg_color="text-bg-success" invisible="state != 'approved'"/>
                     <widget name="web_ribbon" title="Locked" bg_color="text-bg-warning" invisible="state != 'locked'"/>
                     <widget name="web_ribbon" title="Rejected" bg_color="text-bg-danger" invisible="state != 'rejected'"/>
@@ -53,13 +57,22 @@
                     <notebook>
                         <page string="Recommended Courses" name="courses">
                             <field name="course_line_ids" nolabel="1">
-                                <list>
+                                <list create="0" delete="0" edit="0">
                                     <field name="sequence" widget="handle"/>
                                     <field name="course_id"/>
                                     <field name="priority"/>
                                     <field name="timeframe"/>
                                     <field name="status"/>
-                                    <field name="similarity_score" widget="progressbar"/>
+                                    <field name="enrollment_status"/>
+                                    <field name="show_enroll_button" column_invisible="1"/>
+                                    <field name="similarity_score" widget="progressbar" optional="hide"/>
+                                    <button
+                                        name="action_enroll"
+                                        string="Enroll"
+                                        type="object"
+                                        class="btn-primary"
+                                        invisible="not show_enroll_button"
+                                    />
                                 </list>
                                 <form>
                                     <sheet>

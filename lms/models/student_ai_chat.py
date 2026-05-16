@@ -45,6 +45,12 @@ class LmsStudentAiChat(models.TransientModel):
     useful_answers_json = fields.Text(string='Useful Answers (JSON)', readonly=True, default='[]')
     roadmap_options_json = fields.Text(string='Roadmap List (JSON)', readonly=True, default='[]')
     selected_roadmap_index = fields.Integer(string='Selected Roadmap', readonly=True, default=0)
+    created_roadmap_id = fields.Many2one(
+        'lms.roadmap',
+        string='Created Roadmap',
+        readonly=True,
+        ondelete='set null',
+    )
     debug_last_ai_request = fields.Text(string='Debug AI Request', readonly=True)
     debug_last_ai_response = fields.Text(string='Debug AI Response', readonly=True)
     conversation_html = fields.Html(
@@ -653,54 +659,94 @@ class LmsStudentAiChat(models.TransientModel):
                 lines.append('%s %s' % (_('Suitable When:'), opt['fit_when']))
         lines.append('')
         lines.append(
-            _('Please select exactly one roadmap using the "Select Roadmap" button.')
+            _(
+                'Please select exactly one roadmap option. The system will save your roadmap '
+                'and open it so you can register for each course individually (pending approval).'
+            )
         )
         return '\n'.join(lines)
 
-    def _enroll_courses_from_option(self, option):
+    def _priority_and_timeframe_for_sequence(self, index, total):
+        """Gán priority/timeframe theo thứ tự khóa trong phương án AI."""
+        if total <= 1:
+            return 'high', 'short'
+        third = max(1, total // 3)
+        if index < third:
+            return 'high', 'short'
+        if index < 2 * third:
+            return 'medium', 'medium'
+        return 'low', 'long'
+
+    def _create_roadmap_from_option(self, option):
+        """Tạo lms.roadmap + các dòng khóa từ phương án AI (không đăng ký khóa)."""
         self.ensure_one()
         if not self.student_id:
-            raise UserError(_('Student profile not found for course enrollment.'))
+            raise UserError(_('Student profile not found.'))
         course_names = option.get('courses') or []
         if not course_names:
             raise UserError(_('Selected roadmap has no valid courses.'))
+
         Course = self.env['lms.course'].sudo()
-        Enrollment = self.env['lms.student.course'].sudo()
-        created = 0
-        skipped = 0
-        for name in course_names:
+        Roadmap = self.env['lms.roadmap'].sudo()
+        RoadmapCourse = self.env['lms.roadmap.course'].sudo()
+
+        reason_parts = []
+        if option.get('summary'):
+            reason_parts.append(option['summary'])
+        if option.get('strategy'):
+            reason_parts.append(_('Strategy: %s') % option['strategy'])
+        if option.get('fit_when'):
+            reason_parts.append(_('Suitable when: %s') % option['fit_when'])
+
+        roadmap = Roadmap.create(
+            {
+                'student_id': self.student_id.id,
+                'state': 'suggested',
+                'recommendation_method': 'hybrid',
+                'ai_recommendation_reason': '\n'.join(reason_parts) or option.get('title') or '',
+            }
+        )
+
+        valid_names = [n for n in course_names if n]
+        total = len(valid_names)
+        seq = 10
+        for idx, name in enumerate(valid_names):
             course = Course.search([('name', '=', name)], limit=1)
             if not course:
-                skipped += 1
                 continue
-            existed = Enrollment.search(
-                [
-                    ('student_id', '=', self.student_id.id),
-                    ('course_id', '=', course.id),
-                    ('status', '!=', 'rejected'),
-                ],
-                limit=1,
-            )
-            if existed:
-                skipped += 1
-                continue
-            cap = course.max_student
-            if cap and cap >= 1 and course._get_occupied_seat_count() >= cap:
-                skipped += 1
-                continue
-            Enrollment.create(
+            priority, timeframe = self._priority_and_timeframe_for_sequence(idx, total)
+            RoadmapCourse.create(
                 {
-                    'student_id': self.student_id.id,
+                    'roadmap_id': roadmap.id,
                     'course_id': course.id,
-                    'status': 'pending',
-                    'enrollment_date': fields.Date.today(),
-                    'start_date': course.start_date,
-                    'end_date': course.end_date,
-                    'final_score': False,
+                    'sequence': seq,
+                    'priority': priority,
+                    'timeframe': timeframe,
+                    'recommendation_reason': option.get('summary') or option.get('title') or '',
                 }
             )
-            created += 1
-        return created, skipped
+            seq += 10
+
+        if not roadmap.course_line_ids:
+            roadmap.unlink()
+            raise UserError(
+                _(
+                    'Could not create roadmap: no matching courses in the system. '
+                    'Please contact an administrator.'
+                )
+            )
+        return roadmap
+
+    def _open_roadmap_form_action(self, roadmap):
+        self.ensure_one()
+        return roadmap.action_open_form()
+
+    def action_open_created_roadmap(self):
+        """Mở lại roadmap đã tạo từ session chat (nút dự phòng trên form chat)."""
+        self.ensure_one()
+        if not self.created_roadmap_id:
+            raise UserError(_('No roadmap has been created for this session yet.'))
+        return self._open_roadmap_form_action(self.created_roadmap_id)
 
     def _action_select_roadmap(self, index):
         self.ensure_one()
@@ -712,21 +758,29 @@ class LmsStudentAiChat(models.TransientModel):
         option = next((x for x in options if x['index'] == index), None)
         if not option:
             raise UserError(_('Roadmap does not exist or is invalid.'))
-        created, skipped = self._enroll_courses_from_option(option)
-        self.write({'selected_roadmap_index': index})
+        roadmap = self._create_roadmap_from_option(option)
+        self.write(
+            {
+                'selected_roadmap_index': index,
+                'created_roadmap_id': roadmap.id,
+            }
+        )
         conv = self._conversation_messages()
         conv.append(
             {
                 'role': 'assistant',
                 'content': _(
-                    'You selected "%(title)s". Created %(created)s new enrollments, skipped %(skipped)s courses '
-                    '(already enrolled or invalid).'
+                    'You selected "%(title)s". Your learning roadmap has been saved (%(count)s courses).\n\n'
+                    'Next step: on the roadmap screen (opening now), go to the '
+                    '"Recommended Courses" tab and click **Enroll** for each course you want to take. '
+                    'Each registration will be **Pending approval** until an instructor or administrator approves it.\n\n'
+                    'You can reopen this roadmap anytime from your student profile → Roadmap.'
                 )
-                % {'title': option['title'], 'created': created, 'skipped': skipped},
+                % {'title': option['title'], 'count': len(roadmap.course_line_ids)},
             }
         )
         self._set_conversation(conv)
-        return self._reopen_chat_form_action()
+        return self._open_roadmap_form_action(roadmap)
 
     def action_select_roadmap_1(self):
         return self._action_select_roadmap(1)
@@ -748,6 +802,7 @@ class LmsStudentAiChat(models.TransientModel):
                 'asked_count': 1,
                 'user_message': False,
                 'selected_roadmap_index': 0,
+                'created_roadmap_id': False,
                 'roadmap_options_json': '[]',
             }
         )

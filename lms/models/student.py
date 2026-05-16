@@ -587,6 +587,18 @@ class StudentCourse(models.Model):
         ('student_course_unique', 'unique(student_id, course_id)', 'Student has already enrolled in this course!'),
     ]
 
+    @api.model
+    def _should_enforce_prerequisite_rules(self):
+        return not self.env['lms.course']._user_may_bypass_prerequisite_rules()
+
+    def _check_prerequisites_for_enrollment(self):
+        for rec in self:
+            if rec.status == 'rejected':
+                continue
+            message = rec.course_id._prerequisite_error_message(rec.student_id)
+            if message:
+                raise ValidationError(message)
+
     progress = fields.Float(string='Progress (%)', compute='_compute_progress', store=True, digits=(16, 2))
     final_score = fields.Float(string='Final Score', digits=(16, 2))
     
@@ -649,10 +661,27 @@ class StudentCourse(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         records = super().create(vals_list)
+        if records and records._should_enforce_prerequisite_rules():
+            records._check_prerequisites_for_enrollment()
         records.mapped('student_id').action_refresh_statistics()
         return records
 
     def write(self, vals):
+        if self._should_enforce_prerequisite_rules() and vals.get('status') in (
+            'pending',
+            'approved',
+            'learning',
+        ):
+            for rec in self:
+                check_student = rec.student_id
+                check_course = rec.course_id
+                if vals.get('course_id'):
+                    check_course = self.env['lms.course'].browse(vals['course_id'])
+                if vals.get('student_id'):
+                    check_student = self.env['lms.student'].browse(vals['student_id'])
+                message = check_course._prerequisite_error_message(check_student)
+                if message:
+                    raise ValidationError(message)
         students = self.mapped('student_id')
         res = super().write(vals)
         (students | self.mapped('student_id')).action_refresh_statistics()
@@ -688,6 +717,8 @@ class StudentCourse(models.Model):
         approved = self.filtered(lambda r: r.status == 'approved')
         if not approved:
             raise ValidationError(_('No approved enrollments in the selected list.'))
+        if approved._should_enforce_prerequisite_rules():
+            approved._check_prerequisites_for_enrollment()
         approved.write({'status': 'learning'})
         return {
             'type': 'ir.actions.client',

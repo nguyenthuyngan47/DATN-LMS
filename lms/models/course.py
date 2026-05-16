@@ -214,7 +214,60 @@ class Course(models.Model):
                 prereq_course = self.browse(prereq_id)
                 if prereq_course.exists():
                     to_check.extend(prereq_course.prerequisite_ids.ids)
-    
+
+    def _get_unmet_prerequisite_courses(self, student):
+        """Khóa tiên quyết chưa hoàn thành (status completed) của sinh viên."""
+        self.ensure_one()
+        if not student or not self.prerequisite_ids:
+            return self.env['lms.course']
+        completed_ids = set(
+            self.env['lms.student.course']
+            .sudo()
+            .search(
+                [
+                    ('student_id', '=', student.id),
+                    ('course_id', 'in', self.prerequisite_ids.ids),
+                    ('status', '=', 'completed'),
+                ]
+            )
+            .mapped('course_id')
+            .ids
+        )
+        return self.prerequisite_ids.filtered(lambda c: c.id not in completed_ids)
+
+    @api.model
+    def _format_prerequisite_course_names(self, courses):
+        return ', '.join(courses.mapped('name')) if courses else ''
+
+    def _prerequisite_error_message(self, student):
+        """Thông báo lỗi khi chưa đủ khóa tiên quyết."""
+        self.ensure_one()
+        missing = self._get_unmet_prerequisite_courses(student)
+        if not missing:
+            return False
+        return _(
+            'You must complete the following prerequisite course(s) before taking "%(course)s": %(prereqs)s'
+        ) % {
+            'course': self.name,
+            'prereqs': self._format_prerequisite_course_names(missing),
+        }
+
+    def _raise_if_prerequisites_unmet(self, student):
+        self.ensure_one()
+        message = self._prerequisite_error_message(student)
+        if message:
+            raise UserError(message)
+
+    @api.model
+    def _user_may_bypass_prerequisite_rules(self):
+        user = self.env.user
+        return (
+            self.env.context.get('skip_prerequisite_check')
+            or user.has_group('base.group_system')
+            or user.has_group('lms.group_lms_manager')
+            or user.has_group('lms.group_lms_instructor')
+        )
+
     @api.depends('lesson_ids')
     def _compute_total_lessons(self):
         for record in self:
@@ -240,6 +293,7 @@ class Course(models.Model):
     @api.depends(
         'state',
         'is_active',
+        'prerequisite_ids',
         'student_course_ids',
         'student_course_ids.status',
         'instructor_id',
@@ -294,6 +348,7 @@ class Course(models.Model):
             occupied = record._get_occupied_seat_count()
             has_available_seats = not cap or occupied < cap
             # Khớp action_register_courses: chỉ published + đang hoạt động mới cho đăng ký mới.
+            # Thiếu tiên quyết vẫn hiện nút; bấm đăng ký sẽ báo lỗi trong action_register_courses.
             record.show_register_button = (
                 not is_enrolled
                 and record.state == 'published'
@@ -367,12 +422,15 @@ class Course(models.Model):
         duplicate_names = []
         blocked_names = []
         full_names = []
+        bypass_prereq = self._user_may_bypass_prerequisite_rules()
 
         for course in self:
             # Chỉ cho đăng ký khóa học đang hoạt động và đã xuất bản.
             if course.state != 'published' or not course.is_active:
                 blocked_names.append(course.name)
                 continue
+            if not bypass_prereq:
+                course._raise_if_prerequisites_unmet(student)
             cap = course.max_student or 0
             if cap and course._get_occupied_seat_count() >= cap:
                 full_names.append(course.name)
@@ -416,21 +474,23 @@ class Course(models.Model):
         if not lines:
             lines.append(_('No courses were processed.'))
 
-        notif_type = (
-            'success'
-            if created_names and not (duplicate_names or blocked_names or full_names)
-            else 'warning'
-        )
+        if len(self) == 1 and not created_names:
+            raise UserError('\n'.join(lines))
+
+        has_issues = bool(duplicate_names or blocked_names or full_names)
+        notif_type = 'success' if created_names and not has_issues else 'warning'
+        params = {
+            'title': _('Course Registration'),
+            'message': '\n'.join(lines),
+            'type': notif_type,
+            'sticky': notif_type != 'success',
+        }
+        if created_names:
+            params['next'] = {'type': 'ir.actions.client', 'tag': 'reload'}
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
-            'params': {
-                'title': _('Course Registration'),
-                'message': '\n'.join(lines),
-                'type': notif_type,
-                'sticky': False,
-                'next': {'type': 'ir.actions.client', 'tag': 'reload'},
-            },
+            'params': params,
         }
 
     def action_cancel_course_registration(self):
@@ -1106,6 +1166,10 @@ class StudentLessonProgress(models.Model):
         )
         if not enrollment:
             raise ValidationError(_('Student has not enrolled in the course containing this lesson.'))
+        if not self.env['lms.course']._user_may_bypass_prerequisite_rules():
+            message = lesson.course_id._prerequisite_error_message(student)
+            if message:
+                raise ValidationError(message)
         return self.sudo().create(
             {
                 'student_id': student.id,

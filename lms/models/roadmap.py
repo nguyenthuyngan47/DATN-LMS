@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from odoo import models, fields, api
+from odoo import _, api, fields, models
+from odoo.exceptions import UserError
 
 
 class Roadmap(models.Model):
@@ -114,6 +115,18 @@ class Roadmap(models.Model):
         })
         return True
 
+    def action_open_form(self):
+        """Mở form roadmap (dùng sau tư vấn AI hoặc từ hồ sơ sinh viên)."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Learning Roadmap'),
+            'res_model': 'lms.roadmap',
+            'view_mode': 'form',
+            'res_id': self.id,
+            'target': 'current',
+        }
+
 
 class RoadmapCourse(models.Model):
     _name = 'lms.roadmap.course'
@@ -157,4 +170,144 @@ class RoadmapCourse(models.Model):
     course_name = fields.Char(string='Course Name', related='course_id.name', readonly=True)
     course_category = fields.Char(string='Category', related='course_id.category_id.name', readonly=True)
     course_level = fields.Char(string='Level', related='course_id.level_id.name', readonly=True)
+
+    enrollment_status = fields.Selection(
+        [
+            ('not_enrolled', 'Not Enrolled'),
+            ('pending', 'Pending Approval'),
+            ('approved', 'Approved'),
+            ('learning', 'Learning'),
+            ('completed', 'Completed'),
+            ('rejected', 'Rejected'),
+            ('full', 'Course Full'),
+            ('unavailable', 'Not Available'),
+            ('prerequisite_blocked', 'Prerequisites Not Met'),
+        ],
+        string='Registration Status',
+        compute='_compute_enrollment_status',
+    )
+    show_enroll_button = fields.Boolean(
+        string='Show Enroll Button',
+        compute='_compute_enrollment_status',
+    )
+
+    @api.depends(
+        'course_id',
+        'course_id.state',
+        'course_id.is_active',
+        'course_id.max_student',
+        'course_id.prerequisite_ids',
+        'roadmap_id.student_id',
+        'roadmap_id.student_id.enrolled_courses_ids',
+        'roadmap_id.student_id.enrolled_courses_ids.status',
+        'roadmap_id.student_id.enrolled_courses_ids.course_id',
+    )
+    def _compute_enrollment_status(self):
+        Enrollment = self.env['lms.student.course'].sudo()
+        for line in self:
+            line.show_enroll_button = False
+            line.enrollment_status = 'not_enrolled'
+            student = line.roadmap_id.student_id
+            course = line.course_id
+            if not student or not course:
+                line.enrollment_status = 'unavailable'
+                continue
+            enrollment = Enrollment.search(
+                [('student_id', '=', student.id), ('course_id', '=', course.id)],
+                limit=1,
+            )
+            if enrollment and enrollment.status != 'rejected':
+                line.enrollment_status = enrollment.status
+                continue
+            if course.state != 'published' or not course.is_active:
+                line.enrollment_status = 'unavailable'
+                continue
+            cap = course.max_student or 0
+            if cap >= 1 and course._get_occupied_seat_count() >= cap:
+                line.enrollment_status = 'full'
+                continue
+            missing_prereqs = course._get_unmet_prerequisite_courses(student)
+            if missing_prereqs:
+                line.enrollment_status = 'prerequisite_blocked'
+                line.show_enroll_button = True
+                continue
+            if enrollment and enrollment.status == 'rejected':
+                line.enrollment_status = 'rejected'
+            else:
+                line.enrollment_status = 'not_enrolled'
+            line.show_enroll_button = True
+
+    def _check_student_may_enroll(self):
+        self.ensure_one()
+        student = self.roadmap_id.student_id
+        user = self.env.user
+        is_owner = student.user_id == user
+        is_staff = user.has_group('lms.group_lms_manager') or user.has_group('base.group_system')
+        if not is_owner and not is_staff:
+            raise UserError(_('You can only register for courses on your own roadmap.'))
+        if not student:
+            raise UserError(_('Roadmap has no linked student.'))
+
+    def action_enroll(self):
+        """Đăng ký khóa học từ dòng roadmap (trạng thái pending, chờ duyệt)."""
+        self.ensure_one()
+        self._check_student_may_enroll()
+        student = self.roadmap_id.student_id
+        course = self.course_id
+        if not course:
+            raise UserError(_('No course linked to this roadmap line.'))
+        if self.enrollment_status == 'full':
+            raise UserError(_('Course "%s" is full.') % course.name)
+        if self.enrollment_status == 'unavailable':
+            raise UserError(
+                _('Course "%s" is not open for enrollment (unpublished or inactive).') % course.name
+            )
+        bypass_prereq = self.env['lms.course']._user_may_bypass_prerequisite_rules()
+        if not bypass_prereq:
+            course._raise_if_prerequisites_unmet(student)
+        allowed_statuses = ('not_enrolled', 'rejected')
+        if bypass_prereq:
+            allowed_statuses = ('not_enrolled', 'rejected', 'prerequisite_blocked')
+        if self.enrollment_status not in allowed_statuses:
+            status_label = dict(self._fields['enrollment_status'].selection).get(
+                self.enrollment_status, self.enrollment_status
+            )
+            raise UserError(
+                _('You have already registered for "%(course)s" (%(status)s).')
+                % {'course': course.name, 'status': status_label}
+            )
+
+        Enrollment = self.env['lms.student.course'].sudo()
+        enrollment = Enrollment.search(
+            [('student_id', '=', student.id), ('course_id', '=', course.id)],
+            limit=1,
+        )
+        vals = {
+            'student_id': student.id,
+            'course_id': course.id,
+            'status': 'pending',
+            'enrollment_date': fields.Date.today(),
+            'start_date': course.start_date,
+            'end_date': course.end_date,
+            'final_score': False,
+        }
+        if enrollment:
+            enrollment.write(vals)
+        else:
+            Enrollment.create(vals)
+
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Course Registration'),
+                'message': _(
+                    'Registered for "%(course)s". Status: Pending approval.'
+                )
+                % {'course': course.name},
+                'type': 'success',
+                'sticky': False,
+                'next': {'type': 'ir.actions.client', 'tag': 'reload'},
+            },
+        }
 
