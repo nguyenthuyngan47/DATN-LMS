@@ -268,6 +268,15 @@ class Course(models.Model):
             or user.has_group('lms.group_lms_instructor')
         )
 
+    def _renormalize_lesson_sequences(self):
+        """Đánh lại sequence 1, 2, 3... theo thứ tự hiển thị trên khóa học."""
+        Lesson = self.env['lms.lesson'].with_context(skip_lesson_sequence_renormalize=True)
+        for course in self:
+            lessons = course.lesson_ids.sorted(key=lambda l: (l.sequence, l.id))
+            for index, lesson in enumerate(lessons, start=1):
+                if lesson.sequence != index:
+                    Lesson.browse(lesson.id).write({'sequence': index})
+
     @api.depends('lesson_ids')
     def _compute_total_lessons(self):
         for record in self:
@@ -518,14 +527,30 @@ class Course(models.Model):
 class Lesson(models.Model):
     _name = 'lms.lesson'
     _description = 'Lesson'
-    _order = 'sequence, name'
+    _order = 'sequence, id, name'
 
     @api.model
     def _default_end_datetime(self):
         return fields.Datetime.now() + relativedelta(hours=1)
 
+    @api.model
+    def _default_sequence(self):
+        course_id = self.env.context.get('default_course_id')
+        if not course_id:
+            return 1
+        return self._next_sequence_for_course(int(course_id))
+
+    @api.model
+    def _next_sequence_for_course(self, course_id):
+        last = self.search([('course_id', '=', course_id)], order='sequence desc, id desc', limit=1)
+        return (last.sequence or 0) + 1 if last else 1
+
     name = fields.Char(string='Lesson Name', required=True)
-    sequence = fields.Integer(string='Sequence', default=10, required=True)
+    sequence = fields.Integer(
+        string='Sequence',
+        default=_default_sequence,
+        required=True,
+    )
     lesson_type = fields.Selection(
         [
             ('video', 'Video Lecture'),
@@ -544,11 +569,60 @@ class Lesson(models.Model):
         readonly=True,
     )
 
+    def _get_ordered_lessons_in_course(self):
+        self.ensure_one()
+        return self.course_id.lesson_ids.sorted(key=lambda l: (l.sequence, l.id))
+
+    def _get_previous_lessons(self):
+        self.ensure_one()
+        ordered = self._get_ordered_lessons_in_course()
+        if self not in ordered:
+            return ordered.browse()
+        return ordered[: ordered.ids.index(self.id)]
+
+    def _is_completed_for_student(self, student):
+        self.ensure_one()
+        progress = self.env['lms.student.lesson.progress'].sudo().search(
+            [('student_id', '=', student.id), ('lesson_id', '=', self.id)],
+            limit=1,
+        )
+        return bool(progress and progress.status == 'done')
+
+    def _previous_lesson_incomplete_message(self, student):
+        """Sinh viên phải hoàn thành các bài trước (theo sequence trên khóa học)."""
+        self.ensure_one()
+        if not student or self.env['lms.course']._user_may_bypass_prerequisite_rules():
+            return False
+        for previous in self._get_previous_lessons():
+            if not previous._is_completed_for_student(student):
+                return _(
+                    'You must complete lesson "%(lesson)s" before starting "%(current)s".'
+                ) % {'lesson': previous.name, 'current': self.name}
+        return False
+
+    def _raise_if_previous_lessons_incomplete(self, student):
+        message = self._previous_lesson_incomplete_message(student)
+        if message:
+            raise UserError(message)
+
+    @api.depends_context('uid')
+    def _compute_current_user_lesson_locked(self):
+        student = self.env['lms.student'].sudo().search(
+            [('user_id', '=', self.env.user.id)], limit=1
+        )
+        for lesson in self:
+            message = lesson._previous_lesson_incomplete_message(student) if student else False
+            lesson.current_user_lesson_locked = bool(message)
+            lesson.current_user_lesson_lock_message = message or False
+
     def action_open_lesson_full(self):
         """Mở form bài học trên cửa sổ chính (nút trên list one2many; không dùng JS)."""
         self.ensure_one()
         if isinstance(self.id, NewId):
             raise UserError(_('Please save the course (and new lessons) before opening details.'))
+        student = self.env['lms.student'].sudo().search([('user_id', '=', self.env.user.id)], limit=1)
+        if student and self.course_form_readonly:
+            self._raise_if_previous_lessons_incomplete(student)
         return {
             'type': 'ir.actions.act_window',
             'name': _('Lesson'),
@@ -653,7 +727,6 @@ class Lesson(models.Model):
         compute='_compute_calendar_color',
         store=False,
     )
-    is_published = fields.Boolean(string='Visible to Students', default=False, copy=False)
     calendar_sync_status = fields.Selection(
         [
             ('not_synced', 'Not Synced'),
@@ -700,6 +773,14 @@ class Lesson(models.Model):
     current_user_lesson_progress_label = fields.Char(
         string='My Status',
         compute='_compute_current_user_lesson_progress_label',
+    )
+    current_user_lesson_locked = fields.Boolean(
+        string='Locked for Current Student',
+        compute='_compute_current_user_lesson_locked',
+    )
+    current_user_lesson_lock_message = fields.Char(
+        string='Lock Reason',
+        compute='_compute_current_user_lesson_locked',
     )
     current_user_face_checked_in = fields.Boolean(
         string='Face Checked In',
@@ -786,7 +867,24 @@ class Lesson(models.Model):
             else:
                 lesson.face_lesson_attendance_mount_html = ''
 
-    @api.depends('progress_ids', 'progress_ids.status', 'progress_ids.student_id')
+    @api.model
+    def _user_is_pure_student(self, user=None):
+        user = user or self.env.user
+        return user.has_group('lms.group_lms_user') and not (
+            user.has_group('lms.group_lms_instructor')
+            or user.has_group('lms.group_lms_manager')
+            or user.has_group('base.group_system')
+        )
+
+    @api.depends(
+        'progress_ids',
+        'progress_ids.status',
+        'progress_ids.student_id',
+        'progress_ids.face_checked_in',
+        'lesson_type',
+        'course_id',
+        'course_id.student_course_ids.status',
+    )
     def _compute_current_user_lesson_progress_label(self):
         student = self.env['lms.student'].sudo().search([('user_id', '=', self.env.user.id)], limit=1)
         Progress = self.env['lms.student.lesson.progress']
@@ -794,13 +892,28 @@ class Lesson(models.Model):
         if callable(status_sel):
             status_sel = status_sel(Progress)
         selection_labels = dict(status_sel)
+        pure_student = self._user_is_pure_student()
+        StudentCourse = self.env['lms.student.course'].sudo()
         for lesson in self:
+            if not pure_student:
+                total = StudentCourse.search_count(
+                    [
+                        ('course_id', '=', lesson.course_id.id),
+                        ('status', '=', 'learning'),
+                    ]
+                )
+                if lesson.lesson_type == 'online':
+                    completed = len(lesson.progress_ids.filtered('face_checked_in'))
+                else:
+                    completed = len(lesson.progress_ids.filtered(lambda p: p.status == 'done'))
+                lesson.current_user_lesson_progress_label = '%s/%s' % (completed, total)
+                continue
             if not student:
                 lesson.current_user_lesson_progress_label = False
                 continue
             progress = lesson.progress_ids.filtered(lambda p: p.student_id.id == student.id)[:1]
             if not progress:
-                lesson.current_user_lesson_progress_label = 'Not Started'
+                lesson.current_user_lesson_progress_label = _('Not Started')
             else:
                 lesson.current_user_lesson_progress_label = selection_labels.get(
                     progress.status, progress.status
@@ -944,7 +1057,10 @@ class Lesson(models.Model):
                 stream_url = '/web/content/%s?model=lms.lesson&field=video_attachment&download=false' % lesson.id
                 mime = self._guess_video_mime(lesson.video_filename or '')
                 html = (
-                    '<video class="lms-video-tracker" data-lms-lesson-id="%s" controls preload="metadata" style="width:100%%;max-width:900px;">'
+                    '<video class="lms-video-tracker" data-lms-lesson-id="%s" controls '
+                    'controlsList="nodownload noplaybackrate" disablePictureInPicture '
+                    'playsinline preload="metadata" oncontextmenu="return false;" '
+                    'style="width:100%%;max-width:900px;">'
                     '<source src="%s" type="%s"/>'
                     'Your browser does not support direct video playback.'
                     '</video>'
@@ -1014,6 +1130,7 @@ class Lesson(models.Model):
     def create(self, vals_list):
         Course = self.env['lms.course'].sudo()
         ctx_course_id = self.env.context.get('default_course_id')
+        course_next_seq = {}
         for vals in vals_list:
             start_dt = vals.get('start_datetime') or fields.Datetime.now()
             duration = vals.get('duration_minutes', 0)
@@ -1027,7 +1144,16 @@ class Lesson(models.Model):
                 raise ValidationError(
                     _('Lessons can only be created when the course is in "Published" status.')
                 )
+            course_id = int(course_id)
+            if self.env.context.get('skip_lesson_sequence_assign'):
+                continue
+            if course_id not in course_next_seq:
+                course_next_seq[course_id] = self._next_sequence_for_course(course_id)
+            vals['sequence'] = course_next_seq[course_id]
+            course_next_seq[course_id] += 1
         lessons = super().create(vals_list)
+        if not self.env.context.get('skip_lesson_sequence_renormalize'):
+            lessons.mapped('course_id')._renormalize_lesson_sequences()
         if not self.env.context.get('skip_google_calendar_sync'):
             lessons._google_calendar_sync_if_needed()
             lessons._notify_learning_students_for_attendance()
@@ -1035,7 +1161,12 @@ class Lesson(models.Model):
 
     def write(self, vals):
         if self.env.context.get('skip_google_calendar_sync'):
-            return super().write(vals)
+            res = super().write(vals)
+            if not self.env.context.get('skip_lesson_sequence_renormalize') and (
+                'sequence' in vals or 'course_id' in vals
+            ):
+                self.mapped('course_id')._renormalize_lesson_sequences()
+            return res
 
         if any(key in vals for key in ('start_datetime', 'duration_minutes', 'end_datetime')):
             if 'start_datetime' in vals:
@@ -1091,12 +1222,20 @@ class Lesson(models.Model):
                 lambda l: l.state == 'scheduled' and l.lesson_type == 'online'
             )._google_calendar_sync_if_needed()
         self._notify_learning_students_for_attendance()
+        if not self.env.context.get('skip_lesson_sequence_renormalize') and (
+            'sequence' in vals or 'course_id' in vals
+        ):
+            self.mapped('course_id')._renormalize_lesson_sequences()
         return res
 
     def unlink(self):
+        courses = self.mapped('course_id')
         if not self.env.context.get('skip_google_calendar_sync'):
             self._google_calendar_unsync(clear_meeting_url=False)
-        return super().unlink()
+        res = super().unlink()
+        if not self.env.context.get('skip_lesson_sequence_renormalize'):
+            courses._renormalize_lesson_sequences()
+        return res
 
 
 class StudentLessonProgress(models.Model):
@@ -1168,6 +1307,9 @@ class StudentLessonProgress(models.Model):
             raise ValidationError(_('Student has not enrolled in the course containing this lesson.'))
         if not self.env['lms.course']._user_may_bypass_prerequisite_rules():
             message = lesson.course_id._prerequisite_error_message(student)
+            if message:
+                raise ValidationError(message)
+            message = lesson._previous_lesson_incomplete_message(student)
             if message:
                 raise ValidationError(message)
         return self.sudo().create(
@@ -1242,5 +1384,9 @@ class StudentLessonProgress(models.Model):
         if done_no_ts:
             done_no_ts.with_context(skip_progress_completion_ts=True).write(
                 {'completed_at': fields.Datetime.now()}
+            )
+        if any(key in vals for key in ('status', 'face_checked_in', 'progress_percent', 'watched_seconds')):
+            self.mapped('course_id.lesson_ids').invalidate_recordset(
+                ['current_user_lesson_locked', 'current_user_lesson_lock_message']
             )
         return res

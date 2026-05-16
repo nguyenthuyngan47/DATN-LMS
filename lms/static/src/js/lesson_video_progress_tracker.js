@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 // Track lesson video progress while video is playing.
 (() => {
     if (window.__lmsLessonVideoProgressTrackerPatched) {
@@ -67,11 +65,18 @@
         }
     };
 
+    const hardenVideoPlayback = (videoEl) => {
+        videoEl.setAttribute("controlsList", "nodownload noplaybackrate");
+        videoEl.setAttribute("disablePictureInPicture", "");
+        videoEl.oncontextmenu = (ev) => ev.preventDefault();
+    };
+
     const startTracking = (videoEl) => {
         const lessonId = parseLessonId(videoEl);
         if (!lessonId) {
             return;
         }
+        hardenVideoPlayback(videoEl);
         const state = getTrackerState(videoEl);
         if (state.timerId) {
             return;
@@ -100,6 +105,32 @@
         },
         true
     );
+
+    const bindExistingVideos = () => {
+        document.querySelectorAll("video.lms-video-tracker").forEach(hardenVideoPlayback);
+    };
+    const debounce = (fn, ms = 250) => {
+        let timer = null;
+        return (...args) => {
+            if (timer) {
+                clearTimeout(timer);
+            }
+            timer = setTimeout(() => fn(...args), ms);
+        };
+    };
+    const startDomHooks = () => {
+        if (!document.body) {
+            return;
+        }
+        bindExistingVideos();
+        const mo = new MutationObserver(debounce(bindExistingVideos, 300));
+        mo.observe(document.body, { childList: true, subtree: true });
+    };
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", startDomHooks, { once: true });
+    } else {
+        startDomHooks();
+    }
 
     const stopEvents = ["pause", "ended", "abort", "emptied"];
     for (const eventName of stopEvents) {

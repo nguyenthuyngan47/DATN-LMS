@@ -570,7 +570,7 @@ def import_lms_from_csv_directory(
                 fallback_domain=[("name", "=", vals["name"]), ("course_id", "=", vals["course_id"])],
             )
         else:
-            rec = env["lms.lesson"].sudo().create(vals)
+            rec = env["lms.lesson"].sudo().with_context(skip_lesson_sequence_assign=True).create(vals)
         lesson_new_ids.append(rec.id)
     map_lesson = {
         old: new for old, new in zip([int(r["id"]) for r in lesson_rows_raw], lesson_new_ids)
