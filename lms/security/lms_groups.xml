@@ -22,11 +22,11 @@
             <field name="comment">Student: view and manage own courses, learning history, and roadmaps</field>
         </record>
 
-        <!-- Instructor -->
+        <!-- Lecturer -->
         <record id="group_lms_instructor" model="res.groups">
-            <field name="name">Instructor</field>
+            <field name="name">Lecturer</field>
             <field name="category_id" ref="module_category_lms"/>
-            <field name="comment">Instructor: create and manage course content (courses and lessons)</field>
+            <field name="comment">Lecturer: create and manage course content (courses and lessons)</field>
         </record>
     </data>
 </odoo>

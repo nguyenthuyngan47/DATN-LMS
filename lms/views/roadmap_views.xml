@@ -4,12 +4,10 @@
         <field name="name">lms.roadmap.list</field>
         <field name="model">lms.roadmap</field>
         <field name="arch" type="xml">
-            <list string="Roadmap" decoration-info="state=='suggested'" decoration-success="state=='approved'" decoration-muted="state=='rejected'">
+            <list string="Roadmap">
                 <field name="name" width="220px"/>
                 <field name="student_id" width="180px"/>
                 <field name="total_courses" width="100px"/>
-                <field name="recommendation_method" width="160px"/>
-                <field name="state" width="120px"/>
                 <field name="create_date" width="150px"/>
             </list>
         </field>
@@ -20,105 +18,62 @@
         <field name="model">lms.roadmap</field>
         <field name="arch" type="xml">
             <form string="Recommended Roadmap">
-                <header>
-                    <button name="action_approve" string="Approve" type="object" class="btn-primary" modifiers="{'invisible': [('state', 'in', ['approved', 'locked', 'rejected'])]}" groups="lms.group_lms_manager,lms.group_lms_instructor,base.group_system"/>
-                    <button name="action_lock" string="Lock" type="object" modifiers="{'invisible': [('state', 'in', ['locked', 'rejected'])]}" groups="lms.group_lms_manager,lms.group_lms_instructor,base.group_system"/>
-                    <button name="action_reject" string="Reject" type="object" modifiers="{'invisible': [('state', 'in', ['rejected', 'locked'])]}" groups="lms.group_lms_manager,lms.group_lms_instructor,base.group_system"/>
-                </header>
                 <sheet>
-                    <div class="alert alert-info mb-3" role="alert" invisible="state != 'suggested'">
-                        Register for each course in the <b>Recommended Courses</b> tab using the <b>Enroll</b> button.
-                        Each registration stays <b>Pending approval</b> until an instructor or administrator approves it.
+                    <div class="alert alert-info mb-3" role="alert">
+                        <p>Register for each course in the <b>Recommended Courses</b> tab using the <b>Enroll</b> button.</p>
+                        <p>Each registration stays <b>Pending approval</b> until a lecturer or administrator approves it.</p>
                     </div>
-                    <widget name="web_ribbon" title="Approved" bg_color="text-bg-success" invisible="state != 'approved'"/>
-                    <widget name="web_ribbon" title="Locked" bg_color="text-bg-warning" invisible="state != 'locked'"/>
-                    <widget name="web_ribbon" title="Rejected" bg_color="text-bg-danger" invisible="state != 'rejected'"/>
                     <div class="oe_title">
                         <label for="name" string="Roadmap"/>
                         <h1><field name="name" readonly="1" placeholder="Roadmap..."/></h1>
                     </div>
                     <group>
-                        <group>
-                            <field name="student_id"/>
-                            <field name="state"/>
-                            <field name="recommendation_method"/>
-                        </group>
-                        <group>
-                            <field name="create_date"/>
-                            <field name="valid_from"/>
-                            <field name="valid_to"/>
-                            <field name="reviewed_by"/>
-                            <field name="review_date"/>
-                        </group>
+                        <field name="student_id"/>
+                        <field name="create_date"/>
                     </group>
                     <group>
                         <field name="ai_recommendation_reason" placeholder="AI recommendation reason..." nolabel="1"/>
                     </group>
-                    <notebook>
-                        <page string="Recommended Courses" name="courses">
-                            <field name="course_line_ids" nolabel="1">
-                                <list create="0" delete="0" edit="0">
-                                    <field name="sequence" widget="handle"/>
-                                    <field name="course_id" width="220px"/>
-                                    <field name="priority" width="100px"/>
-                                    <field name="timeframe" width="120px"/>
-                                    <field name="status" width="120px"/>
-                                    <field name="enrollment_status" width="150px"/>
-                                    <field name="show_enroll_button" column_invisible="1"/>
-                                    <field name="similarity_score" widget="progressbar" optional="hide"/>
-                                    <button
-                                        name="action_enroll"
-                                        string="Enroll"
-                                        type="object"
-                                        class="btn-primary"
-                                        invisible="not show_enroll_button"
-                                    />
-                                </list>
-                                <form>
-                                    <sheet>
-                                        <group>
-                                            <group>
-                                                <field name="course_id"/>
-                                                <field name="sequence"/>
-                                                <field name="priority"/>
-                                                <field name="timeframe"/>
-                                                <field name="status"/>
-                                            </group>
-                                        </group>
-                                        <group>
-                                            <field name="recommendation_reason" placeholder="Recommendation reason..."/>
-                                            <field name="similarity_score"/>
-                                        </group>
-                                        <group>
-                                            <field name="supplementary_materials" placeholder="Supplementary materials..."/>
-                                            <field name="reminder_date"/>
-                                        </group>
-                                    </sheet>
-                                </form>
-                            </field>
-                        </page>
-                        <page string="Statistics" name="statistics">
-                            <group>
-                                <group string="Overview">
-                                    <field name="total_courses"/>
-                                    <field name="short_term_courses"/>
-                                    <field name="medium_term_courses"/>
-                                    <field name="long_term_courses"/>
+                    <field name="course_line_ids" nolabel="1">
+                        <list create="0" delete="0" edit="0">
+                            <field name="sequence" widget="handle"/>
+                            <field name="course_id" width="220px"/>
+                            <field name="priority" width="100px"/>
+                            <field name="timeframe" width="120px"/>
+                            <field name="status" width="120px"/>
+                            <field name="enrollment_status" width="150px"/>
+                            <field name="show_enroll_button" column_invisible="1"/>
+                            <field name="similarity_score" widget="progressbar" optional="hide"/>
+                            <button
+                                name="action_enroll"
+                                string="Enroll"
+                                type="object"
+                                class="btn-primary"
+                                invisible="not show_enroll_button"
+                            />
+                        </list>
+                        <form>
+                            <sheet>
+                                <group>
+                                    <group>
+                                        <field name="course_id"/>
+                                        <field name="sequence"/>
+                                        <field name="priority"/>
+                                        <field name="timeframe"/>
+                                        <field name="status"/>
+                                    </group>
                                 </group>
-                                <group string="Progress">
-                                    <field name="completed_courses_count"/>
-                                    <field name="in_progress_courses_count"/>
+                                <group>
+                                    <field name="recommendation_reason" placeholder="Recommendation reason..."/>
+                                    <field name="similarity_score"/>
                                 </group>
-                            </group>
-                        </page>
-                        <page string="Review" name="review" modifiers="{'invisible': [('reviewed_by', '=', False)]}">
-                            <group>
-                                <field name="reviewed_by"/>
-                                <field name="review_date"/>
-                                <field name="review_notes" placeholder="Review notes..."/>
-                            </group>
-                        </page>
-                    </notebook>
+                                <group>
+                                    <field name="supplementary_materials" placeholder="Supplementary materials..."/>
+                                    <field name="reminder_date"/>
+                                </group>
+                            </sheet>
+                        </form>
+                    </field>
                 </sheet>
             </form>
         </field>
@@ -128,11 +83,10 @@
         <field name="name">lms.roadmap.kanban</field>
         <field name="model">lms.roadmap</field>
         <field name="arch" type="xml">
-            <kanban default_group_by="state" class="o_kanban_dashboard">
+            <kanban class="o_kanban_dashboard">
                 <field name="name"/>
                 <field name="student_id"/>
                 <field name="total_courses"/>
-                <field name="state"/>
                 <templates>
                     <t t-name="kanban-box">
                         <div class="oe_kanban_card oe_kanban_global_click">

@@ -16,7 +16,7 @@
     <!-- Student: opens with "My Courses" filter enabled -->
     <menuitem
         id="menu_lms_courses_student"
-        name="Courses"
+        name="Khóa học"
         sequence="20"
         action="action_lms_course_student"
         web_icon="lms,static/description/icon.png"
@@ -25,7 +25,7 @@
     <!-- Instructor: opens with teaching-assignment filter -->
     <menuitem
         id="menu_lms_courses_instructor"
-        name="Courses"
+        name="Khóa học"
         sequence="20"
         action="action_lms_course_instructor"
         web_icon="lms,static/description/icon.png"
@@ -34,7 +34,7 @@
     <menuitem id="menu_lms_courses_list" name="Course Catalog" parent="menu_lms_courses" action="action_lms_course" sequence="10"/>
     <menuitem
         id="menu_lms_courses_list_student"
-        name="Course Catalog"
+        name="Danh mục khóa học"
         parent="menu_lms_courses_student"
         action="action_lms_course"
         sequence="10"
@@ -42,7 +42,7 @@
     />
     <menuitem
         id="menu_lms_courses_list_instructor"
-        name="Course Catalog"
+        name="Danh mục khóa học"
         parent="menu_lms_courses_instructor"
         action="action_lms_course"
         sequence="10"
@@ -83,8 +83,8 @@
     <menuitem id="menu_lms_course_categories" name="Categories" parent="menu_lms_courses" action="action_lms_course_category" sequence="20"/>
     <menuitem id="menu_lms_course_levels" name="Levels" parent="menu_lms_courses" action="action_lms_course_level" sequence="30"/>
 
-    <!-- Instructors: top-level menu -->
-    <menuitem id="menu_lms_lecturers" name="Instructors" action="action_lms_lecturer" sequence="15" web_icon="lms,static/description/icon.png"/>
+    <!-- Lecturers: top-level menu -->
+    <menuitem id="menu_lms_lecturers" name="Lecturers" action="action_lms_lecturer" sequence="15" web_icon="lms,static/description/icon.png"/>
 
     <!-- Learning / Analytics: inactive — hidden from shell app (no special groups on menu). -->
     <menuitem id="menu_lms_learning" name="Learning" sequence="30" action="action_lms_learning_history" web_icon="lms,static/description/icon.png" active="False"/>

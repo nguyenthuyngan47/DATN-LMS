@@ -125,7 +125,7 @@ class Student(models.Model):
         readonly=True,
     )
     is_instructor_restricted = fields.Boolean(
-        string='Instructor Edit Restricted',
+        string='Lecturer Edit Restricted',
         compute='_compute_is_instructor_restricted',
     )
     is_current_user_account = fields.Boolean(
@@ -268,7 +268,7 @@ class Student(models.Model):
                     % (rec.id, registered)
                 )
             else:
-                rec.face_enrollment_mount_html = (
+                rec.face_enrollment_mount_html = _(
                     '<p class="text-muted">Save the student profile first, then return to this tab to register the face template.</p>'
                 )
 
@@ -596,7 +596,7 @@ class StudentCourse(models.Model):
 
     student_id = fields.Many2one('lms.student', string='Student', required=True, ondelete='cascade')
     course_id = fields.Many2one(
-        'lms.course', string='Course', required=True, ondelete='cascade'
+        'lms.course', string='Course', required=True, ondelete='restrict'
     )
     
     enrollment_date = fields.Date(string='Enrollment Date', default=fields.Date.today, required=True)

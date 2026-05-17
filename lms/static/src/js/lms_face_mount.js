@@ -1,7 +1,11 @@
+/** @odoo-module **/
+
 /**
  * Webcam UI for face enrollment (student profile) and lesson check-in.
  * Embedding: 16x8 grayscale normalized = 128 dims (face_embedding_utils.FACE_EMBEDDING_DIM).
  */
+import { _t } from "@web/core/l10n/translation";
+
 const EMBEDDING_DIM = 128;
 
 function buildEmbedding128FromVideo(videoEl) {
@@ -121,7 +125,7 @@ function showSnapshotImg(wrap, video, b64OrDataUrl) {
     };
     img.style.display = "";
     img.src = src;
-    img.alt = "Attendance photo";
+    img.alt = _t("Attendance photo");
     return img;
 }
 
@@ -157,7 +161,7 @@ function ensureEnrollRetakeButton(wrap) {
         retake = document.createElement("button");
         retake.type = "button";
         retake.className = "btn btn-secondary btn-sm lms-face-retake";
-        retake.textContent = "Re-register face template";
+        retake.textContent = _t("Re-register face template");
         row.appendChild(retake);
     }
     retake.style.display = "";
@@ -182,8 +186,8 @@ async function showEnrollmentLocked(wrap, video, studentId) {
     const status = wrap.querySelector(".lms-face-status");
     if (status) {
         status.textContent = src
-            ? "Face template registered."
-            : "Face template registered (no photo saved — use Re-register to capture a photo).";
+            ? _t("Face template registered.")
+            : _t("Face template registered (no photo saved — use Re-register to capture a photo).");
         status.classList.remove("text-muted", "text-danger");
         status.classList.add("text-success");
     }
@@ -309,7 +313,7 @@ async function loadLockedAttendance(wrap, video, lessonId) {
     }
     stopStream(video._lmsStream);
     video._lmsStream = null;
-    lockAttendUi(wrap, "Attendance recorded. Photo locked.");
+    lockAttendUi(wrap, _t("Attendance recorded. Photo locked."));
     return true;
 }
 
@@ -342,9 +346,9 @@ function ensureUi(el) {
     const role = el.dataset.lmsRole;
     const isAttend = role === "attend";
     if (role === "enroll") {
-        btn.textContent = "Capture and Save Face Template";
+        btn.textContent = _t("Capture and Save Face Template");
     } else {
-        btn.textContent = "Check In (Take Photo)";
+        btn.textContent = _t("Check In (Take Photo)");
     }
 
     let stream = null;
@@ -355,7 +359,7 @@ function ensureUi(el) {
             video.srcObject = stream;
             status.textContent = "";
         } catch (e) {
-            status.textContent = "Could not open camera: " + (e.message || e);
+            status.textContent = _t("Could not open camera:") + " " + (e.message || e);
         }
     };
 
@@ -391,13 +395,13 @@ function ensureUi(el) {
     btn.addEventListener("click", async () => {
         const vec = buildEmbedding128FromVideo(video);
         if (!vec) {
-            status.textContent = "No frame from camera yet. Wait for the video feed, then try again.";
+            status.textContent = _t("No frame from camera yet. Wait for the video feed, then try again.");
             return;
         }
         const photoB64 = capturePhotoBase64FromVideo(video);
         const json = JSON.stringify(vec);
         btn.disabled = true;
-        status.textContent = "Processing…";
+        status.textContent = _t("Processing…");
 
         if (isAttend && photoB64) {
             const lid = parseInt(el.dataset.lessonId, 10);
@@ -423,7 +427,7 @@ function ensureUi(el) {
                     stopStream(stream);
                     stream = null;
                 }
-                status.textContent = "Success. Reloading page…";
+                status.textContent = _t("Success. Reloading page…");
                 window.setTimeout(() => window.location.reload(), 600);
             } else {
                 const lid = parseInt(el.dataset.lessonId, 10);
@@ -436,7 +440,7 @@ function ensureUi(el) {
                     saveAttendancePhotoCache(lid, photoB64);
                     showSnapshotImg(wrap, video, photoB64);
                 }
-                lockAttendUi(wrap, "Attendance recorded. Photo locked.");
+                lockAttendUi(wrap, _t("Attendance recorded. Photo locked."));
             }
         } catch (e) {
             status.textContent = (e && e.message) || String(e);

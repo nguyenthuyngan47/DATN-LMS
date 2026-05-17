@@ -235,7 +235,7 @@ msgid ""
 "                        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:640px;max-width:94%;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;\">\n"
 "                            <tr>\n"
 "                                <td style=\"background:#4f46e5;color:#ffffff;padding:18px 24px;font-size:18px;font-weight:700;\">\n"
-"                                    LMS - Instructor Account Activation Notice\n"
+"                                    LMS - Lecturer Account Activation Notice\n"
 "                                </td>\n"
 "                            </tr>\n"
 "                            <tr>\n"
@@ -243,7 +243,7 @@ msgid ""
 "                                    <p style=\"margin:0 0 12px 0;\">Dear <strong><t t-out=\"object.name or object.login\"/></strong>,</p>\n"
 "                                    <p style=\"margin:0 0 12px 0;\">\n"
 "                                        Your account has been approved and activated with the role of\n"
-"                                        <strong>Instructor</strong> on the LMS system.\n"
+"                                        <strong>Lecturer</strong> on the LMS system.\n"
 "                                    </p>\n"
 "                                    <p style=\"margin:0 0 18px 0;\">\n"
 "                                        You can log in to start managing your classes and teaching content.\n"
@@ -391,7 +391,7 @@ msgstr "Nâng cao"
 
 #. module: lms
 #: model_terms:ir.ui.view,arch_db:lms.view_users_search_lms
-msgid "All Instructors"
+msgid "All Lecturers"
 msgstr "Tất cả giảng viên"
 
 #. module: lms
@@ -672,8 +672,10 @@ msgstr "Cấp độ khóa học"
 
 #. module: lms
 #: model:ir.ui.menu,name:lms.menu_lms_courses_list
-msgid "Course List"
-msgstr "Danh sách khóa học"
+#: model:ir.ui.menu,name:lms.menu_lms_courses_list_student
+#: model:ir.ui.menu,name:lms.menu_lms_courses_list_instructor
+msgid "Course Catalog"
+msgstr "Danh mục khóa học"
 
 #. module: lms
 #: model:ir.model.fields,field_description:lms.field_lms_course__name
@@ -700,10 +702,14 @@ msgstr "Nhãn khóa học"
 
 #. module: lms
 #: model:ir.actions.act_window,name:lms.action_lms_course
+#: model:ir.actions.act_window,name:lms.action_lms_course_instructor
+#: model:ir.actions.act_window,name:lms.action_lms_course_student
 #: model:ir.model.fields,field_description:lms.field_lms_course_category__course_ids
 #: model:ir.model.fields,field_description:lms.field_lms_course_level__course_ids
 #: model:ir.model.fields,field_description:lms.field_lms_course_tag__course_ids
 #: model:ir.ui.menu,name:lms.menu_lms_courses
+#: model:ir.ui.menu,name:lms.menu_lms_courses_instructor
+#: model:ir.ui.menu,name:lms.menu_lms_courses_student
 #: model_terms:ir.ui.view,arch_db:lms.view_lms_course_tree
 msgid "Courses"
 msgstr "Khóa học"
@@ -990,28 +996,28 @@ msgstr "Số ngày không hoạt động"
 #: model:res.groups,name:lms.group_lms_instructor
 #: model_terms:ir.ui.view,arch_db:lms.view_lms_course_search
 #: model_terms:ir.ui.view,arch_db:lms.view_lms_learning_history_search
-msgid "Instructor"
+msgid "Lecturer"
 msgstr "Giảng viên"
 
 #. module: lms
 #: model:ir.model.fields,field_description:lms.field_lms_course__contact_payment
-msgid "Instructor Contact"
+msgid "Lecturer Contact"
 msgstr "Liên hệ giảng viên"
 
 #. module: lms
 #: model:res.groups,comment:lms.group_lms_instructor
-msgid "Instructor: create and manage course content (courses and lessons)"
+msgid "Lecturer: create and manage course content (courses and lessons)"
 msgstr "Giảng viên: tạo và quản lý nội dung khóa học (khóa học và bài học)"
 
 #. module: lms
 #: model:ir.actions.act_window,name:lms.action_lms_lecturer
 #: model:ir.ui.menu,name:lms.menu_lms_lecturers
-msgid "Instructors"
+msgid "Lecturers"
 msgstr "Giảng viên"
 
 #. module: lms
 #: model_terms:ir.ui.view,arch_db:lms.view_users_search_lms
-msgid "Instructors Pending Approval"
+msgid "Lecturers Pending Approval"
 msgstr "Giảng viên chờ duyệt"
 
 #. module: lms
@@ -1550,7 +1556,7 @@ msgstr "Tên Roadmap"
 #. module: lms
 #: model_terms:ir.ui.view,arch_db:lms.view_lms_student_ai_chat_form
 msgid "Roadmap Options to Choose"
-msgstr "Danh sách roadmap để chọn"
+msgstr "Các phương án lộ trình để chọn"
 
 #. module: lms
 #: model:ir.model.fields,field_description:lms.field_lms_lecturer__role
@@ -1588,17 +1594,17 @@ msgstr "Tìm kiếm học viên"
 #. module: lms
 #: model_terms:ir.ui.view,arch_db:lms.view_lms_student_ai_chat_form
 msgid "Select Roadmap 1"
-msgstr "Chọn roadmap 1"
+msgstr "Chọn phương án 1"
 
 #. module: lms
 #: model_terms:ir.ui.view,arch_db:lms.view_lms_student_ai_chat_form
 msgid "Select Roadmap 2"
-msgstr "Chọn roadmap 2"
+msgstr "Chọn phương án 2"
 
 #. module: lms
 #: model_terms:ir.ui.view,arch_db:lms.view_lms_student_ai_chat_form
 msgid "Select Roadmap 3"
-msgstr "Chọn roadmap 3"
+msgstr "Chọn phương án 3"
 
 #. module: lms
 #: model_terms:ir.ui.view,arch_db:lms.view_lms_student_ai_chat_form
@@ -1954,7 +1960,7 @@ msgstr "Số năm kinh nghiệm"
 #: model_terms:ir.ui.view,arch_db:lms.view_lms_student_ai_chat_form
 msgid ""
 "You have selected a roadmap. Open it to register for each course (pending "
-"instructor/admin approval)."
+"lecturer/admin approval)."
 msgstr ""
 "Bạn đã chọn lộ trình. Mở lộ trình để đăng ký từng khóa (chờ giảng viên/"
 "quản trị duyệt)."
@@ -1976,7 +1982,7 @@ msgstr "Yêu cầu của bạn đã được ghi nhận thành công."
 
 #. module: lms
 #: model:mail.template,subject:lms.email_template_lecturer_welcome
-msgid "[LMS] Congratulations, your instructor account has been activated"
+msgid "[LMS] Congratulations, your lecturer account has been activated"
 msgstr "[LMS] Chúc mừng bạn đã được kích hoạt tài khoản giảng viên"
 
 #. module: lms
@@ -2005,7 +2011,7 @@ msgstr "giờ"
 
 #. module: lms
 #: model_terms:ir.ui.view,arch_db:lms.lms_login_register_links
-msgid "instructor"
+msgid "lecturer"
 msgstr "giảng viên"
 
 #. module: lms
@@ -2185,13 +2191,13 @@ msgstr "Bạn có thể chia sẻ thêm về mục tiêu học tập cụ thể 
 #. odoo-python
 #: code:addons/lms/models/student_ai_chat.py:0
 msgid "from %(start)s to %(end)s"
-msgstr "từ %(start)s đến %(end)s"
+msgstr "từ ngày %(start)s đến %(end)s"
 
 #. module: lms
 #. odoo-python
 #: code:addons/lms/models/student_ai_chat.py:0
 msgid "I have created roadmap suggestions for you to choose from:"
-msgstr "Hệ thống đã tạo các phương án roadmap để bạn lựa chọn:"
+msgstr "Hệ thống đã tạo các phương án lộ trình để bạn lựa chọn:"
 
 #. module: lms
 #. odoo-python
@@ -2274,7 +2280,7 @@ msgstr "Phù hợp khi:"
 #. odoo-python
 #: code:addons/lms/models/student_ai_chat.py:0
 msgid "Total Roadmap Cost:"
-msgstr "Tổng chi phí roadmap:"
+msgstr "Tổng chi phí lộ trình:"
 
 #. module: lms
 #. odoo-python
@@ -2285,7 +2291,7 @@ msgid ""
 "\n"
 "Next step: on the roadmap screen (opening now), go to the \"Recommended "
 "Courses\" tab and click **Enroll** for each course you want to take. Each "
-"registration will be **Pending approval** until an instructor or "
+"registration will be **Pending approval** until a lecturer or "
 "administrator approves it.\n"
 "\n"
 "You can reopen this roadmap anytime from your student profile → Roadmap."
@@ -2320,11 +2326,24 @@ msgstr ""
 #. module: lms
 #: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_form
 msgid ""
-"Each registration stays <b>Pending approval</b> until an instructor or "
+"Each registration stays <b>Pending approval</b> until a lecturer or "
 "administrator approves it."
 msgstr ""
 "Mỗi đăng ký ở trạng thái <b>Chờ duyệt</b> cho đến khi giảng viên hoặc "
-"quản trị phê duyệt."
+"quản trị viên phê duyệt."
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_form
+msgid ""
+"Register for each course in the <b>Recommended Courses</b> tab using the "
+"<b>Enroll</b> button.\n"
+"Each registration stays <b>Pending approval</b> until a lecturer or "
+"administrator approves it."
+msgstr ""
+"Đăng ký từng khóa trong tab <b>Khóa học đề xuất</b> bằng nút <b>Đăng "
+"ký</b>.\n"
+"Mỗi đăng ký ở trạng thái <b>Chờ duyệt</b> cho đến khi giảng viên hoặc "
+"quản trị viên phê duyệt."
 
 #. module: lms
 #: model_terms:ir.ui.view,arch_db:lms.view_lms_roadmap_form
@@ -2477,3 +2496,210 @@ msgstr ""
 #: code:addons/lms/models/course.py:0
 msgid "Cannot register — complete prerequisite course(s) first: %s"
 msgstr "Không thể đăng ký — hoàn thành khóa tiên quyết trước: %s"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/course.py:0
+msgid ""
+"Cannot delete course \"%(name)s\" because %(count)s student(s) are enrolled. "
+"Cancel or remove all enrollments before deleting the course."
+msgstr ""
+"Không thể xóa khóa học \"%(name)s\" vì đã có %(count)s sinh viên đăng ký. "
+"Hãy hủy hoặc gỡ toàn bộ đăng ký trước khi xóa khóa học."
+
+#. module: lms
+#: model:ir.ui.menu,name:lms.menu_lms_pending_enrollments
+#: model:ir.ui.menu,name:lms.menu_lms_pending_enrollments_instructor
+#: model:ir.actions.act_window,name:lms.action_lms_pending_enrollments
+msgid "Pending Approvals"
+msgstr "Chờ phê duyệt"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_form
+msgid "Enter course overview, learning objectives, syllabus, and notes for students..."
+msgstr "Nhập tổng quan khóa học, mục tiêu học tập, đề cương và ghi chú cho học viên..."
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_form
+msgid "Select courses students must complete before enrolling in this course..."
+msgstr "Chọn các khóa học học viên phải hoàn thành trước khi đăng ký khóa này..."
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_form
+msgid "Face template registration (attendance)"
+msgstr "Đăng ký mẫu khuôn mặt (điểm danh)"
+
+#. module: lms
+#: model:ir.model.fields,field_description:lms.field_lms_student__face_embedding_registered_at
+msgid "Face Registered At"
+msgstr "Thời gian đăng ký khuôn mặt"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_form
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_learning_history_tree
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_course_form
+msgid "Duration (min)"
+msgstr "Thời lượng (phút)"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/roadmap.py:0
+msgid "Roadmap for %s - %s"
+msgstr "Lộ trình cho %s - %s"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/roadmap.py:0
+msgid "Roadmap - %s"
+msgstr "Lộ trình - %s"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lecturer_form
+msgid "Identity & account"
+msgstr "Danh tính & tài khoản"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lecturer_form
+msgid "Profile"
+msgstr "Hồ sơ"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lecturer_form
+msgid "Contact & login"
+msgstr "Liên hệ & đăng nhập"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lecturer_form
+msgid "Personal details"
+msgstr "Thông tin cá nhân"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lecturer_form
+msgid "Demographics"
+msgstr "Thông tin nhân thân"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lecturer_form
+msgid "Academic background"
+msgstr "Học vấn"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lecturer_form
+msgid "Teaching profile"
+msgstr "Hồ sơ giảng dạy"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_lecturer_form
+msgid "Teaching mode"
+msgstr "Hình thức giảng dạy"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/student.py:0
+msgid ""
+"<p class=\"text-muted\">Save the student profile first, then return to this "
+"tab to register the face template.</p>"
+msgstr ""
+"<p class=\"text-muted\">Lưu hồ sơ học viên trước, sau đó quay lại tab này để "
+"đăng ký mẫu khuôn mặt.</p>"
+
+#. module: lms
+#. odoo-javascript
+#: code:addons/lms/static/src/js/lms_face_mount.js:0
+msgid "Attendance photo"
+msgstr "Ảnh điểm danh"
+
+#. module: lms
+#. odoo-javascript
+#: code:addons/lms/static/src/js/lms_face_mount.js:0
+msgid "Re-register face template"
+msgstr "Đăng ký lại mẫu khuôn mặt"
+
+#. module: lms
+#. odoo-javascript
+#: code:addons/lms/static/src/js/lms_face_mount.js:0
+msgid "Face template registered."
+msgstr "Đã đăng ký mẫu khuôn mặt."
+
+#. module: lms
+#. odoo-javascript
+#: code:addons/lms/static/src/js/lms_face_mount.js:0
+msgid ""
+"Face template registered (no photo saved — use Re-register to capture a "
+"photo)."
+msgstr ""
+"Đã đăng ký mẫu khuôn mặt (chưa lưu ảnh — bấm Đăng ký lại để chụp ảnh)."
+
+#. module: lms
+#. odoo-javascript
+#: code:addons/lms/static/src/js/lms_face_mount.js:0
+msgid "Attendance recorded. Photo locked."
+msgstr "Đã điểm danh. Ảnh đã khóa."
+
+#. module: lms
+#. odoo-javascript
+#: code:addons/lms/static/src/js/lms_face_mount.js:0
+msgid "Capture and Save Face Template"
+msgstr "Chụp và lưu mẫu khuôn mặt"
+
+#. module: lms
+#. odoo-javascript
+#: code:addons/lms/static/src/js/lms_face_mount.js:0
+msgid "Check In (Take Photo)"
+msgstr "Điểm danh (chụp ảnh)"
+
+#. module: lms
+#. odoo-javascript
+#: code:addons/lms/static/src/js/lms_face_mount.js:0
+msgid "Could not open camera:"
+msgstr "Không mở được camera:"
+
+#. module: lms
+#. odoo-javascript
+#: code:addons/lms/static/src/js/lms_face_mount.js:0
+msgid "No frame from camera yet. Wait for the video feed, then try again."
+msgstr "Chưa có khung hình từ camera. Đợi video hiển thị rồi thử lại."
+
+#. module: lms
+#. odoo-javascript
+#: code:addons/lms/static/src/js/lms_face_mount.js:0
+msgid "Processing…"
+msgstr "Đang xử lý…"
+
+#. module: lms
+#. odoo-javascript
+#: code:addons/lms/static/src/js/lms_face_mount.js:0
+msgid "Success. Reloading page…"
+msgstr "Thành công. Đang tải lại trang…"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_form
+msgid "Contact"
+msgstr "Liên hệ"
+
+#. module: lms
+#: model_terms:ir.ui.view,arch_db:lms.view_lms_student_form
+msgid "Account & learning"
+msgstr "Tài khoản & học tập"
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/course.py:0
+msgid "Course start date must be before the end date."
+msgstr "Ngày bắt đầu khóa học phải nhỏ hơn ngày kết thúc."
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/course.py:0
+msgid ""
+"Lesson \"%(lesson)s\": start and end time must be within the course period "
+"(%(start)s – %(end)s)."
+msgstr ""
+"Bài học \"%(lesson)s\": thời gian bắt đầu và kết thúc phải nằm trong khoảng "
+"thời gian khóa học (%(start)s – %(end)s)."
+
+#. module: lms
+#. odoo-python
+#: code:addons/lms/models/course.py:0
+msgid "New Lesson"
+msgstr "Bài học mới"

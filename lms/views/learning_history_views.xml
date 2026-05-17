@@ -14,7 +14,7 @@
                 <filter string="Completed" name="status_completed" domain="[('status', '=', 'completed')]"/>
                 <group expand="0" string="Group By">
                     <filter string="Course" name="group_course" context="{'group_by': 'course_id'}"/>
-                    <filter string="Instructor" name="group_instructor" context="{'group_by': 'instructor_id'}"/>
+                    <filter string="Lecturer" name="group_instructor" context="{'group_by': 'instructor_id'}"/>
                 </group>
             </search>
         </field>

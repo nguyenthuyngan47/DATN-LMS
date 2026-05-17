@@ -17,7 +17,7 @@ class LearningHistory(models.Model):
     lesson_id = fields.Many2one('lms.lesson', string='Lesson', required=True, ondelete='cascade')
     instructor_id = fields.Many2one(
         'res.users',
-        string='Instructor',
+        string='Lecturer',
         related='course_id.instructor_id',
         store=True,
         readonly=True,

@@ -106,7 +106,7 @@
                                 />
                             </div>
                             <div class="o_form_label text-success" invisible="not has_roadmap_selected">
-                                You have selected a roadmap. Open it to register for each course (pending instructor/admin approval).
+                                You have selected a roadmap. Open it to register for each course (pending lecturer/admin approval).
                             </div>
                             <button
                                 name="action_open_created_roadmap"

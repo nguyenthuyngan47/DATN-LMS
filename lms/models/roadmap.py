@@ -57,10 +57,11 @@ class Roadmap(models.Model):
     @api.depends('student_id', 'create_date')
     def _compute_name(self):
         for record in self:
+            date_str = fields.Datetime.to_string(record.create_date)[:10]
             if record.student_id:
-                record.name = f"Roadmap for {record.student_id.name} - {fields.Datetime.to_string(record.create_date)[:10]}"
+                record.name = _('Roadmap for %s - %s') % (record.student_id.name, date_str)
             else:
-                record.name = f"Roadmap - {fields.Datetime.to_string(record.create_date)[:10]}"
+                record.name = _('Roadmap - %s') % (date_str,)
     
     @api.depends('course_line_ids')
     def _compute_total_courses(self):

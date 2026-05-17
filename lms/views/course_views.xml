@@ -73,7 +73,7 @@
                     <filter string="Category" name="group_category" context="{'group_by': 'category_id'}"/>
                     <filter string="Level" name="group_level" context="{'group_by': 'level_id'}"/>
                     <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
-                    <filter string="Instructor" name="group_instructor" context="{'group_by': 'instructor_id'}"/>
+                    <filter string="Lecturer" name="group_instructor" context="{'group_by': 'instructor_id'}"/>
                 </group>
             </search>
         </field>
@@ -277,7 +277,7 @@
     </record>
 
     <record id="action_lms_course_student" model="ir.actions.act_window">
-        <field name="name">Courses</field>
+        <field name="name">Khóa học</field>
         <field name="res_model">lms.course</field>
         <field name="view_mode">list,kanban,form</field>
         <field name="search_view_id" ref="view_lms_course_search"/>
@@ -285,7 +285,7 @@
     </record>
 
     <record id="action_lms_course_instructor" model="ir.actions.act_window">
-        <field name="name">Courses</field>
+        <field name="name">Khóa học</field>
         <field name="res_model">lms.course</field>
         <field name="view_mode">list,kanban,form</field>
         <field name="search_view_id" ref="view_lms_course_search"/>

@@ -773,7 +773,7 @@ class LmsStudentAiChat(models.TransientModel):
                     'You selected "%(title)s". Your learning roadmap has been saved (%(count)s courses).\n\n'
                     'Next step: on the roadmap screen (opening now), go to the '
                     '"Recommended Courses" tab and click **Enroll** for each course you want to take. '
-                    'Each registration will be **Pending approval** until an instructor or administrator approves it.\n\n'
+                    'Each registration will be **Pending approval** until a lecturer or administrator approves it.\n\n'
                     'You can reopen this roadmap anytime from your student profile → Roadmap.'
                 )
                 % {'title': option['title'], 'count': len(roadmap.course_line_ids)},

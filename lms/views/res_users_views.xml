@@ -40,14 +40,14 @@
                         string="Students Pending Approval"
                         domain="[('lms_signup_channel', '=', 'student'), ('lms_is_pending', '=', True)]"/>
                 <filter name="filter_pending_lecturer"
-                        string="Instructors Pending Approval"
+                        string="Lecturers Pending Approval"
                         domain="[('lms_signup_channel', '=', 'lecturer'), ('lms_is_pending', '=', True)]"/>
                 <separator/>
                 <filter name="filter_all_student"
                         string="All Students"
                         domain="[('lms_signup_channel', '=', 'student')]"/>
                 <filter name="filter_all_lecturer"
-                        string="All Instructors"
+                        string="All Lecturers"
                         domain="[('lms_signup_channel', '=', 'lecturer')]"/>
             </xpath>
         </field>

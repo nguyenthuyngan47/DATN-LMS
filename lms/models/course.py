@@ -10,6 +10,7 @@ import unicodedata
 from odoo import _, api, fields, models
 from odoo.api import NewId
 from odoo.exceptions import UserError, ValidationError
+from odoo.tools import format_date
 
 from ..services import google_calendar_sync
 from . import face_embedding_utils
@@ -53,7 +54,7 @@ class Course(models.Model):
     level_id = fields.Many2one('lms.course.level', string='Level', required=True, tracking=True)
     
     # Thông tin khóa học
-    instructor_id = fields.Many2one('res.users', string='Instructor', required=True, tracking=True)
+    instructor_id = fields.Many2one('res.users', string='Lecturer', required=True, tracking=True)
     duration_hours = fields.Float(string='Duration (hours)', digits=(16, 2), required=True, tracking=True)
     max_student = fields.Integer(
         string='Max Students',
@@ -65,7 +66,7 @@ class Course(models.Model):
     end_date = fields.Date(string='End Date', required=True, tracking=True)
     # VND không dùng phần thập phân -> lưu số nguyên để tránh hiển thị 100,000.00
     price = fields.Integer(string='Cost (VND)', default=0, required=True, tracking=True)
-    contact_payment = fields.Text(string='Instructor Contact', required=True, tracking=True)
+    contact_payment = fields.Text(string='Lecturer Contact', required=True, tracking=True)
     prerequisite_ids = fields.Many2many(
         'lms.course', 'course_prerequisite_rel', 'course_id', 'prerequisite_id',
         string='Prerequisites'
@@ -154,13 +155,15 @@ class Course(models.Model):
     def _check_contact_payment(self):
         for record in self:
             if not (record.contact_payment or '').strip():
-                raise ValidationError(_('Instructor contact is required.'))
+                raise ValidationError(_('Lecturer contact is required.'))
 
     @api.constrains('start_date', 'end_date')
     def _check_course_start_end_dates(self):
         for record in self:
-            if record.start_date and record.end_date and record.start_date > record.end_date:
-                raise ValidationError(_('Course start date must be on or before the end date.'))
+            if record.start_date and record.end_date and record.start_date >= record.end_date:
+                raise ValidationError(_('Course start date must be before the end date.'))
+            for lesson in record.lesson_ids:
+                lesson._validate_within_course_dates()
 
     @api.constrains('price')
     def _check_price_non_negative(self):
@@ -985,6 +988,23 @@ class Course(models.Model):
             'target': 'self',
         }
 
+    def unlink(self):
+        excluded = ENROLLMENT_STATUSES_EXCLUDED_FROM_CAPACITY
+        for course in self:
+            blocking = course.student_course_ids.filtered(
+                lambda e, ex=excluded: e.status not in ex
+            )
+            if blocking:
+                raise ValidationError(
+                    _('Cannot delete course "%(name)s" because %(count)s student(s) are enrolled. '
+                      'Cancel or remove all enrollments before deleting the course.')
+                    % {'name': course.name, 'count': len(blocking)}
+                )
+            stale = course.student_course_ids.filtered(lambda e, ex=excluded: e.status in ex)
+            if stale:
+                stale.unlink()
+        return super().unlink()
+
 
 class Lesson(models.Model):
     _name = 'lms.lesson'
@@ -1305,6 +1325,34 @@ class Lesson(models.Model):
         for lesson in self:
             if lesson.duration_minutes is not None and lesson.duration_minutes < 0:
                 raise ValidationError(_('Duration (minutes) cannot be negative.'))
+
+    def _lesson_outside_course_dates_error(self):
+        self.ensure_one()
+        course = self.course_id
+        return _(
+            'Lesson "%(lesson)s": start and end time must be within the course period '
+            '(%(start)s – %(end)s).'
+        ) % {
+            'lesson': self.name or _('New Lesson'),
+            'start': format_date(self.env, course.start_date),
+            'end': format_date(self.env, course.end_date),
+        }
+
+    def _validate_within_course_dates(self):
+        for lesson in self:
+            course = lesson.course_id
+            if not course or not course.start_date or not course.end_date:
+                continue
+            if not lesson.start_datetime or not lesson.end_datetime:
+                continue
+            lesson_start = fields.Datetime.to_datetime(lesson.start_datetime).date()
+            lesson_end = fields.Datetime.to_datetime(lesson.end_datetime).date()
+            if lesson_start < course.start_date or lesson_end > course.end_date:
+                raise ValidationError(lesson._lesson_outside_course_dates_error())
+
+    @api.constrains('start_datetime', 'end_datetime', 'course_id')
+    def _check_lesson_within_course_dates(self):
+        self._validate_within_course_dates()
 
     @api.depends('state')
     def _compute_calendar_color(self):
