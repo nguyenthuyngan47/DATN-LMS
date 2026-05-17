@@ -117,8 +117,7 @@ class AIAnalysis(models.Model):
         available_courses_info = []
         for course in all_courses[:50]:  # Giới hạn 50 khóa học để tránh prompt quá dài
             available_courses_info.append(
-                f"- {course.name} (Category: {course.category_id.name}, Level: {course.level_id.name}, "
-                f"Tags: {', '.join(course.tag_ids.mapped('name'))})"
+                f"- {course.name} (Category: {course.category_id.name}, Level: {course.level_id.name})"
             )
         
         prompt = f"""
@@ -174,7 +173,6 @@ Chỉ trả về JSON, không có text thêm.
                 if course:
                     recommendations.append({
                         'course_id': course.id,
-                        'similarity_score': 0.9 if rec.get('priority') == 'high' else 0.7,
                         'reason': f"AI đề xuất: {rec.get('reason', '')}",
                         'priority': rec.get('priority', 'medium'),
                     })
@@ -192,7 +190,7 @@ Chỉ trả về JSON, không có text thêm.
     @api.model
     def content_based_filtering(self, student_id):
         """
-        Content-Based Filtering: So sánh Category, Level, Tags
+        Content-Based Filtering: So sánh Category, Level
         giữa khóa học đã học và khóa học mới
         """
         student = self.env['lms.student'].browse(student_id)
@@ -211,7 +209,6 @@ Chỉ trả về JSON, không có text thêm.
         # Lấy thông tin từ khóa học đã học
         learned_categories = completed_courses.mapped('category_id')
         learned_levels = completed_courses.mapped('level_id')
-        learned_tags = completed_courses.mapped('tag_ids')
         
         # Tìm khóa học tương tự
         all_courses = self.env['lms.course'].search([
@@ -238,22 +235,15 @@ Chỉ trả về JSON, không có text thêm.
                 similarity_score += 0.2
                 reasons.append(f"Cấp độ tiếp theo: {course.level_id.name}")
             
-            # So sánh Tags (trọng số 0.3)
-            common_tags = course.tag_ids & learned_tags
-            if common_tags:
-                tag_score = min(0.3, len(common_tags) * 0.1)
-                similarity_score += tag_score
-                reasons.append(f"Có {len(common_tags)} nhãn tương tự: {', '.join(common_tags.mapped('name'))}")
-            
             if similarity_score > 0.2:  # Ngưỡng tối thiểu
                 recommendations.append({
                     'course_id': course.id,
-                    'similarity_score': similarity_score,
                     'reason': ' | '.join(reasons),
+                    'priority': 'high' if similarity_score >= 0.7 else 'medium' if similarity_score >= 0.4 else 'low',
                 })
         
-        # Sắp xếp theo điểm tương đồng
-        recommendations.sort(key=lambda x: x['similarity_score'], reverse=True)
+        priority_rank = {'high': 3, 'medium': 2, 'low': 1}
+        recommendations.sort(key=lambda x: priority_rank.get(x.get('priority', 'medium'), 0), reverse=True)
         return recommendations[:10]  # Top 10
     
     @api.model
@@ -288,7 +278,6 @@ Chỉ trả về JSON, không có text thêm.
                 if python_intermediate:
                     recommendations.append({
                         'course_id': python_intermediate.id,
-                        'similarity_score': 1.0,
                         'reason': 'Luật: Đã hoàn thành Python Beginner → Gợi ý Python Intermediate',
                         'priority': 'high',
                     })
@@ -304,7 +293,6 @@ Chỉ trả về JSON, không có text thêm.
             for course in easy_courses:
                 recommendations.append({
                     'course_id': course.id,
-                    'similarity_score': 0.7,
                     'reason': f'Luật: Không hoạt động {student.inactive_days} ngày → Gợi ý khóa học dễ để khởi động lại',
                     'priority': 'medium',
                 })
@@ -324,7 +312,6 @@ Chỉ trả về JSON, không có text thêm.
             for next_course in next_courses:
                 recommendations.append({
                     'course_id': next_course.id,
-                    'similarity_score': 0.9,
                     'reason': f'Luật: Đã hoàn thành {course.name} → Gợi ý khóa học tiếp theo',
                     'priority': 'high',
                 })
@@ -342,8 +329,8 @@ Chỉ trả về JSON, không có text thêm.
         
         return [{
             'course_id': course.id,
-            'similarity_score': 0.5,
             'reason': f'Đề xuất theo trình độ: {level}',
+            'priority': 'medium',
         } for course in courses]
     
     @api.model

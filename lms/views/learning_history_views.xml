@@ -25,13 +25,13 @@
         <field name="model">lms.learning.history</field>
         <field name="arch" type="xml">
             <list string="Learning History" decoration-warning="is_at_risk==True">
-                <field name="date"/>
-                <field name="student_id"/>
-                <field name="course_id"/>
-                <field name="lesson_id"/>
-                <field name="instructor_id"/>
-                <field name="study_duration"/>
-                <field name="status"/>
+                <field name="date" width="120px"/>
+                <field name="student_id" width="180px"/>
+                <field name="course_id" width="200px"/>
+                <field name="lesson_id" width="200px"/>
+                <field name="instructor_id" width="160px"/>
+                <field name="study_duration" string="Duration (min)" width="120px"/>
+                <field name="status" width="120px"/>
                 <field name="is_at_risk" invisible="1"/>
             </list>
         </field>
@@ -56,7 +56,7 @@
                         </group>
                         <group>
                             <field name="status"/>
-                            <field name="study_duration"/>
+                            <field name="study_duration" string="Duration (min)"/>
                         </group>
                     </group>
                     <group>

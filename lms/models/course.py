@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from dateutil.relativedelta import relativedelta
+import base64
+import io
 import os
+import re
+import unicodedata
 
 from odoo import _, api, fields, models
 from odoo.api import NewId
@@ -9,6 +13,7 @@ from odoo.exceptions import UserError, ValidationError
 
 from ..services import google_calendar_sync
 from . import face_embedding_utils
+from .student import ENROLLMENT_STATUSES_EXCLUDED_FROM_CAPACITY
 
 
 class CourseCategory(models.Model):
@@ -33,16 +38,6 @@ class CourseLevel(models.Model):
     course_ids = fields.One2many('lms.course', 'level_id', string='Courses')
 
 
-class CourseTag(models.Model):
-    _name = 'lms.course.tag'
-    _description = 'Course Tag'
-    _order = 'name'
-
-    name = fields.Char(string='Tag Name', required=True)
-    color = fields.Integer(string='Color')
-    course_ids = fields.Many2many('lms.course', 'course_tag_rel', 'tag_id', 'course_id', string='Courses')
-
-
 class Course(models.Model):
     _name = 'lms.course'
     _description = 'Course'
@@ -56,17 +51,21 @@ class Course(models.Model):
     # Phân loại
     category_id = fields.Many2one('lms.course.category', string='Category', required=True, tracking=True)
     level_id = fields.Many2one('lms.course.level', string='Level', required=True, tracking=True)
-    tag_ids = fields.Many2many('lms.course.tag', 'course_tag_rel', 'course_id', 'tag_id', string='Tags')
     
     # Thông tin khóa học
-    instructor_id = fields.Many2one('res.users', string='Instructor', tracking=True)
-    duration_hours = fields.Float(string='Duration (hours)', digits=(16, 2), tracking=True)
-    max_student = fields.Integer(string='Max Students')
-    start_date = fields.Date(string='Start Date')
-    end_date = fields.Date(string='End Date')
+    instructor_id = fields.Many2one('res.users', string='Instructor', required=True, tracking=True)
+    duration_hours = fields.Float(string='Duration (hours)', digits=(16, 2), required=True, tracking=True)
+    max_student = fields.Integer(
+        string='Max Students',
+        default=15,
+        help='Maximum concurrent enrollments counting pending, approved, learning, and completed '
+             '(rejected/cancelled do not use a seat).',
+    )
+    start_date = fields.Date(string='Start Date', required=True, tracking=True)
+    end_date = fields.Date(string='End Date', required=True, tracking=True)
     # VND không dùng phần thập phân -> lưu số nguyên để tránh hiển thị 100,000.00
-    price = fields.Integer(string='Cost (VND)', default=0, tracking=True)
-    contact_payment = fields.Text(string='Instructor Contact', tracking=True)
+    price = fields.Integer(string='Cost (VND)', default=0, required=True, tracking=True)
+    contact_payment = fields.Text(string='Instructor Contact', required=True, tracking=True)
     prerequisite_ids = fields.Many2many(
         'lms.course', 'course_prerequisite_rel', 'course_id', 'prerequisite_id',
         string='Prerequisites'
@@ -101,9 +100,9 @@ class Course(models.Model):
         ('draft', 'Draft'),
         ('published', 'Published'),
         ('archived', 'Archived'),
-    ], string='Status', default='draft', tracking=True)
+    ], string='Status', default='draft', required=True, tracking=True)
     
-    is_active = fields.Boolean(string='Active', default=True)
+    is_active = fields.Boolean(string='Active', default=True, required=True)
 
     @api.model
     def default_get(self, fields_list):
@@ -144,17 +143,59 @@ class Course(models.Model):
 
     @api.constrains('duration_hours')
     def _check_duration_hours(self):
-        """Kiểm tra thời lượng khóa học không được âm"""
+        """Thời lượng khóa học phải lớn hơn 0."""
         for record in self:
-            if record.duration_hours and record.duration_hours < 0:
-                raise ValueError('Course duration cannot be negative')
+            if record.duration_hours is not None and record.duration_hours < 0:
+                raise ValidationError(_('Course duration cannot be negative.'))
+            if not record.duration_hours:
+                raise ValidationError(_('Course duration (hours) must be greater than 0.'))
+
+    @api.constrains('contact_payment')
+    def _check_contact_payment(self):
+        for record in self:
+            if not (record.contact_payment or '').strip():
+                raise ValidationError(_('Instructor contact is required.'))
+
+    @api.constrains('start_date', 'end_date')
+    def _check_course_start_end_dates(self):
+        for record in self:
+            if record.start_date and record.end_date and record.start_date > record.end_date:
+                raise ValidationError(_('Course start date must be on or before the end date.'))
 
     @api.constrains('price')
     def _check_price_non_negative(self):
         for record in self:
             if record.price is not None and record.price < 0:
                 raise ValueError('Course cost cannot be negative')
-    
+
+    @api.constrains('max_student')
+    def _check_max_student_minimum(self):
+        for record in self:
+            if record.max_student in (False, None):
+                continue
+            if record.max_student < 1:
+                raise ValidationError(_('When set, max students must be at least 1.'))
+
+    @api.constrains('max_student', 'student_course_ids', 'student_course_ids.status')
+    def _check_max_student_vs_occupied(self):
+        for record in self:
+            cap = record.max_student
+            if not cap:
+                continue
+            occupied = len(
+                record.student_course_ids.filtered(
+                    lambda e: e.status not in ENROLLMENT_STATUSES_EXCLUDED_FROM_CAPACITY
+                )
+            )
+            if occupied > cap:
+                raise ValidationError(
+                    _(
+                        'This course already has %(occ)s active student(s); max students '
+                        'cannot be set below %(occ)s.',
+                    )
+                    % {'occ': occupied}
+                )
+
     @api.constrains('prerequisite_ids')
     def _check_prerequisite_cycle(self):
         """Kiểm tra prerequisite không được tạo vòng lặp"""
@@ -174,18 +215,100 @@ class Course(models.Model):
                 prereq_course = self.browse(prereq_id)
                 if prereq_course.exists():
                     to_check.extend(prereq_course.prerequisite_ids.ids)
-    
+
+    def _get_unmet_prerequisite_courses(self, student):
+        """Khóa tiên quyết chưa hoàn thành (status completed) của sinh viên."""
+        self.ensure_one()
+        if not student or not self.prerequisite_ids:
+            return self.env['lms.course']
+        completed_ids = set(
+            self.env['lms.student.course']
+            .sudo()
+            .search(
+                [
+                    ('student_id', '=', student.id),
+                    ('course_id', 'in', self.prerequisite_ids.ids),
+                    ('status', '=', 'completed'),
+                ]
+            )
+            .mapped('course_id')
+            .ids
+        )
+        return self.prerequisite_ids.filtered(lambda c: c.id not in completed_ids)
+
+    @api.model
+    def _format_prerequisite_course_names(self, courses):
+        return ', '.join(courses.mapped('name')) if courses else ''
+
+    def _prerequisite_error_message(self, student):
+        """Thông báo lỗi khi chưa đủ khóa tiên quyết."""
+        self.ensure_one()
+        missing = self._get_unmet_prerequisite_courses(student)
+        if not missing:
+            return False
+        return _(
+            'You must complete the following prerequisite course(s) before taking "%(course)s": %(prereqs)s'
+        ) % {
+            'course': self.name,
+            'prereqs': self._format_prerequisite_course_names(missing),
+        }
+
+    def _raise_if_prerequisites_unmet(self, student):
+        self.ensure_one()
+        message = self._prerequisite_error_message(student)
+        if message:
+            raise UserError(message)
+
+    @api.model
+    def _user_may_bypass_prerequisite_rules(self):
+        user = self.env.user
+        return (
+            self.env.context.get('skip_prerequisite_check')
+            or user.has_group('base.group_system')
+            or user.has_group('lms.group_lms_manager')
+            or user.has_group('lms.group_lms_instructor')
+        )
+
+    def _renormalize_lesson_sequences(self):
+        """Đánh lại sequence 1, 2, 3... theo thứ tự hiển thị trên khóa học."""
+        Lesson = self.env['lms.lesson'].with_context(skip_lesson_sequence_renormalize=True)
+        for course in self:
+            lessons = course.lesson_ids.sorted(key=lambda l: (l.sequence, l.id))
+            for index, lesson in enumerate(lessons, start=1):
+                if lesson.sequence != index:
+                    Lesson.browse(lesson.id).write({'sequence': index})
+
     @api.depends('lesson_ids')
     def _compute_total_lessons(self):
         for record in self:
             record.total_lessons = len(record.lesson_ids)
     
-    @api.depends('student_course_ids')
+    @api.depends('student_course_ids', 'student_course_ids.status')
     def _compute_enrolled_students(self):
         for record in self:
-            record.enrolled_students_count = len(record.student_course_ids)
+            record.enrolled_students_count = len(
+                record.student_course_ids.filtered(
+                    lambda e: e.status not in ENROLLMENT_STATUSES_EXCLUDED_FROM_CAPACITY
+                )
+            )
 
-    @api.depends('state', 'is_active', 'student_course_ids', 'instructor_id')
+    def _get_occupied_seat_count(self):
+        self.ensure_one()
+        return len(
+            self.student_course_ids.filtered(
+                lambda e: e.status not in ENROLLMENT_STATUSES_EXCLUDED_FROM_CAPACITY
+            )
+        )
+
+    @api.depends(
+        'state',
+        'is_active',
+        'prerequisite_ids',
+        'student_course_ids',
+        'student_course_ids.status',
+        'instructor_id',
+        'max_student',
+    )
     def _compute_current_user_registration_state(self):
         """Điều khiển hiển thị nút đăng ký/hủy theo user hiện tại trên form course."""
         user = self.env.user
@@ -231,11 +354,16 @@ class Course(models.Model):
         )
         for record in self:
             is_enrolled = record.id in enrolled_ids
+            cap = record.max_student or 0
+            occupied = record._get_occupied_seat_count()
+            has_available_seats = not cap or occupied < cap
             # Khớp action_register_courses: chỉ published + đang hoạt động mới cho đăng ký mới.
+            # Thiếu tiên quyết vẫn hiện nút; bấm đăng ký sẽ báo lỗi trong action_register_courses.
             record.show_register_button = (
                 not is_enrolled
                 and record.state == 'published'
                 and record.is_active
+                and has_available_seats
             )
             record.show_cancel_button = is_enrolled
             is_learning = self.env['lms.student.course'].sudo().search_count(
@@ -303,11 +431,19 @@ class Course(models.Model):
         created_names = []
         duplicate_names = []
         blocked_names = []
+        full_names = []
+        bypass_prereq = self._user_may_bypass_prerequisite_rules()
 
         for course in self:
             # Chỉ cho đăng ký khóa học đang hoạt động và đã xuất bản.
             if course.state != 'published' or not course.is_active:
                 blocked_names.append(course.name)
+                continue
+            if not bypass_prereq:
+                course._raise_if_prerequisites_unmet(student)
+            cap = course.max_student or 0
+            if cap and course._get_occupied_seat_count() >= cap:
+                full_names.append(course.name)
                 continue
             existed = StudentCourse.search(
                 [('student_id', '=', student.id), ('course_id', '=', course.id)],
@@ -322,6 +458,8 @@ class Course(models.Model):
                     'course_id': course.id,
                     'status': 'pending',
                     'enrollment_date': fields.Date.today(),
+                    'start_date': course.start_date,
+                    'end_date': course.end_date,
                     'final_score': False,
                 }
             )
@@ -338,20 +476,31 @@ class Course(models.Model):
                 _('Cannot register (not published or inactive): %s')
                 % ', '.join(blocked_names)
             )
+        if full_names:
+            lines.append(
+                _('Cannot register because the following course(s) are full (max students reached): %s')
+                % ', '.join(full_names)
+            )
         if not lines:
             lines.append(_('No courses were processed.'))
 
-        notif_type = 'success' if created_names and not (duplicate_names or blocked_names) else 'warning'
+        if len(self) == 1 and not created_names:
+            raise UserError('\n'.join(lines))
+
+        has_issues = bool(duplicate_names or blocked_names or full_names)
+        notif_type = 'success' if created_names and not has_issues else 'warning'
+        params = {
+            'title': _('Course Registration'),
+            'message': '\n'.join(lines),
+            'type': notif_type,
+            'sticky': notif_type != 'success',
+        }
+        if created_names:
+            params['next'] = {'type': 'ir.actions.client', 'tag': 'reload'}
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
-            'params': {
-                'title': _('Course Registration'),
-                'message': '\n'.join(lines),
-                'type': notif_type,
-                'sticky': False,
-                'next': {'type': 'ir.actions.client', 'tag': 'reload'},
-            },
+            'params': params,
         }
 
     def action_cancel_course_registration(self):
@@ -375,18 +524,495 @@ class Course(models.Model):
             },
         }
 
+    # --- Báo cáo tiến độ (Excel, không thêm field model) ---
+
+    _REPORT_ENROLLMENT_STATUS_VI = {
+        'pending': 'Chờ duyệt',
+        'approved': 'Đã duyệt',
+        'learning': 'Đang học',
+        'completed': 'Hoàn thành',
+        'rejected': 'Từ chối',
+    }
+    _REPORT_LESSON_STATE_VI = {
+        'draft': 'Nháp',
+        'scheduled': 'Đã lên lịch',
+        'done': 'Hoàn thành',
+        'cancelled': 'Đã hủy',
+    }
+
+    @api.model
+    def _report_filename_part(self, text, max_len=60):
+        if not text:
+            return 'unknown'
+        normalized = unicodedata.normalize('NFD', str(text))
+        ascii_text = ''.join(c for c in normalized if unicodedata.category(c) != 'Mn')
+        cleaned = re.sub(r'[^\w\s-]', '', ascii_text, flags=re.UNICODE)
+        cleaned = re.sub(r'[\s_]+', '_', cleaned.strip())
+        return (cleaned[:max_len] if cleaned else 'unknown') or 'unknown'
+
+    @api.model
+    def _report_sheet_title(self, text):
+        title = self._report_filename_part(text, max_len=31)
+        return title or 'Hoc_vien'
+
+    @api.model
+    def _report_unique_sheet_name(self, base_name, used_names):
+        name = self._report_sheet_title(base_name)
+        if name not in used_names:
+            used_names.add(name)
+            return name
+        for index in range(2, 100):
+            suffix = f'_{index}'
+            candidate = f'{name[: 31 - len(suffix)]}{suffix}'
+            if candidate not in used_names:
+                used_names.add(candidate)
+                return candidate
+        fallback = f'SV_{len(used_names)}'
+        used_names.add(fallback)
+        return fallback
+
+    @staticmethod
+    def _report_format_datetime(value):
+        if not value:
+            return ''
+        dt = fields.Datetime.to_datetime(value)
+        if not dt:
+            return ''
+        return dt.strftime('%d/%m/%Y %H:%M')
+
+    @staticmethod
+    def _report_format_date(value):
+        if not value:
+            return ''
+        d = fields.Date.to_date(value)
+        if not d:
+            return ''
+        return d.strftime('%d/%m/%Y')
+
+    def _report_check_export_access(self):
+        self.ensure_one()
+        user = self.env.user
+        if user.has_group('base.group_system') or user.has_group('lms.group_lms_manager'):
+            return
+        if (
+            user.has_group('lms.group_lms_instructor')
+            and self.instructor_id
+            and self.instructor_id.id == user.id
+        ):
+            return
+        raise UserError(_('You do not have permission to export this course report.'))
+
+    def _report_client_notify(self, message, notif_type='warning'):
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Export Report'),
+                'message': message,
+                'type': notif_type,
+                'sticky': False,
+            },
+        }
+
+    def _report_lessons_ordered(self):
+        self.ensure_one()
+        return self.lesson_ids.sorted(key=lambda lesson: (lesson.sequence, lesson.id))
+
+    def _report_enrollments(self):
+        self.ensure_one()
+        return self.student_course_ids.filtered(
+            lambda enrollment: enrollment.status != 'rejected'
+        ).sorted(key=lambda enrollment: (enrollment.student_id.name or '', enrollment.id))
+
+    def _report_progress_map(self, student_ids, lesson_ids):
+        if not student_ids or not lesson_ids:
+            return {}
+        Progress = self.env['lms.student.lesson.progress'].sudo()
+        rows = Progress.search([
+            ('student_id', 'in', list(student_ids)),
+            ('lesson_id', 'in', list(lesson_ids)),
+        ])
+        return {(row.student_id.id, row.lesson_id.id): row for row in rows}
+
+    def _report_lesson_type_label(self, lesson):
+        if lesson.lesson_type == 'video':
+            return 'Video'
+        return 'Online'
+
+    def _report_progress_completed(self, progress, lesson):
+        if not progress:
+            return False
+        if (lesson.lesson_type or 'online') == 'online':
+            return bool(progress.face_checked_in)
+        return (progress.progress_percent or 0.0) >= 90.0 or progress.status == 'done'
+
+    def _report_result_label(self, progress, lesson):
+        lesson_type = lesson.lesson_type or 'online'
+        if not progress:
+            return 'Chưa học'
+        if lesson_type == 'online':
+            return 'Có' if progress.face_checked_in else 'Không'
+        percent = progress.progress_percent or 0.0
+        if percent >= 90.0 or progress.status == 'done':
+            return 'Có'
+        if percent > 0:
+            return 'Đang học'
+        return 'Chưa học'
+
+    def _report_completion_datetime(self, progress, lesson):
+        if not progress or not self._report_progress_completed(progress, lesson):
+            return False
+        if (lesson.lesson_type or 'online') == 'online':
+            return progress.face_checked_in_at
+        return progress.completed_at
+
+    def _report_study_minutes(self, progress):
+        if not progress:
+            return 0.0
+        return progress.study_duration_minutes()
+
+    def _report_student_lesson_stats(self, enrollment, lessons, progress_map):
+        student = enrollment.student_id
+        total = len(lessons)
+        completed = 0
+        online_done = 0
+        online_total = 0
+        video_done = 0
+        video_total = 0
+        for lesson in lessons:
+            progress = progress_map.get((student.id, lesson.id))
+            is_done = self._report_progress_completed(progress, lesson)
+            if is_done:
+                completed += 1
+            if lesson.lesson_type == 'video':
+                video_total += 1
+                if is_done:
+                    video_done += 1
+            else:
+                online_total += 1
+                if is_done:
+                    online_done += 1
+        percent = round((completed / total) * 100.0, 1) if total else 0.0
+        return {
+            'total': total,
+            'completed': completed,
+            'percent': percent,
+            'online_done': online_done,
+            'online_total': online_total,
+            'video_done': video_done,
+            'video_total': video_total,
+        }
+
+    def _report_course_completion_stats(self, enrollments, lessons, progress_map):
+        total_slots = len(enrollments) * len(lessons)
+        if not total_slots:
+            return 0, 0, 0.0
+        completed_slots = 0
+        for enrollment in enrollments:
+            student_id = enrollment.student_id.id
+            for lesson in lessons:
+                progress = progress_map.get((student_id, lesson.id))
+                if self._report_progress_completed(progress, lesson):
+                    completed_slots += 1
+        percent = round((completed_slots / total_slots) * 100.0, 1)
+        return completed_slots, total_slots, percent
+
+    def _report_export_filename(self):
+        self.ensure_one()
+        month_part = self.start_date.strftime('%m-%Y') if self.start_date else 'unknown'
+        course_part = self._report_filename_part(self.name)
+        instructor_part = self._report_filename_part(self.instructor_id.name if self.instructor_id else '')
+        return f'{course_part}_{instructor_part}_{month_part}.xlsx'
+
+    def _report_write_label_value_rows(self, worksheet, row_start, rows, label_fmt, value_fmt):
+        row = row_start
+        for label, value in rows:
+            worksheet.write(row, 0, label, label_fmt)
+            worksheet.write(row, 1, value, value_fmt)
+            row += 1
+        return row
+
+    def _report_student_sheet_names(self, enrollments):
+        used_names = {'Tổng quan'}
+        return [
+            self._report_unique_sheet_name(
+                enrollment.student_id.name or 'Hoc_vien',
+                used_names,
+            )
+            for enrollment in enrollments
+        ]
+
+    def _report_write_overview_sheet(self, workbook, lessons, enrollments, progress_map, sheet_names):
+        worksheet = workbook.add_worksheet('Tổng quan')
+        label_fmt = workbook.add_format({'bold': True})
+        header_fmt = workbook.add_format({'bold': True, 'bg_color': '#D9E1F2', 'border': 1})
+        cell_fmt = workbook.add_format({'border': 1})
+        percent_fmt = workbook.add_format({'border': 1, 'num_format': '0.0'})
+
+        online_count = len(lessons.filtered(lambda lesson: lesson.lesson_type != 'video'))
+        video_count = len(lessons.filtered(lambda lesson: lesson.lesson_type == 'video'))
+        completed_slots, total_slots, slots_percent = self._report_course_completion_stats(
+            enrollments, lessons, progress_map
+        )
+        export_dt = fields.Datetime.context_timestamp(self, fields.Datetime.now())
+
+        info_rows = [
+            ('Khóa học', self.name or ''),
+            ('Giảng viên', self.instructor_id.name if self.instructor_id else ''),
+            ('Danh mục', self.category_id.name if self.category_id else ''),
+            ('Trình độ', self.level_id.name if self.level_id else ''),
+            (
+                'Thời gian khóa',
+                '%s – %s'
+                % (
+                    self._report_format_date(self.start_date),
+                    self._report_format_date(self.end_date),
+                ),
+            ),
+            (
+                'Tổng số bài',
+                '%s (Online: %s · Video: %s)' % (len(lessons), online_count, video_count),
+            ),
+            (
+                'Lượt hoàn thành / Tổng lượt bài học',
+                '%s / %s (%.1f%%)' % (completed_slots, total_slots, slots_percent),
+            ),
+            ('Số học viên', len(enrollments)),
+            ('Ngày xuất báo cáo', export_dt.strftime('%d/%m/%Y %H:%M')),
+        ]
+        next_row = self._report_write_label_value_rows(
+            worksheet, 0, info_rows, label_fmt, workbook.add_format({})
+        )
+
+        table_headers = [
+            'STT',
+            'Họ tên',
+            'Email',
+            'Trạng thái ĐK',
+            'Số bài',
+            'Đã hoàn thành',
+            'Online (Có/Tổng)',
+            'Video (Có/Tổng)',
+            '% hoàn thành',
+            'Sheet chi tiết',
+        ]
+        header_row = next_row + 1
+        for col, header in enumerate(table_headers):
+            worksheet.write(header_row, col, header, header_fmt)
+
+        data_row = header_row + 1
+        for index, enrollment in enumerate(enrollments, start=1):
+            student = enrollment.student_id
+            stats = self._report_student_lesson_stats(enrollment, lessons, progress_map)
+            sheet_name = sheet_names[index - 1] if index - 1 < len(sheet_names) else ''
+            row_values = [
+                index,
+                student.name or '',
+                student.email or '',
+                self._REPORT_ENROLLMENT_STATUS_VI.get(enrollment.status, enrollment.status or ''),
+                stats['total'],
+                stats['completed'],
+                '%s/%s' % (stats['online_done'], stats['online_total']),
+                '%s/%s' % (stats['video_done'], stats['video_total']),
+                stats['percent'],
+                sheet_name,
+            ]
+            for col, value in enumerate(row_values):
+                fmt = percent_fmt if col == 8 else cell_fmt
+                worksheet.write(data_row, col, value, fmt)
+            data_row += 1
+
+        worksheet.set_column(0, 0, 6)
+        worksheet.set_column(1, 2, 24)
+        worksheet.set_column(3, 3, 14)
+        worksheet.set_column(4, 8, 16)
+        worksheet.set_column(9, 9, 18)
+
+    def _report_write_student_sheet(self, workbook, enrollment, lessons, progress_map, sheet_name):
+        worksheet = workbook.add_worksheet(sheet_name)
+        label_fmt = workbook.add_format({'bold': True})
+        header_fmt = workbook.add_format({'bold': True, 'bg_color': '#E2EFDA', 'border': 1})
+        cell_fmt = workbook.add_format({'border': 1})
+
+        student = enrollment.student_id
+        stats = self._report_student_lesson_stats(enrollment, lessons, progress_map)
+        info_rows = [
+            ('Họ tên', student.name or ''),
+            ('Email', student.email or ''),
+            ('Điện thoại', student.phone or ''),
+            ('Khóa học', self.name or ''),
+            ('Giảng viên', self.instructor_id.name if self.instructor_id else ''),
+            (
+                'Trạng thái đăng ký',
+                self._REPORT_ENROLLMENT_STATUS_VI.get(enrollment.status, enrollment.status or ''),
+            ),
+            ('Ngày ghi danh', self._report_format_date(enrollment.enrollment_date)),
+            (
+                'Tiến độ khóa',
+                '%s/%s bài (%.1f%%)' % (stats['completed'], stats['total'], stats['percent']),
+            ),
+        ]
+        next_row = self._report_write_label_value_rows(
+            worksheet, 0, info_rows, label_fmt, workbook.add_format({})
+        )
+
+        table_headers = [
+            'STT',
+            'STT bài',
+            'Tên bài học',
+            'Loại bài',
+            'Ngày/giờ bài',
+            'Trạng thái bài',
+            'Kết quả',
+            'Thời điểm',
+            'Tiến độ %',
+            'Thời lượng học (phút)',
+            'Ghi chú',
+        ]
+        header_row = next_row + 1
+        for col, header in enumerate(table_headers):
+            worksheet.write(header_row, col, header, header_fmt)
+
+        data_row = header_row + 1
+        for index, lesson in enumerate(lessons, start=1):
+            progress = progress_map.get((student.id, lesson.id))
+            result = self._report_result_label(progress, lesson)
+            completion_dt = self._report_completion_datetime(progress, lesson)
+            percent = progress.progress_percent if progress and lesson.lesson_type == 'video' else None
+            note = ''
+            if lesson.lesson_type == 'online':
+                note = 'Điểm danh khuôn mặt' if result == 'Có' else (
+                    'Chưa điểm danh' if result == 'Không' else ''
+                )
+            elif lesson.lesson_type == 'video':
+                if result == 'Có':
+                    note = 'Hoàn thành xem video'
+                elif result == 'Đang học':
+                    note = 'Chưa đủ 90%'
+            row_values = [
+                index,
+                lesson.sequence,
+                lesson.name or '',
+                self._report_lesson_type_label(lesson),
+                self._report_format_datetime(lesson.start_datetime),
+                self._REPORT_LESSON_STATE_VI.get(lesson.state, lesson.state or ''),
+                result,
+                self._report_format_datetime(completion_dt),
+                '' if percent is None else round(percent, 1),
+                self._report_study_minutes(progress),
+                note,
+            ]
+            for col, value in enumerate(row_values):
+                worksheet.write(data_row, col, value, cell_fmt)
+            data_row += 1
+
+        summary_row = data_row + 1
+        worksheet.write(summary_row, 0, 'Tổng kết', label_fmt)
+        worksheet.write(
+            summary_row,
+            1,
+            'Đã hoàn thành: %s/%s · Online: %s/%s · Video: %s/%s'
+            % (
+                stats['completed'],
+                stats['total'],
+                stats['online_done'],
+                stats['online_total'],
+                stats['video_done'],
+                stats['video_total'],
+            ),
+        )
+
+        worksheet.set_column(0, 0, 6)
+        worksheet.set_column(1, 1, 8)
+        worksheet.set_column(2, 2, 30)
+        worksheet.set_column(3, 5, 16)
+        worksheet.set_column(6, 10, 18)
+
+    def _report_build_xlsx_bytes(self):
+        self.ensure_one()
+        try:
+            import xlsxwriter
+        except ImportError as exc:
+            raise UserError(
+                _('Excel export requires the xlsxwriter library (%s)') % exc
+            ) from exc
+
+        lessons = self._report_lessons_ordered()
+        enrollments = self._report_enrollments()
+        student_ids = enrollments.mapped('student_id').ids
+        lesson_ids = lessons.ids
+        progress_map = self._report_progress_map(student_ids, lesson_ids)
+
+        buffer = io.BytesIO()
+        workbook = xlsxwriter.Workbook(buffer, {'in_memory': True})
+        sheet_names = self._report_student_sheet_names(enrollments)
+        self._report_write_overview_sheet(
+            workbook, lessons, enrollments, progress_map, sheet_names
+        )
+        for enrollment, sheet_name in zip(enrollments, sheet_names):
+            self._report_write_student_sheet(
+                workbook, enrollment, lessons, progress_map, sheet_name
+            )
+        workbook.close()
+        buffer.seek(0)
+        return buffer.read()
+
+    def action_export_course_progress_report(self):
+        """Xuất báo cáo tiến độ khóa học (Excel, nhiều sheet)."""
+        self.ensure_one()
+        self._report_check_export_access()
+        if self.state != 'published':
+            return self._report_client_notify(
+                _('Cannot export report: this course is not published yet.')
+            )
+        if not self._report_enrollments():
+            return self._report_client_notify(
+                _('Cannot export report: this course has no enrolled students yet.')
+            )
+        content = self._report_build_xlsx_bytes()
+        filename = self._report_export_filename()
+        attachment = self.env['ir.attachment'].sudo().create({
+            'name': filename,
+            'type': 'binary',
+            'datas': base64.b64encode(content),
+            'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'res_model': self._name,
+            'res_id': self.id,
+        })
+        return {
+            'type': 'ir.actions.act_url',
+            'url': '/web/content/%s?download=true' % attachment.id,
+            'target': 'self',
+        }
+
 
 class Lesson(models.Model):
     _name = 'lms.lesson'
     _description = 'Lesson'
-    _order = 'sequence, name'
+    _order = 'sequence, id, name'
 
     @api.model
     def _default_end_datetime(self):
         return fields.Datetime.now() + relativedelta(hours=1)
 
+    @api.model
+    def _default_sequence(self):
+        course_id = self.env.context.get('default_course_id')
+        if not course_id:
+            return 1
+        return self._next_sequence_for_course(int(course_id))
+
+    @api.model
+    def _next_sequence_for_course(self, course_id):
+        last = self.search([('course_id', '=', course_id)], order='sequence desc, id desc', limit=1)
+        return (last.sequence or 0) + 1 if last else 1
+
     name = fields.Char(string='Lesson Name', required=True)
-    sequence = fields.Integer(string='Sequence', default=10, required=True)
+    sequence = fields.Integer(
+        string='Sequence',
+        default=_default_sequence,
+        required=True,
+    )
     lesson_type = fields.Selection(
         [
             ('video', 'Video Lecture'),
@@ -405,11 +1031,89 @@ class Lesson(models.Model):
         readonly=True,
     )
 
+    def _get_ordered_lessons_in_course(self):
+        self.ensure_one()
+        return self.course_id.lesson_ids.sorted(key=lambda l: (l.sequence, l.id))
+
+    def _get_previous_lessons(self):
+        self.ensure_one()
+        ordered = self._get_ordered_lessons_in_course()
+        if self not in ordered:
+            return ordered.browse()
+        return ordered[: ordered.ids.index(self.id)]
+
+    def _is_completed_for_student(self, student):
+        self.ensure_one()
+        progress = self.env['lms.student.lesson.progress'].sudo().search(
+            [('student_id', '=', student.id), ('lesson_id', '=', self.id)],
+            limit=1,
+        )
+        return bool(progress and progress.is_lesson_completed())
+
+    def _previous_lesson_incomplete_message(self, student):
+        """Sinh viên phải hoàn thành các bài trước (theo sequence trên khóa học)."""
+        self.ensure_one()
+        if not student or self.env['lms.course']._user_may_bypass_prerequisite_rules():
+            return False
+        for previous in self._get_previous_lessons():
+            if not previous._is_completed_for_student(student):
+                return _(
+                    'You must complete lesson "%(lesson)s" before starting "%(current)s".'
+                ) % {'lesson': previous.name, 'current': self.name}
+        return False
+
+    def _raise_if_previous_lessons_incomplete(self, student):
+        message = self._previous_lesson_incomplete_message(student)
+        if message:
+            raise UserError(message)
+
+    @api.depends_context('uid')
+    def _compute_current_user_lesson_locked(self):
+        student = self.env['lms.student'].sudo().search(
+            [('user_id', '=', self.env.user.id)], limit=1
+        )
+        for lesson in self:
+            message = lesson._previous_lesson_incomplete_message(student) if student else False
+            lesson.current_user_lesson_locked = bool(message)
+            lesson.current_user_lesson_lock_message = message or False
+
+    def _register_lesson_session_start(self, student):
+        """Bắt đầu phiên học: đồng hồ tính từ lúc mở chi tiết bài (dùng ``started_at`` có sẵn)."""
+        self.ensure_one()
+        progress = self.env['lms.student.lesson.progress'].sudo().get_or_create_progress(student, self)
+        progress.write({'started_at': fields.Datetime.now()})
+
+    def action_register_lesson_session_start(self):
+        """RPC/JS: sinh viên mở form chi tiết bài học."""
+        self.ensure_one()
+        student = self.env['lms.student'].sudo().search([('user_id', '=', self.env.user.id)], limit=1)
+        if student:
+            self._register_lesson_session_start(student)
+        return True
+
+    def action_ping_lesson_session(self):
+        """Cập nhật thời lượng phiên học (started_at → hiện tại) vào lịch sử."""
+        self.ensure_one()
+        student = self.env['lms.student'].sudo().search([('user_id', '=', self.env.user.id)], limit=1)
+        if not student:
+            return True
+        progress = self.env['lms.student.lesson.progress'].sudo().search(
+            [('student_id', '=', student.id), ('lesson_id', '=', self.id)],
+            limit=1,
+        )
+        if progress:
+            self.env['lms.learning.history'].sync_from_lesson_progress(progress)
+        return True
+
     def action_open_lesson_full(self):
         """Mở form bài học trên cửa sổ chính (nút trên list one2many; không dùng JS)."""
         self.ensure_one()
         if isinstance(self.id, NewId):
             raise UserError(_('Please save the course (and new lessons) before opening details.'))
+        student = self.env['lms.student'].sudo().search([('user_id', '=', self.env.user.id)], limit=1)
+        if student and self.course_form_readonly:
+            self._raise_if_previous_lessons_incomplete(student)
+            self._register_lesson_session_start(student)
         return {
             'type': 'ir.actions.act_window',
             'name': _('Lesson'),
@@ -514,7 +1218,6 @@ class Lesson(models.Model):
         compute='_compute_calendar_color',
         store=False,
     )
-    is_published = fields.Boolean(string='Visible to Students', default=False, copy=False)
     calendar_sync_status = fields.Selection(
         [
             ('not_synced', 'Not Synced'),
@@ -561,6 +1264,14 @@ class Lesson(models.Model):
     current_user_lesson_progress_label = fields.Char(
         string='My Status',
         compute='_compute_current_user_lesson_progress_label',
+    )
+    current_user_lesson_locked = fields.Boolean(
+        string='Locked for Current Student',
+        compute='_compute_current_user_lesson_locked',
+    )
+    current_user_lesson_lock_message = fields.Char(
+        string='Lock Reason',
+        compute='_compute_current_user_lesson_locked',
     )
     current_user_face_checked_in = fields.Boolean(
         string='Face Checked In',
@@ -647,7 +1358,24 @@ class Lesson(models.Model):
             else:
                 lesson.face_lesson_attendance_mount_html = ''
 
-    @api.depends('progress_ids', 'progress_ids.status', 'progress_ids.student_id')
+    @api.model
+    def _user_is_pure_student(self, user=None):
+        user = user or self.env.user
+        return user.has_group('lms.group_lms_user') and not (
+            user.has_group('lms.group_lms_instructor')
+            or user.has_group('lms.group_lms_manager')
+            or user.has_group('base.group_system')
+        )
+
+    @api.depends(
+        'progress_ids',
+        'progress_ids.status',
+        'progress_ids.student_id',
+        'progress_ids.face_checked_in',
+        'lesson_type',
+        'course_id',
+        'course_id.student_course_ids.status',
+    )
     def _compute_current_user_lesson_progress_label(self):
         student = self.env['lms.student'].sudo().search([('user_id', '=', self.env.user.id)], limit=1)
         Progress = self.env['lms.student.lesson.progress']
@@ -655,13 +1383,28 @@ class Lesson(models.Model):
         if callable(status_sel):
             status_sel = status_sel(Progress)
         selection_labels = dict(status_sel)
+        pure_student = self._user_is_pure_student()
+        StudentCourse = self.env['lms.student.course'].sudo()
         for lesson in self:
+            if not pure_student:
+                total = StudentCourse.search_count(
+                    [
+                        ('course_id', '=', lesson.course_id.id),
+                        ('status', '=', 'learning'),
+                    ]
+                )
+                if lesson.lesson_type == 'online':
+                    completed = len(lesson.progress_ids.filtered('face_checked_in'))
+                else:
+                    completed = len(lesson.progress_ids.filtered(lambda p: p.status == 'done'))
+                lesson.current_user_lesson_progress_label = '%s/%s' % (completed, total)
+                continue
             if not student:
                 lesson.current_user_lesson_progress_label = False
                 continue
             progress = lesson.progress_ids.filtered(lambda p: p.student_id.id == student.id)[:1]
             if not progress:
-                lesson.current_user_lesson_progress_label = 'Not Started'
+                lesson.current_user_lesson_progress_label = _('Not Started')
             else:
                 lesson.current_user_lesson_progress_label = selection_labels.get(
                     progress.status, progress.status
@@ -805,7 +1548,10 @@ class Lesson(models.Model):
                 stream_url = '/web/content/%s?model=lms.lesson&field=video_attachment&download=false' % lesson.id
                 mime = self._guess_video_mime(lesson.video_filename or '')
                 html = (
-                    '<video class="lms-video-tracker" data-lms-lesson-id="%s" controls preload="metadata" style="width:100%%;max-width:900px;">'
+                    '<video class="lms-video-tracker" data-lms-lesson-id="%s" controls '
+                    'controlsList="nodownload noplaybackrate" disablePictureInPicture '
+                    'playsinline preload="metadata" oncontextmenu="return false;" '
+                    'style="width:100%%;max-width:900px;">'
                     '<source src="%s" type="%s"/>'
                     'Your browser does not support direct video playback.'
                     '</video>'
@@ -875,6 +1621,7 @@ class Lesson(models.Model):
     def create(self, vals_list):
         Course = self.env['lms.course'].sudo()
         ctx_course_id = self.env.context.get('default_course_id')
+        course_next_seq = {}
         for vals in vals_list:
             start_dt = vals.get('start_datetime') or fields.Datetime.now()
             duration = vals.get('duration_minutes', 0)
@@ -888,7 +1635,16 @@ class Lesson(models.Model):
                 raise ValidationError(
                     _('Lessons can only be created when the course is in "Published" status.')
                 )
+            course_id = int(course_id)
+            if self.env.context.get('skip_lesson_sequence_assign'):
+                continue
+            if course_id not in course_next_seq:
+                course_next_seq[course_id] = self._next_sequence_for_course(course_id)
+            vals['sequence'] = course_next_seq[course_id]
+            course_next_seq[course_id] += 1
         lessons = super().create(vals_list)
+        if not self.env.context.get('skip_lesson_sequence_renormalize'):
+            lessons.mapped('course_id')._renormalize_lesson_sequences()
         if not self.env.context.get('skip_google_calendar_sync'):
             lessons._google_calendar_sync_if_needed()
             lessons._notify_learning_students_for_attendance()
@@ -896,7 +1652,12 @@ class Lesson(models.Model):
 
     def write(self, vals):
         if self.env.context.get('skip_google_calendar_sync'):
-            return super().write(vals)
+            res = super().write(vals)
+            if not self.env.context.get('skip_lesson_sequence_renormalize') and (
+                'sequence' in vals or 'course_id' in vals
+            ):
+                self.mapped('course_id')._renormalize_lesson_sequences()
+            return res
 
         if any(key in vals for key in ('start_datetime', 'duration_minutes', 'end_datetime')):
             if 'start_datetime' in vals:
@@ -952,12 +1713,20 @@ class Lesson(models.Model):
                 lambda l: l.state == 'scheduled' and l.lesson_type == 'online'
             )._google_calendar_sync_if_needed()
         self._notify_learning_students_for_attendance()
+        if not self.env.context.get('skip_lesson_sequence_renormalize') and (
+            'sequence' in vals or 'course_id' in vals
+        ):
+            self.mapped('course_id')._renormalize_lesson_sequences()
         return res
 
     def unlink(self):
+        courses = self.mapped('course_id')
         if not self.env.context.get('skip_google_calendar_sync'):
             self._google_calendar_unsync(clear_meeting_url=False)
-        return super().unlink()
+        res = super().unlink()
+        if not self.env.context.get('skip_lesson_sequence_renormalize'):
+            courses._renormalize_lesson_sequences()
+        return res
 
 
 class StudentLessonProgress(models.Model):
@@ -1027,6 +1796,13 @@ class StudentLessonProgress(models.Model):
         )
         if not enrollment:
             raise ValidationError(_('Student has not enrolled in the course containing this lesson.'))
+        if not self.env['lms.course']._user_may_bypass_prerequisite_rules():
+            message = lesson.course_id._prerequisite_error_message(student)
+            if message:
+                raise ValidationError(message)
+            message = lesson._previous_lesson_incomplete_message(student)
+            if message:
+                raise ValidationError(message)
         return self.sudo().create(
             {
                 'student_id': student.id,
@@ -1049,6 +1825,25 @@ class StudentLessonProgress(models.Model):
             watched = max(0, rec.watched_seconds or 0)
             rec.progress_percent = min(100.0, (watched / duration_seconds) * 100.0)
 
+    def is_lesson_completed(self):
+        """Same rules as Attendance Status on the lesson form (do not read ``status`` — it is derived)."""
+        self.ensure_one()
+        lesson = self.lesson_id
+        if not lesson:
+            return False
+        if (lesson.lesson_type or 'online') == 'online':
+            return bool(self.face_checked_in)
+        return (self.progress_percent or 0.0) >= 90.0
+
+    def study_duration_minutes(self):
+        """Thời lượng phiên học (phút) = từ ``started_at`` (lúc mở chi tiết) đến hiện tại / hoàn thành."""
+        self.ensure_one()
+        if not self.started_at:
+            return 0.0
+        end_dt = self.completed_at or self.face_checked_in_at or fields.Datetime.now()
+        seconds = (end_dt - self.started_at).total_seconds()
+        return round(max(0.0, seconds) / 60.0, 2)
+
     @api.depends(
         'watched_seconds',
         'lesson_id.duration_minutes',
@@ -1059,19 +1854,12 @@ class StudentLessonProgress(models.Model):
     )
     def _compute_status(self):
         for rec in self:
-            lesson_type = rec.lesson_id.lesson_type or 'online'
-            if lesson_type == 'online':
-                # Bài online: chỉ cần điểm danh khuôn mặt thành công là hoàn thành.
-                rec.status = 'done' if rec.face_checked_in else 'not_started'
+            if rec.is_lesson_completed():
+                rec.status = 'done'
+            elif (rec.lesson_id.lesson_type or 'online') != 'online' and (rec.progress_percent or 0.0) > 0:
+                rec.status = 'in_progress'
             else:
-                pct = rec.progress_percent or 0.0
-                # Bài video: hoàn thành khi xem >= 90%.
-                if pct >= 90.0:
-                    rec.status = 'done'
-                elif pct > 0:
-                    rec.status = 'in_progress'
-                else:
-                    rec.status = 'not_started'
+                rec.status = 'not_started'
 
     @api.constrains('last_position_seconds', 'watched_seconds')
     def _check_video_positions(self):
@@ -1091,8 +1879,52 @@ class StudentLessonProgress(models.Model):
             if rec.enrollment_id.course_id != rec.lesson_id.course_id:
                 raise ValidationError(_('Enrollment does not belong to the course of the selected lesson.'))
 
+    def _enrollments_for_progress_refresh(self):
+        SC = self.env['lms.student.course'].sudo()
+        enrollments = SC.browse()
+        for row in self:
+            if not row.student_id or not row.course_id:
+                continue
+            enrollments |= SC.search([
+                ('student_id', '=', row.student_id.id),
+                ('course_id', '=', row.course_id.id),
+            ], limit=1)
+        return enrollments
+
+    def _sync_learning_history(self):
+        self.env['lms.learning.history'].sudo().sync_from_lesson_progress(self)
+
+    def _refresh_enrollment_progress(self):
+        enrollments = self._enrollments_for_progress_refresh()
+        for row in self:
+            if not row.student_id or not row.course_id:
+                continue
+            sc = enrollments.filtered(
+                lambda e, r=row: e.student_id == r.student_id and e.course_id == r.course_id
+            )[:1]
+            if sc and row.enrollment_id != sc:
+                row.sudo().with_context(lms_skip_progress_side_effects=True).write(
+                    {'enrollment_id': sc.id}
+                )
+        if enrollments:
+            enrollments._compute_progress()
+        if self.env.context.get('skip_lms_statistics_refresh'):
+            return
+        students = enrollments.mapped('student_id').filtered('id')
+        if students:
+            students.action_refresh_statistics()
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        records._sync_learning_history()
+        records._refresh_enrollment_progress()
+        return records
+
     def write(self, vals):
         res = super().write(vals)
+        if self.env.context.get('lms_skip_progress_side_effects'):
+            return res
         if self.env.context.get('skip_progress_completion_ts'):
             return res
         done_no_ts = self.filtered(lambda r: r.status == 'done' and not r.completed_at)
@@ -1100,4 +1932,32 @@ class StudentLessonProgress(models.Model):
             done_no_ts.with_context(skip_progress_completion_ts=True).write(
                 {'completed_at': fields.Datetime.now()}
             )
+        tracked = {
+            'face_checked_in',
+            'face_checked_in_at',
+            'progress_percent',
+            'watched_seconds',
+            'video_duration_seconds',
+            'started_at',
+            'completed_at',
+            'lesson_id',
+            'student_id',
+        }
+        if tracked.intersection(vals):
+            self.mapped('course_id.lesson_ids').invalidate_recordset(
+                ['current_user_lesson_locked', 'current_user_lesson_lock_message']
+            )
+            self._sync_learning_history()
+            self._refresh_enrollment_progress()
+        return res
+
+    def unlink(self):
+        enrollments = self._enrollments_for_progress_refresh()
+        res = super().unlink()
+        if enrollments:
+            enrollments._compute_progress()
+            if not self.env.context.get('skip_lms_statistics_refresh'):
+                students = enrollments.mapped('student_id').filtered('id')
+                if students:
+                    students.action_refresh_statistics()
         return res

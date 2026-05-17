@@ -15,6 +15,7 @@
                         <field name="unavailable_reason" invisible="1"/>
                         <field name="roadmap_options_json" invisible="1"/>
                         <field name="selected_roadmap_index" invisible="1"/>
+                        <field name="created_roadmap_id" invisible="1"/>
                         <field name="has_roadmap_options" invisible="1"/>
                         <field name="has_roadmap_selected" invisible="1"/>
                         <field name="roadmap_option_1_available" invisible="1"/>
@@ -105,8 +106,15 @@
                                 />
                             </div>
                             <div class="o_form_label text-success" invisible="not has_roadmap_selected">
-                                You have selected a roadmap for this session. The system has processed course registration based on your choice.
+                                You have selected a roadmap. Open it to register for each course (pending instructor/admin approval).
                             </div>
+                            <button
+                                name="action_open_created_roadmap"
+                                string="Open My Roadmap"
+                                type="object"
+                                class="btn-secondary mt-2"
+                                invisible="not has_roadmap_selected"
+                            />
                         </group>
                     </group>
                 </sheet>

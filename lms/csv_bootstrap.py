@@ -209,15 +209,20 @@ def _ensure_many_to_many_enrollments(env, per_course: int = 5) -> None:
     existing = SC.search([])
     existing_pairs = {(r.student_id.id, r.course_id.id): r for r in existing}
 
+    course_by_id = {c.id: c for c in courses}
+
     to_create: list[dict[str, Any]] = []
     for sid, cid in sorted(target_pairs, key=lambda x: (x[1], x[0])):
         if (sid, cid) not in existing_pairs:
+            co = course_by_id[cid]
             to_create.append(
                 {
                     "student_id": sid,
                     "course_id": cid,
                     "enrollment_date": fields.Date.today(),
                     "status": "pending",
+                    "start_date": co.start_date,
+                    "end_date": co.end_date,
                 }
             )
     if to_create:
@@ -394,8 +399,8 @@ def import_lms_from_csv_directory(
 ) -> None:
     """
     Đọc ``lms_*.csv`` trong ``csv_dir`` và tạo bản ghi mới (ID CSV → ID Odoo mới).
-    Cần đủ: course_category, course_level, course_tag, course, course_tag_rel,
-    course_prerequisite_rel, lesson, student, student_course, learning_history.
+    Cần đủ: course_category, course_level, course, course_prerequisite_rel,
+    lesson, student, student_course, learning_history.
     Tuỳ chọn: roadmap, roadmap_course (nếu có ``lms_roadmap.csv`` / ``lms_roadmap_course.csv``).
     """
     base = Path(csv_dir)
@@ -461,28 +466,6 @@ def import_lms_from_csv_directory(
         env, "lms.course.level", "csv_course_level_", source_lev_ids, delete_missing_managed
     )
 
-    tag_rows_raw = _read_csv(f("course_tag"))
-    map_tag: dict[int, int] = {}
-    source_tag_ids: set[int] = set()
-    for r in tag_rows_raw:
-        old_id = int(r["id"])
-        source_tag_ids.add(old_id)
-        vals = {"name": (r["name"] or "")[:120], "color": int(r.get("color") or 0)}
-        if safe_upsert:
-            rec = _upsert_by_xmlid(
-                env,
-                "lms.course.tag",
-                f"csv_course_tag_{old_id}",
-                vals,
-                fallback_domain=[("name", "=", vals["name"])],
-            )
-        else:
-            rec = env["lms.course.tag"].sudo().create(vals)
-        map_tag[old_id] = rec.id
-    _delete_missing_managed_records(
-        env, "lms.course.tag", "csv_course_tag_", source_tag_ids, delete_missing_managed
-    )
-
     course_rows_raw = _read_csv(f("course"))
     category_pool = list(map_cat.values())
     level_pool = list(map_lev.values())
@@ -507,13 +490,23 @@ def import_lms_from_csv_directory(
         target_cat_id = category_pool[idx % len(category_pool)]
         # Chuẩn hóa cấp độ khóa học theo nhóm mức rõ ràng, cân bằng theo round-robin.
         target_level_id = level_pool[idx % len(level_pool)]
+        duration = _to_float(r.get("duration_hours"))
+        if duration <= 0:
+            duration = 1.0
+        start = _norm_date(r.get("start_date")) or fields.Date.today()
+        end = _norm_date(r.get("end_date")) or (fields.Date.today() + timedelta(days=90))
+        contact = (r.get("contact_payment") or "").strip()
         vals = {
             "name": (r["name"] or "")[:500],
             "description": (r.get("description") or "")[:65535] or "<p></p>",
             "category_id": target_cat_id,
             "level_id": target_level_id,
             "instructor_id": ins_id,
-            "duration_hours": _to_float(r.get("duration_hours")),
+            "duration_hours": duration,
+            "start_date": start,
+            "end_date": end,
+            "contact_payment": contact or "—",
+            "price": int(_to_float(r.get("price"))) if r.get("price") not in (None, "") else 0,
             "state": (r.get("state") or "draft").strip(),
             "is_active": _to_bool(r.get("is_active", True)),
             "average_rating": _to_float(r.get("average_rating")),
@@ -530,11 +523,6 @@ def import_lms_from_csv_directory(
             rec = Course.sudo().create(vals)
         course_new_ids.append(rec.id)
     map_course = {old: new for old, new in zip([int(r["id"]) for r in course_rows_raw], course_new_ids)}
-
-    for row in _read_csv(f("course_tag_rel")):
-        cid = map_course[int(row["course_id"])]
-        tid = map_tag[int(row["tag_id"])]
-        Course.browse(cid).sudo().write({"tag_ids": [(4, tid)]})
 
     for row in _read_csv(f("course_prerequisite_rel")):
         p0 = row.get("prerequisite_id") or row.get("prerequisite_course_id")
@@ -565,7 +553,7 @@ def import_lms_from_csv_directory(
                 fallback_domain=[("name", "=", vals["name"]), ("course_id", "=", vals["course_id"])],
             )
         else:
-            rec = env["lms.lesson"].sudo().create(vals)
+            rec = env["lms.lesson"].sudo().with_context(skip_lesson_sequence_assign=True).create(vals)
         lesson_new_ids.append(rec.id)
     map_lesson = {
         old: new for old, new in zip([int(r["id"]) for r in lesson_rows_raw], lesson_new_ids)
@@ -612,6 +600,7 @@ def import_lms_from_csv_directory(
             "course_id": map_course[int(r["course_id"])],
             "enrollment_date": _norm_date(r.get("enrollment_date")),
             "start_date": _norm_date(r.get("start_date")),
+            "end_date": _norm_date(r.get("end_date")),
             "completion_date": _norm_date(r.get("completion_date")),
             "status": (r.get("status") or "pending").strip(),
             "final_score": _to_float(fs) if fs not in (None, "") else False,
@@ -678,11 +667,10 @@ def import_lms_from_csv_directory(
     n_lecturers = import_lecturers_from_csv_directory(env, base)
 
     _logger.info(
-        "LMS CSV bootstrap: categories=%s levels=%s tags=%s courses=%s lessons=%s "
+        "LMS CSV bootstrap: categories=%s levels=%s courses=%s lessons=%s "
         "students=%s enrollments=%s history=%s roadmaps=%s roadmap_lines=%s lecturers=%s",
         len(map_cat),
         len(map_lev),
-        len(map_tag),
         len(course_new_ids),
         len(lesson_new_ids),
         len(st_new_ids),
@@ -709,8 +697,8 @@ def import_lecturers_from_csv_directory(env, base: Path) -> int:
     sau đó gán ``lms.course.instructor_id`` luân phiên cho khớp dataset hiện có.
 
     Cột CSV (UTF-8-SIG): id, login, password, full_name, email, phone, gender,
-    date_of_birth, address, department, specialization, academic_degree,
-    years_of_experience, faculty, subject_expertise, certifications,
+    date_of_birth, address, specialization, academic_degree,
+    years_of_experience, subject_expertise, certifications,
     teaching_level, teaching_type, active
     """
     path = base / "lms_lecturer.csv"
@@ -781,11 +769,9 @@ def import_lecturers_from_csv_directory(env, base: Path) -> int:
             "date_of_birth": _norm_date(r.get("date_of_birth")),
             "avatar_url": ((r.get("avatar_url") or "").strip()[:2048]) or False,
             "address": ((r.get("address") or "").strip()[:500]) or False,
-            "department": ((r.get("department") or "").strip()[:255]) or False,
             "specialization": ((r.get("specialization") or "").strip()[:255]) or False,
             "academic_degree": ((r.get("academic_degree") or "").strip()[:255]) or False,
             "years_of_experience": int(float(r.get("years_of_experience") or 0)),
-            "faculty": ((r.get("faculty") or "").strip()[:255]) or False,
             "subject_expertise": ((r.get("subject_expertise") or "").strip()[:65535]) or False,
             "certifications": ((r.get("certifications") or "").strip()[:65535]) or False,
             "teaching_level": teaching_level or False,

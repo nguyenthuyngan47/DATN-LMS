@@ -3,6 +3,7 @@
 import logging
 
 from odoo import api, fields, models, _
+from odoo.addons.auth_signup.models.res_users import SignupError
 from odoo.exceptions import UserError
 from odoo.tools.mail import email_normalize
 
@@ -130,6 +131,7 @@ class ResUsers(models.Model):
         vals = dict(values or {})
         lms_register = vals.pop('lms_register', None)
         doc_link = vals.pop('lms_lecturer_document', None)
+        self._lms_validate_signup_display_name(vals, lms_register)
         if lms_register in ('lecturer', 'student'):
             user = super(
                 ResUsers, self.with_context(**_LMS_SILENT_MAIL_CTX)
@@ -153,6 +155,71 @@ class ResUsers(models.Model):
                 'state': 'pending_approval',
             })
         return user
+
+    @api.model
+    def _lms_name_looks_like_email(self, name, email_norm=None, login=None):
+        """True nếu chuỗi trống, là email, hoặc trùng login/email đã chuẩn hóa."""
+        candidate = (name or '').strip()
+        if not candidate:
+            return True
+        if '@' in candidate and email_normalize(candidate):
+            return True
+        email_norm = (email_norm or '').strip().lower()
+        login_key = (login or '').strip().lower()
+        low = candidate.lower()
+        if email_norm and low == email_norm:
+            return True
+        if login_key and low == login_key:
+            return True
+        return False
+
+    def _lms_resolve_person_name(self, email_norm=None):
+        """Lấy họ tên thật từ user/partner; không fallback sang email/login."""
+        self.ensure_one()
+        email_norm = email_norm or email_normalize(self.email or self.login or '') or ''
+        login = (self.login or '').strip()
+        candidates = [(self.name or '').strip()]
+        if self.partner_id:
+            candidates.append((self.partner_id.name or '').strip())
+        for candidate in candidates:
+            if candidate and not self._lms_name_looks_like_email(
+                candidate, email_norm=email_norm, login=login
+            ):
+                return candidate
+        return False
+
+    @api.model
+    def _lms_validate_signup_display_name(self, vals, lms_register):
+        """Đăng ký LMS: bắt buộc họ tên, không được trùng email/login."""
+        if lms_register not in ('student', 'lecturer'):
+            return
+        name = (vals.get('name') or '').strip()
+        login = (vals.get('login') or vals.get('email') or '').strip()
+        email_norm = email_normalize(vals.get('email') or login)
+        if not name:
+            raise SignupError(_('Please enter your full name.'))
+        if self._lms_name_looks_like_email(name, email_norm=email_norm, login=login):
+            raise SignupError(_('Full name must not be the same as your email address.'))
+
+    def _lms_sync_person_name_to_profiles(self):
+        """Cập nhật lms.student / lms.lecturer nếu đang lưu email thay vì họ tên."""
+        Student = self.env['lms.student'].sudo().with_context(**_LMS_PROFILE_SYNC_CTX)
+        Lecturer = self.env['lms.lecturer'].sudo().with_context(**_LMS_PROFILE_SYNC_CTX)
+        for user in self:
+            email_norm = email_normalize(user.email or user.login or '')
+            resolved = user._lms_resolve_person_name(email_norm=email_norm)
+            if not resolved:
+                continue
+            student = Student.search([('user_id', '=', user.id)], limit=1)
+            if student and self._lms_name_looks_like_email(
+                student.name, email_norm=email_norm, login=user.login
+            ):
+                student.write({'name': resolved})
+            lecturer = Lecturer.search([('user_id', '=', user.id)], limit=1)
+            if lecturer and self._lms_name_looks_like_email(
+                lecturer.full_name, email_norm=email_norm, login=user.login
+            ):
+                lecturer.write({'full_name': resolved})
 
     def _lms_is_internal_for_profile_sync(self):
         """User nội bộ (backend): không portal/public; ưu tiên ``base.group_user``."""
@@ -191,7 +258,13 @@ class ResUsers(models.Model):
                     user.id,
                 )
                 continue
-            display_name = (user.name or '').strip() or email_norm
+            display_name = user._lms_resolve_person_name(email_norm=email_norm)
+            if not display_name:
+                _logger.warning(
+                    'LMS: bỏ qua tạo hồ sơ — user %s chưa có họ tên (chỉ có email/login)',
+                    user.id,
+                )
+                continue
             # Một user: ưu tiên hồ sơ giảng viên nếu có nhóm Instructor; không thì Student.
             if user.has_group('lms.group_lms_instructor'):
                 if not Lecturer.search([('user_id', '=', user.id)], limit=1):
@@ -207,6 +280,7 @@ class ResUsers(models.Model):
                         'name': display_name,
                         'email': email_norm,
                     })
+        self._lms_sync_person_name_to_profiles()
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -236,7 +310,9 @@ class ResUsers(models.Model):
             return res
         # Luôn thử đồng bộ: form Odoo 18 có thể không gửi groups_id trong vals (lưu quyền theo bước khác).
         self._lms_sync_profile_records()
-        
+        if 'name' in vals:
+            self._lms_sync_person_name_to_profiles()
+
         if should_check_welcome:
             lecturer_template = self.env.ref('lms.email_template_lecturer_welcome', raise_if_not_found=False)
             student_template = self.env.ref('lms.email_template_student_welcome', raise_if_not_found=False)

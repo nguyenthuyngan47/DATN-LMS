@@ -4,13 +4,70 @@
     <menuitem id="menu_lms_students" name="Students" action="action_lms_student" sequence="10" web_icon="lms,static/description/icon.png"/>
 
     <!-- Courses -->
-    <!-- When clicking "Courses" open course list -->
-    <menuitem id="menu_lms_courses" name="Courses" sequence="20" action="action_lms_course" web_icon="lms,static/description/icon.png"/>
-    <menuitem id="menu_lms_courses_list" name="Course List" parent="menu_lms_courses" action="action_lms_course" sequence="10"/>
+    <!-- Manager / admin: full catalog -->
+    <menuitem
+        id="menu_lms_courses"
+        name="Courses"
+        sequence="20"
+        action="action_lms_course"
+        web_icon="lms,static/description/icon.png"
+        groups="lms.group_lms_manager,base.group_system"
+    />
+    <!-- Student: opens with "My Courses" filter enabled -->
+    <menuitem
+        id="menu_lms_courses_student"
+        name="Courses"
+        sequence="20"
+        action="action_lms_course_student"
+        web_icon="lms,static/description/icon.png"
+        groups="lms.group_lms_user"
+    />
+    <!-- Instructor: opens with teaching-assignment filter -->
+    <menuitem
+        id="menu_lms_courses_instructor"
+        name="Courses"
+        sequence="20"
+        action="action_lms_course_instructor"
+        web_icon="lms,static/description/icon.png"
+        groups="lms.group_lms_instructor"
+    />
+    <menuitem id="menu_lms_courses_list" name="Course Catalog" parent="menu_lms_courses" action="action_lms_course" sequence="10"/>
+    <menuitem
+        id="menu_lms_courses_list_student"
+        name="Course Catalog"
+        parent="menu_lms_courses_student"
+        action="action_lms_course"
+        sequence="10"
+        groups="lms.group_lms_user"
+    />
+    <menuitem
+        id="menu_lms_courses_list_instructor"
+        name="Course Catalog"
+        parent="menu_lms_courses_instructor"
+        action="action_lms_course"
+        sequence="10"
+        groups="lms.group_lms_instructor"
+    />
+    <menuitem
+        id="menu_lms_pending_enrollments"
+        name="Pending Approvals"
+        parent="menu_lms_courses"
+        action="action_lms_pending_enrollments"
+        sequence="12"
+        groups="lms.group_lms_manager,base.group_system"
+    />
+    <menuitem
+        id="menu_lms_pending_enrollments_instructor"
+        name="Pending Approvals"
+        parent="menu_lms_courses_instructor"
+        action="action_lms_pending_enrollments"
+        sequence="12"
+        groups="lms.group_lms_instructor"
+    />
     <menuitem
         id="menu_lms_lession"
         name="Class Schedule"
-        parent="menu_lms_courses"
+        parent="menu_lms_courses_student"
         action="action_lms_student_lesson_calendar"
         sequence="15"
         groups="lms.group_lms_user"
@@ -18,14 +75,13 @@
     <menuitem
         id="menu_lms_teaching_schedule"
         name="Teaching Schedule"
-        parent="menu_lms_courses"
+        parent="menu_lms_courses_instructor"
         action="action_lms_instructor_lesson_calendar"
         sequence="16"
         groups="lms.group_lms_instructor"
     />
     <menuitem id="menu_lms_course_categories" name="Categories" parent="menu_lms_courses" action="action_lms_course_category" sequence="20"/>
     <menuitem id="menu_lms_course_levels" name="Levels" parent="menu_lms_courses" action="action_lms_course_level" sequence="30"/>
-    <menuitem id="menu_lms_course_tags" name="Tags" parent="menu_lms_courses" action="action_lms_course_tag" sequence="40"/>
 
     <!-- Instructors: top-level menu -->
     <menuitem id="menu_lms_lecturers" name="Instructors" action="action_lms_lecturer" sequence="15" web_icon="lms,static/description/icon.png"/>
@@ -44,5 +100,3 @@
     <!-- Configuration -->
     <menuitem id="menu_lms_config" name="Configuration" sequence="99"/>
 </odoo>
-
-

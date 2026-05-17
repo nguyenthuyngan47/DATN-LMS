@@ -15,10 +15,14 @@ _DEFAULT_STUDENT_AUTO_PASSWORD = "123456"
 # Trạng thái đăng ký khóa (lms.student.course) — thứ tự theo luồng nghiệp vụ.
 ENROLLMENT_STATUS_SELECTION = [
     ('pending', 'Pending'),
+    ('approved', 'Approved'),
     ('learning', 'Learning'),
     ('completed', 'Completed'),
     ('rejected', 'Rejected'),
 ]
+
+# Trạng thái không chiếm chỗ trong lớp (đồng bộ khái niệm với schema ERD / giới hạn max_student).
+ENROLLMENT_STATUSES_EXCLUDED_FROM_CAPACITY = frozenset({'rejected', 'cancelled'})
 
 
 class Student(models.Model):
@@ -124,6 +128,15 @@ class Student(models.Model):
         string='Instructor Edit Restricted',
         compute='_compute_is_instructor_restricted',
     )
+    is_current_user_account = fields.Boolean(
+        string='Current User Account',
+        compute='_compute_current_user_highlight',
+        search='_search_is_current_user_account',
+    )
+    current_user_marker = fields.Char(
+        string='Account Marker',
+        compute='_compute_current_user_highlight',
+    )
 
     # Thống kê
     total_courses = fields.Integer(string='Total Courses', compute='_compute_statistics', store=True)
@@ -146,7 +159,7 @@ class Student(models.Model):
         compute='_compute_statistics',
         store=True,
     )
-    total_study_time = fields.Float(string='Total Study Time (hours)', compute='_compute_statistics', store=True, digits=(16, 2))
+    total_study_time = fields.Float(string='Total Study Time (minutes)', compute='_compute_statistics', store=True, digits=(16, 2))
     last_activity_date = fields.Date(string='Last Activity', compute='_compute_statistics', store=True, index=True)
     
     # Trạng thái
@@ -156,6 +169,24 @@ class Student(models.Model):
     _sql_constraints = [
         ('student_user_unique', 'unique(user_id)', 'Each user account can only be linked to one student.'),
     ]
+
+    @api.depends('user_id')
+    def _compute_current_user_highlight(self):
+        uid = self.env.uid
+        for student in self:
+            is_self = bool(student.user_id and student.user_id.id == uid)
+            student.is_current_user_account = is_self
+            student.current_user_marker = _('You') if is_self else ''
+
+    def _search_is_current_user_account(self, operator, value):
+        if operator not in ('=', '!='):
+            raise ValidationError(_('Invalid search on current user account.'))
+        is_match = bool(value)
+        if operator == '!=':
+            is_match = not is_match
+        if is_match:
+            return [('user_id', '=', self.env.uid)]
+        return ['|', ('user_id', '=', False), ('user_id', '!=', self.env.uid)]
 
     @api.model
     def _needs_auto_student_user(self, vals):
@@ -221,16 +252,20 @@ class Student(models.Model):
             self._prepare_student_user_on_create(vals)
             if vals.get('user_id') and not (vals.get('name') or '').strip():
                 user = self.env['res.users'].browse(vals['user_id'])
-                vals['name'] = user.name
+                resolved = user._lms_resolve_person_name()
+                if resolved:
+                    vals['name'] = resolved
         return super().create(vals_list)
 
-    @api.depends('create_date', 'write_date')
+    @api.depends('face_embedding_json', 'create_date', 'write_date')
     def _compute_face_enrollment_mount_html(self):
         for rec in self:
             if isinstance(rec.id, int) and rec.id:
+                registered = '1' if rec.face_embedding_json else '0'
                 rec.face_enrollment_mount_html = (
-                    '<div class="o_lms_student_face_root" data-lms-role="enroll" data-student-id="%s"></div>'
-                    % rec.id
+                    '<div class="o_lms_student_face_root" data-lms-role="enroll" '
+                    'data-student-id="%s" data-lms-face-registered="%s"></div>'
+                    % (rec.id, registered)
                 )
             else:
                 rec.face_enrollment_mount_html = (
@@ -407,6 +442,9 @@ class Student(models.Model):
     def action_set_course_status_pending(self):
         return self._set_current_course_status('pending')
 
+    def action_set_course_status_approved(self):
+        return self._set_current_course_status('approved')
+
     def action_set_course_status_rejected(self):
         return self._set_current_course_status('rejected')
 
@@ -563,6 +601,10 @@ class StudentCourse(models.Model):
     
     enrollment_date = fields.Date(string='Enrollment Date', default=fields.Date.today, required=True)
     start_date = fields.Date(string='Start Date')
+    end_date = fields.Date(
+        string='End Date',
+        help='Planned end of the study period for this enrollment (often copied from the course).',
+    )
     completion_date = fields.Date(string='Completion Date')
     
     status = fields.Selection(
@@ -576,35 +618,138 @@ class StudentCourse(models.Model):
         ('student_course_unique', 'unique(student_id, course_id)', 'Student has already enrolled in this course!'),
     ]
 
-    progress = fields.Float(string='Progress (%)', compute='_compute_progress', store=True, digits=(16, 2))
+    @api.model
+    def _should_enforce_prerequisite_rules(self):
+        return not self.env['lms.course']._user_may_bypass_prerequisite_rules()
+
+    def _check_prerequisites_for_enrollment(self):
+        for rec in self:
+            if rec.status == 'rejected':
+                continue
+            message = rec.course_id._prerequisite_error_message(rec.student_id)
+            if message:
+                raise ValidationError(message)
+
+    progress = fields.Float(
+        string='Progress (%)',
+        compute='_compute_progress',
+        store=True,
+        digits=(16, 2),
+    )
     final_score = fields.Float(string='Final Score', digits=(16, 2))
-    
-    @api.depends('learning_history_ids', 'learning_history_ids.status', 'course_id', 'course_id.lesson_ids')
-    def _compute_progress(self):
-        for record in self:
-            if record.course_id:
-                total_lessons = len(record.course_id.lesson_ids)
-                completed_lessons = len(record.learning_history_ids.filtered(
-                    lambda h: h.lesson_id.course_id == record.course_id and h.status == 'completed'
-                ))
-                if total_lessons > 0:
-                    record.progress = (completed_lessons / total_lessons) * 100
-                else:
-                    record.progress = 0.0
-            else:
-                record.progress = 0.0
-    
+
+    lesson_progress_ids = fields.One2many(
+        'lms.student.lesson.progress',
+        'enrollment_id',
+        string='Lesson Progress',
+    )
     learning_history_ids = fields.One2many(
         'lms.learning.history', 'student_course_id', string='Learning History'
     )
 
+    @api.depends(
+        'student_id',
+        'course_id',
+        'course_id.lesson_ids',
+        'lesson_progress_ids.face_checked_in',
+        'lesson_progress_ids.progress_percent',
+        'lesson_progress_ids.watched_seconds',
+        'lesson_progress_ids.lesson_id',
+        'learning_history_ids.status',
+        'learning_history_ids.lesson_id',
+    )
+    def _compute_progress(self):
+        """Completed lessons / total lessons in course (same rules as lesson Attendance Status)."""
+        Progress = self.env['lms.student.lesson.progress'].sudo()
+        for enrollment in self:
+            student = enrollment.student_id
+            course = enrollment.course_id
+            lessons = course.lesson_ids if course else self.env['lms.lesson']
+            if not student or not lessons:
+                enrollment.progress = 0.0
+                continue
+            progress_map = {
+                row.lesson_id.id: row
+                for row in Progress.search([
+                    ('student_id', '=', student.id),
+                    ('lesson_id', 'in', lessons.ids),
+                ])
+            }
+            done_lesson_ids = {
+                lesson.id
+                for lesson in lessons
+                if progress_map.get(lesson.id) and progress_map[lesson.id].is_lesson_completed()
+            }
+            for history in enrollment.learning_history_ids:
+                if (
+                    history.status == 'completed'
+                    and history.lesson_id
+                    and history.lesson_id.id in lessons.ids
+                ):
+                    done_lesson_ids.add(history.lesson_id.id)
+            enrollment.progress = min(100.0, (len(done_lesson_ids) / len(lessons)) * 100.0)
+
+    @api.model
+    def _enrollment_status_counts_toward_capacity(cls, status):
+        return status not in ENROLLMENT_STATUSES_EXCLUDED_FROM_CAPACITY
+
+    @api.constrains('start_date', 'end_date')
+    def _check_enrollment_start_before_end(self):
+        for rec in self:
+            if rec.start_date and rec.end_date and rec.start_date > rec.end_date:
+                raise ValidationError(_('Enrollment start date must be on or before the end date.'))
+
+    @api.constrains('start_date', 'completion_date')
+    def _check_enrollment_start_before_completion(self):
+        for rec in self:
+            if rec.start_date and rec.completion_date and rec.start_date > rec.completion_date:
+                raise ValidationError(_('Enrollment start date must be on or before the completion date.'))
+
+    @api.constrains('course_id', 'status')
+    def _check_course_seat_capacity(self):
+        for rec in self:
+            if not rec.course_id:
+                continue
+            cap = rec.course_id.max_student
+            if not cap or cap < 1:
+                continue
+            domain = [
+                ('course_id', '=', rec.course_id.id),
+                ('status', 'not in', list(ENROLLMENT_STATUSES_EXCLUDED_FROM_CAPACITY)),
+            ]
+            if rec.id:
+                domain.append(('id', '!=', rec.id))
+            other = self.search_count(domain)
+            need_seat = self._enrollment_status_counts_toward_capacity(rec.status)
+            if need_seat and other + 1 > cap:
+                raise ValidationError(
+                    _('Course "%s" is full (maximum %s students).') % (rec.course_id.name, cap)
+                )
+
     @api.model_create_multi
     def create(self, vals_list):
         records = super().create(vals_list)
+        if records and records._should_enforce_prerequisite_rules():
+            records._check_prerequisites_for_enrollment()
         records.mapped('student_id').action_refresh_statistics()
         return records
 
     def write(self, vals):
+        if self._should_enforce_prerequisite_rules() and vals.get('status') in (
+            'pending',
+            'approved',
+            'learning',
+        ):
+            for rec in self:
+                check_student = rec.student_id
+                check_course = rec.course_id
+                if vals.get('course_id'):
+                    check_course = self.env['lms.course'].browse(vals['course_id'])
+                if vals.get('student_id'):
+                    check_student = self.env['lms.student'].browse(vals['student_id'])
+                message = check_course._prerequisite_error_message(check_student)
+                if message:
+                    raise ValidationError(message)
         students = self.mapped('student_id')
         res = super().write(vals)
         (students | self.mapped('student_id')).action_refresh_statistics()
@@ -616,6 +761,44 @@ class StudentCourse(models.Model):
         if not self.env.context.get('skip_lms_statistics_refresh'):
             students.action_refresh_statistics()
         return res
+
+    def action_bulk_approve_pending(self):
+        """Duyệt hàng loạt đăng ký đang chờ (pending → approved)."""
+        pending = self.filtered(lambda r: r.status == 'pending')
+        if not pending:
+            raise ValidationError(_('No pending enrollments in the selected list.'))
+        pending.write({'status': 'approved'})
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Approve Enrollments'),
+                'message': _('Approved %(count)s enrollment(s).', count=len(pending)),
+                'type': 'success',
+                'sticky': False,
+                'next': {'type': 'ir.actions.client', 'tag': 'reload'},
+            },
+        }
+
+    def action_bulk_set_learning(self):
+        """Chuyển đăng ký đã duyệt sang đang học (approved → learning)."""
+        approved = self.filtered(lambda r: r.status == 'approved')
+        if not approved:
+            raise ValidationError(_('No approved enrollments in the selected list.'))
+        if approved._should_enforce_prerequisite_rules():
+            approved._check_prerequisites_for_enrollment()
+        approved.write({'status': 'learning'})
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Start Learning'),
+                'message': _('Set %(count)s enrollment(s) to Learning.', count=len(approved)),
+                'type': 'success',
+                'sticky': False,
+                'next': {'type': 'ir.actions.client', 'tag': 'reload'},
+            },
+        }
 
     @api.model
     def action_merge_duplicate_enrollments(self):
@@ -634,10 +817,11 @@ class StudentCourse(models.Model):
         History = self.env['lms.learning.history'].sudo()
         skip_ctx = {'skip_lms_statistics_refresh': True, 'skip_lms_student_course_relink': True}
         status_rank = {
-            'completed': 4,
-            'learning': 3,
-            'pending': 2,
-            'rejected': 1,
+            'completed': 6,
+            'learning': 5,
+            'approved': 4,
+            'pending': 3,
+            'rejected': 2,
         }
 
         def pick_status(a, b):
@@ -657,6 +841,8 @@ class StudentCourse(models.Model):
                     vals['enrollment_date'] = dup.enrollment_date
                 if dup.start_date and (not keep.start_date or dup.start_date < keep.start_date):
                     vals['start_date'] = dup.start_date
+                if dup.end_date and (not keep.end_date or dup.end_date > keep.end_date):
+                    vals['end_date'] = dup.end_date
                 if dup.completion_date and (not keep.completion_date or dup.completion_date > keep.completion_date):
                     vals['completion_date'] = dup.completion_date
                 fs_keep = keep.final_score or 0

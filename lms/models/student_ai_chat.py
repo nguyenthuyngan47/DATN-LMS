@@ -8,6 +8,7 @@ from html import escape
 
 from odoo import _, fields, models
 from odoo.exceptions import UserError
+from odoo.tools import format_date
 
 from ..services import groq_client
 from ..services.groq_client import GroqConfigError
@@ -44,6 +45,12 @@ class LmsStudentAiChat(models.TransientModel):
     useful_answers_json = fields.Text(string='Useful Answers (JSON)', readonly=True, default='[]')
     roadmap_options_json = fields.Text(string='Roadmap List (JSON)', readonly=True, default='[]')
     selected_roadmap_index = fields.Integer(string='Selected Roadmap', readonly=True, default=0)
+    created_roadmap_id = fields.Many2one(
+        'lms.roadmap',
+        string='Created Roadmap',
+        readonly=True,
+        ondelete='set null',
+    )
     debug_last_ai_request = fields.Text(string='Debug AI Request', readonly=True)
     debug_last_ai_response = fields.Text(string='Debug AI Response', readonly=True)
     conversation_html = fields.Html(
@@ -89,13 +96,16 @@ class LmsStudentAiChat(models.TransientModel):
     roadmap_option_2_label = fields.Char(string='Roadmap 2 Label', compute='_compute_roadmap_choice_ui')
     roadmap_option_3_label = fields.Char(string='Roadmap 3 Label', compute='_compute_roadmap_choice_ui')
 
-    @staticmethod
-    def _no_course_message():
-        return 'No courses available in the system. Roadmap counseling cannot be used yet.'
+    def _no_course_message(self):
+        return _(
+            'No courses available in the system. Roadmap counseling cannot be used yet.'
+        )
 
-    @staticmethod
-    def _chat_ephemeral_notice():
-        return 'Note: Please save this roadmap suggestion. If you leave this screen, the entire conversation will be deleted.'
+    def _chat_ephemeral_notice(self):
+        return _(
+            'Note: Please save this roadmap suggestion. If you leave this screen, the entire '
+            'conversation will be deleted.'
+        )
 
     def _get_available_courses_count(self):
         return self.env['lms.course'].sudo().search_count([])
@@ -107,6 +117,16 @@ class LmsStudentAiChat(models.TransientModel):
         except (TypeError, ValueError):
             value = 0
         return f'{value:,}'.replace(',', '.') + 'VND'
+
+    def _format_course_period_plain(self, course):
+        """Localized start/end for roadmap text (plain, not HTML)."""
+        if not course:
+            return ''
+        if course.start_date or course.end_date:
+            sd = format_date(self.env, course.start_date) if course.start_date else '—'
+            ed = format_date(self.env, course.end_date) if course.end_date else '—'
+            return _('from %(start)s to %(end)s') % {'start': sd, 'end': ed}
+        return _('(course dates not set)')
 
     def _reopen_chat_form_action(self):
         self.ensure_one()
@@ -181,9 +201,9 @@ class LmsStudentAiChat(models.TransientModel):
             rec.roadmap_option_1_available = 1 in by_index
             rec.roadmap_option_2_available = 2 in by_index
             rec.roadmap_option_3_available = 3 in by_index
-            rec.roadmap_option_1_label = by_index.get(1, {}).get('title') or 'Option A'
-            rec.roadmap_option_2_label = by_index.get(2, {}).get('title') or 'Option B'
-            rec.roadmap_option_3_label = by_index.get(3, {}).get('title') or 'Option C'
+            rec.roadmap_option_1_label = by_index.get(1, {}).get('title') or _('Option A')
+            rec.roadmap_option_2_label = by_index.get(2, {}).get('title') or _('Option B')
+            rec.roadmap_option_3_label = by_index.get(3, {}).get('title') or _('Option C')
 
     def _compute_roadmap_options_html(self):
         for rec in self:
@@ -191,7 +211,7 @@ class LmsStudentAiChat(models.TransientModel):
             if not options:
                 rec.roadmap_options_html = (
                     '<div style="padding:8px 10px;border:1px dashed #d1d5db;border-radius:8px;color:#6b7280;">'
-                    'No roadmaps to choose from.</div>'
+                    '%s</div>' % escape(_('No roadmaps to choose from.'))
                 )
                 rec.roadmap_option_1_html = False
                 rec.roadmap_option_2_html = False
@@ -203,7 +223,8 @@ class LmsStudentAiChat(models.TransientModel):
                 is_selected = rec.selected_roadmap_index == opt['index']
                 title = escape(opt['title'])
                 badge = (
-                    '<span style="margin-left:8px;color:#166534;background:#dcfce7;padding:2px 8px;border-radius:999px;">Selected</span>'
+                    '<span style="margin-left:8px;color:#166534;background:#dcfce7;padding:2px 8px;border-radius:999px;">'
+                    '%s</span>' % escape(_('Selected'))
                     if is_selected
                     else ''
                 )
@@ -212,22 +233,42 @@ class LmsStudentAiChat(models.TransientModel):
                     '<div style="border:1px solid #d1d5db;border-radius:10px;padding:10px;background:#fff;">'
                     '<div style="font-weight:600;">%s%s</div>' % (title, badge)
                 )
-                if opt['strategy']:
-                    opt_lines.append('<div><b>Strategy:</b> %s</div>' % escape(opt['strategy']))
                 if opt['summary']:
-                    opt_lines.append('<div><b>Summary:</b> %s</div>' % escape(opt['summary']))
+                    opt_lines.append(
+                        '<div><b>%s</b> %s</div>'
+                        % (escape(_('Summary:')), escape(opt['summary']))
+                    )
                 if opt['courses']:
-                    opt_lines.append('<div><b>Suggested Courses:</b><ul style="margin:4px 0 0 18px;">')
+                    opt_lines.append(
+                        '<div><b>%s</b><ul style="margin:4px 0 0 18px;">' % escape(_('Suggested Courses:'))
+                    )
                     for course_name in opt['courses']:
                         course = rec.env['lms.course'].sudo().search([('name', '=', course_name)], limit=1)
                         price_text = self._format_vnd(course.price) if course else '0VND'
-                        opt_lines.append('<li>%s (%s)</li>' % (escape(course_name), escape(price_text)))
+                        period = ''
+                        if course:
+                            ptxt = rec._format_course_period_plain(course)
+                            if ptxt:
+                                period = ' — %s' % escape(ptxt)
+                        opt_lines.append(
+                            '<li>%s (%s)%s</li>'
+                            % (escape(course_name), escape(price_text), period)
+                        )
                     opt_lines.append('</ul></div>')
-                opt_lines.append('<div><b>Total Roadmap Cost:</b> %s</div>' % escape(self._format_vnd(opt['total_cost_vnd'])))
+                opt_lines.append(
+                    '<div><b>%s</b> %s</div>'
+                    % (escape(_('Total Roadmap Cost:')), escape(self._format_vnd(opt['total_cost_vnd'])))
+                )
                 if opt['difference']:
-                    opt_lines.append('<div><b>Key Difference:</b> %s</div>' % escape(opt['difference']))
+                    opt_lines.append(
+                        '<div><b>%s</b> %s</div>'
+                        % (escape(_('Key Difference:')), escape(opt['difference']))
+                    )
                 if opt['fit_when']:
-                    opt_lines.append('<div><b>Suitable When:</b> %s</div>' % escape(opt['fit_when']))
+                    opt_lines.append(
+                        '<div><b>%s</b> %s</div>'
+                        % (escape(_('Suitable When:')), escape(opt['fit_when']))
+                    )
                 opt_lines.append('</div>')
                 opt_html = ''.join(opt_lines)
                 individual_htmls[opt['index']] = opt_html
@@ -591,70 +632,121 @@ class LmsStudentAiChat(models.TransientModel):
 
     def _build_roadmap_result_text(self, options):
         if not options:
-            return (
+            return _(
                 'Could not create valid roadmap options from the current data. '
                 'Please try again with more detailed answers.'
             )
-        lines = ['I have created roadmap suggestions for you to choose from:']
+        lines = [_('I have created roadmap suggestions for you to choose from:')]
         for opt in options:
             lines.append('')
             lines.append('%s' % opt['title'])
-            if opt['strategy']:
-                lines.append('Strategy: %s' % opt['strategy'])
             if opt['summary']:
-                lines.append('Summary: %s' % opt['summary'])
-            lines.append('Suggested Courses:')
+                lines.append('%s %s' % (_('Summary:'), opt['summary']))
+            lines.append(_('Suggested Courses:'))
             for course_name in opt['courses']:
                 course = self.env['lms.course'].sudo().search([('name', '=', course_name)], limit=1)
                 price_text = self._format_vnd(course.price if course else 0)
-                lines.append('- %s (%s)' % (course_name, price_text))
-            lines.append('Total Roadmap Cost: %s' % self._format_vnd(opt['total_cost_vnd']))
+                period = ''
+                if course:
+                    ptxt = self._format_course_period_plain(course)
+                    if ptxt:
+                        period = ' — %s' % ptxt
+                lines.append('- %s (%s)%s' % (course_name, price_text, period))
+            lines.append('%s %s' % (_('Total Roadmap Cost:'), self._format_vnd(opt['total_cost_vnd'])))
             if opt['difference']:
-                lines.append('Key Difference: %s' % opt['difference'])
+                lines.append('%s %s' % (_('Key Difference:'), opt['difference']))
             if opt['fit_when']:
-                lines.append('Suitable When: %s' % opt['fit_when'])
+                lines.append('%s %s' % (_('Suitable When:'), opt['fit_when']))
         lines.append('')
-        lines.append('Please select exactly one roadmap using the "Select Roadmap" button.')
+        lines.append(
+            _(
+                'Please select exactly one roadmap option. The system will save your roadmap '
+                'and open it so you can register for each course individually (pending approval).'
+            )
+        )
         return '\n'.join(lines)
 
-    def _enroll_courses_from_option(self, option):
+    def _priority_and_timeframe_for_sequence(self, index, total):
+        """Gán priority/timeframe theo thứ tự khóa trong phương án AI."""
+        if total <= 1:
+            return 'high', 'short'
+        third = max(1, total // 3)
+        if index < third:
+            return 'high', 'short'
+        if index < 2 * third:
+            return 'medium', 'medium'
+        return 'low', 'long'
+
+    def _create_roadmap_from_option(self, option):
+        """Tạo lms.roadmap + các dòng khóa từ phương án AI (không đăng ký khóa)."""
         self.ensure_one()
         if not self.student_id:
-            raise UserError(_('Student profile not found for course enrollment.'))
+            raise UserError(_('Student profile not found.'))
         course_names = option.get('courses') or []
         if not course_names:
             raise UserError(_('Selected roadmap has no valid courses.'))
+
         Course = self.env['lms.course'].sudo()
-        Enrollment = self.env['lms.student.course'].sudo()
-        created = 0
-        skipped = 0
-        for name in course_names:
+        Roadmap = self.env['lms.roadmap'].sudo()
+        RoadmapCourse = self.env['lms.roadmap.course'].sudo()
+
+        reason_parts = []
+        if option.get('summary'):
+            reason_parts.append(option['summary'])
+        if option.get('strategy'):
+            reason_parts.append(_('Strategy: %s') % option['strategy'])
+        if option.get('fit_when'):
+            reason_parts.append(_('Suitable when: %s') % option['fit_when'])
+
+        roadmap = Roadmap.create(
+            {
+                'student_id': self.student_id.id,
+                'state': 'suggested',
+                'recommendation_method': 'hybrid',
+                'ai_recommendation_reason': '\n'.join(reason_parts) or option.get('title') or '',
+            }
+        )
+
+        valid_names = [n for n in course_names if n]
+        total = len(valid_names)
+        seq = 10
+        for idx, name in enumerate(valid_names):
             course = Course.search([('name', '=', name)], limit=1)
             if not course:
-                skipped += 1
                 continue
-            existed = Enrollment.search(
-                [
-                    ('student_id', '=', self.student_id.id),
-                    ('course_id', '=', course.id),
-                    ('status', '!=', 'rejected'),
-                ],
-                limit=1,
-            )
-            if existed:
-                skipped += 1
-                continue
-            Enrollment.create(
+            priority, timeframe = self._priority_and_timeframe_for_sequence(idx, total)
+            RoadmapCourse.create(
                 {
-                    'student_id': self.student_id.id,
+                    'roadmap_id': roadmap.id,
                     'course_id': course.id,
-                    'status': 'pending',
-                    'enrollment_date': fields.Date.today(),
-                    'final_score': False,
+                    'sequence': seq,
+                    'priority': priority,
+                    'timeframe': timeframe,
+                    'recommendation_reason': option.get('summary') or option.get('title') or '',
                 }
             )
-            created += 1
-        return created, skipped
+            seq += 10
+
+        if not roadmap.course_line_ids:
+            roadmap.unlink()
+            raise UserError(
+                _(
+                    'Could not create roadmap: no matching courses in the system. '
+                    'Please contact an administrator.'
+                )
+            )
+        return roadmap
+
+    def _open_roadmap_form_action(self, roadmap):
+        self.ensure_one()
+        return roadmap.action_open_form()
+
+    def action_open_created_roadmap(self):
+        """Mở lại roadmap đã tạo từ session chat (nút dự phòng trên form chat)."""
+        self.ensure_one()
+        if not self.created_roadmap_id:
+            raise UserError(_('No roadmap has been created for this session yet.'))
+        return self._open_roadmap_form_action(self.created_roadmap_id)
 
     def _action_select_roadmap(self, index):
         self.ensure_one()
@@ -666,18 +758,29 @@ class LmsStudentAiChat(models.TransientModel):
         option = next((x for x in options if x['index'] == index), None)
         if not option:
             raise UserError(_('Roadmap does not exist or is invalid.'))
-        created, skipped = self._enroll_courses_from_option(option)
-        self.write({'selected_roadmap_index': index})
+        roadmap = self._create_roadmap_from_option(option)
+        self.write(
+            {
+                'selected_roadmap_index': index,
+                'created_roadmap_id': roadmap.id,
+            }
+        )
         conv = self._conversation_messages()
         conv.append(
             {
                 'role': 'assistant',
-                'content': 'You selected "%s". Created %s new enrollments, skipped %s courses (already enrolled or invalid).'
-                % (option['title'], created, skipped),
+                'content': _(
+                    'You selected "%(title)s". Your learning roadmap has been saved (%(count)s courses).\n\n'
+                    'Next step: on the roadmap screen (opening now), go to the '
+                    '"Recommended Courses" tab and click **Enroll** for each course you want to take. '
+                    'Each registration will be **Pending approval** until an instructor or administrator approves it.\n\n'
+                    'You can reopen this roadmap anytime from your student profile → Roadmap.'
+                )
+                % {'title': option['title'], 'count': len(roadmap.course_line_ids)},
             }
         )
         self._set_conversation(conv)
-        return self._reopen_chat_form_action()
+        return self._open_roadmap_form_action(roadmap)
 
     def action_select_roadmap_1(self):
         return self._action_select_roadmap(1)
@@ -691,7 +794,7 @@ class LmsStudentAiChat(models.TransientModel):
     def action_start_session(self):
         self.ensure_one()
         if self._get_available_courses_count() <= 0:
-            raise UserError(_(self._no_course_message()))
+            raise UserError(self._no_course_message())
         first_question = self._generate_first_question()
         self.write(
             {
@@ -699,6 +802,7 @@ class LmsStudentAiChat(models.TransientModel):
                 'asked_count': 1,
                 'user_message': False,
                 'selected_roadmap_index': 0,
+                'created_roadmap_id': False,
                 'roadmap_options_json': '[]',
             }
         )
@@ -734,7 +838,9 @@ class LmsStudentAiChat(models.TransientModel):
             self.write({'session_state': 'done', 'user_message': False})
             self._set_conversation(conv)
             return self._reopen_chat_form_action()
-        next_question = eval_result['next_question'] or 'Could you share more about your specific learning goals?'
+        next_question = eval_result['next_question'] or _(
+            'Could you share more about your specific learning goals?'
+        )
         conv.append({'role': 'assistant', 'content': next_question})
         self.write({'asked_count': self.asked_count + 1, 'user_message': False})
         self._set_conversation(conv)

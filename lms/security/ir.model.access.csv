@@ -13,7 +13,6 @@ access_lms_lesson_user,lms.lesson.user,model_lms_lesson,base.group_user,1,0,0,0
 access_lms_lesson_manager,lms.lesson.manager,model_lms_lesson,base.group_system,1,1,1,1
 access_lms_course_category_manager,lms.course.category.manager,model_lms_course_category,base.group_system,1,1,1,1
 access_lms_course_level_manager,lms.course.level.manager,model_lms_course_level,base.group_system,1,1,1,1
-access_lms_course_tag_manager,lms.course.tag.manager,model_lms_course_tag,base.group_system,1,1,1,1
 access_lms_roadmap_course_user,lms.roadmap.course.user,model_lms_roadmap_course,base.group_user,1,1,1,0
 access_lms_roadmap_course_manager,lms.roadmap.course.manager,model_lms_roadmap_course,base.group_system,1,1,1,1
 access_lms_ai_analysis_manager,lms.ai.analysis.manager,model_lms_ai_analysis,base.group_system,1,1,1,1
@@ -25,7 +24,6 @@ access_lms_student_course_lms_manager,lms.student.course.lms.manager,model_lms_s
 access_lms_lesson_lms_manager,lms.lesson.lms.manager,model_lms_lesson,lms.group_lms_manager,1,1,1,1
 access_lms_course_category_lms_manager,lms.course.category.lms.manager,model_lms_course_category,lms.group_lms_manager,1,1,1,1
 access_lms_course_level_lms_manager,lms.course.level.lms.manager,model_lms_course_level,lms.group_lms_manager,1,1,1,1
-access_lms_course_tag_lms_manager,lms.course.tag.lms.manager,model_lms_course_tag,lms.group_lms_manager,1,1,1,1
 access_lms_roadmap_course_lms_manager,lms.roadmap.course.lms.manager,model_lms_roadmap_course,lms.group_lms_manager,1,1,1,1
 access_lms_ai_analysis_lms_manager,lms.ai.analysis.lms.manager,model_lms_ai_analysis,lms.group_lms_manager,1,1,1,1
 access_lms_student_lms_user,lms.student.lms.user,model_lms_student,lms.group_lms_user,1,1,0,0
@@ -43,7 +41,6 @@ access_lms_roadmap_instructor,lms.roadmap.instructor,model_lms_roadmap,lms.group
 access_lms_student_course_instructor,lms.student.course.instructor,model_lms_student_course,lms.group_lms_instructor,1,1,1,1
 access_lms_course_category_instructor,lms.course.category.instructor,model_lms_course_category,lms.group_lms_instructor,1,1,1,1
 access_lms_course_level_instructor,lms.course.level.instructor,model_lms_course_level,lms.group_lms_instructor,1,1,1,1
-access_lms_course_tag_instructor,lms.course.tag.instructor,model_lms_course_tag,lms.group_lms_instructor,1,1,1,1
 access_lms_student_ai_chat_lms_user,lms.student.ai.chat.lms.user,model_lms_student_ai_chat,lms.group_lms_user,1,1,1,1
 access_lms_lecturer_system,lms.lecturer.system,model_lms_lecturer,base.group_system,1,1,1,1
 access_lms_lecturer_lms_manager,lms.lecturer.lms.manager,model_lms_lecturer,lms.group_lms_manager,1,1,1,1

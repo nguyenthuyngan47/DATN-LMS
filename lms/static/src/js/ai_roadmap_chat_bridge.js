@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 // AI roadmap chat bridge:
 // - Enter-to-send in the chat input.
 // - Optional F12 console debug (toggle by localStorage flag).
