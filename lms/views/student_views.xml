@@ -22,15 +22,15 @@
         <field name="model">lms.student</field>
         <field name="arch" type="xml">
             <list string="Students" create="0">
-                <field name="id"/>
-                <field name="name"/>
-                <field name="email"/>
-                <field name="phone"/>
-                <field name="username"/>
-                <field name="gender"/>
-                <field name="date_of_birth"/>
-                <field name="address"/>
-                <field name="is_active"/>
+                <field name="id" width="70px"/>
+                <field name="name" width="180px"/>
+                <field name="email" width="220px"/>
+                <field name="phone" width="130px"/>
+                <field name="username" width="140px"/>
+                <field name="gender" width="90px"/>
+                <field name="date_of_birth" width="120px"/>
+                <field name="address" width="280px"/>
+                <field name="is_active" width="80px"/>
             </list>
         </field>
     </record>
@@ -40,24 +40,25 @@
         <field name="model">lms.student</field>
         <field name="arch" type="xml">
             <list string="Course Students" create="0" delete="0" editable="bottom">
-                <field name="id"/>
-                <field name="name"/>
+                <field name="id" width="70px"/>
+                <field name="name" width="180px"/>
                 <field
                     name="current_course_registration_status"
                     string="Registration Status"
                     widget="selection"
+                    width="160px"
                     decoration-success="current_course_registration_status in ('approved', 'learning', 'completed')"
                     decoration-info="current_course_registration_status == 'pending'"
                     decoration-danger="current_course_registration_status == 'rejected'"
                     decoration-muted="current_course_registration_status == 'cancelled'"
                 />
-                <field name="email"/>
-                <field name="phone"/>
-                <field name="username"/>
-                <field name="gender"/>
-                <field name="date_of_birth"/>
-                <field name="address"/>
-                <field name="is_active"/>
+                <field name="email" width="220px"/>
+                <field name="phone" width="130px"/>
+                <field name="username" width="140px"/>
+                <field name="gender" width="90px"/>
+                <field name="date_of_birth" width="120px"/>
+                <field name="address" width="280px"/>
+                <field name="is_active" width="80px"/>
             </list>
         </field>
     </record>
@@ -80,16 +81,20 @@
                             <field name="roadmap_ids" widget="statinfo" string="Roadmap"/>
                         </button>
                     </div>
+                    <div class="oe_title">
+                        <label for="name" string="Student"/>
+                        <h1>
+                            <field name="name" placeholder="Student name" readonly="is_instructor_restricted"/>
+                        </h1>
+                    </div>
                     <group>
-                        <group>
-                            <field name="name" readonly="is_instructor_restricted"/>
+                        <group string="Contact">
                             <field name="email" readonly="is_instructor_restricted"/>
                             <field name="phone" readonly="is_instructor_restricted"/>
                             <field name="gender" readonly="is_instructor_restricted"/>
                             <field name="date_of_birth" readonly="is_instructor_restricted"/>
-                            <field name="address" readonly="is_instructor_restricted"/>
                         </group>
-                        <group>
+                        <group string="Account &amp; learning">
                             <field name="username" readonly="1"/>
                             <field name="current_level" readonly="is_instructor_restricted"/>
                             <field name="is_active" readonly="is_instructor_restricted"/>
@@ -103,6 +108,17 @@
                             />
                         </group>
                     </group>
+                    <group>
+                        <field name="address" colspan="2" readonly="is_instructor_restricted"/>
+                    </group>
+                    <separator string="Face template registration (attendance)" invisible="is_instructor_restricted"/>
+                    <group name="face_biometric" col="1" invisible="is_instructor_restricted">
+                        <field name="face_embedding_json" invisible="1"/>
+                        <group>
+                            <field name="face_embedding_registered_at" readonly="1"/>
+                        </group>
+                        <field name="face_enrollment_mount_html" widget="html" readonly="1" nolabel="1" colspan="2"/>
+                    </group>
                     <notebook>
                         <page string="Learning Goals" name="goals">
                             <group>
@@ -113,31 +129,23 @@
                         <page string="Enrolled Courses" name="courses" invisible="is_instructor_restricted">
                             <field name="enrolled_courses_ids" nolabel="1">
                                 <list>
-                                    <field name="course_id"/>
-                                    <field name="enrollment_date"/>
-                                    <field name="status"/>
-                                    <field name="progress" widget="progressbar"/>
-                                    <field name="final_score"/>
+                                    <field name="course_id" width="220px"/>
+                                    <field name="enrollment_date" width="120px"/>
+                                    <field name="status" width="120px"/>
+                                    <field name="progress" widget="progressbar" width="120px"/>
                                 </list>
                             </field>
                         </page>
                         <page string="Learning History" name="history" invisible="is_instructor_restricted">
-                            <field name="learning_history_ids" nolabel="1">
-                                <list>
-                                    <field name="date"/>
-                                    <field name="course_id"/>
-                                    <field name="lesson_id"/>
-                                    <field name="study_duration"/>
-                                    <field name="status"/>
+                            <field name="learning_history_ids" nolabel="1" readonly="1">
+                                <list create="0" delete="0" edit="0">
+                                    <field name="date" width="120px"/>
+                                    <field name="course_id" width="200px"/>
+                                    <field name="lesson_id" width="200px"/>
+                                    <field name="study_duration" string="Duration (min)" width="120px"/>
+                                    <field name="status" width="120px"/>
                                 </list>
                             </field>
-                        </page>
-                        <page string="Face (Attendance)" name="face_biometric" invisible="is_instructor_restricted">
-                            <group>
-                                <field name="face_embedding_json" invisible="1"/>
-                                <field name="face_embedding_registered_at" readonly="1"/>
-                            </group>
-                            <field name="face_enrollment_mount_html" widget="html" readonly="1" nolabel="1" colspan="2"/>
                         </page>
                         <!-- <page string="Statistics" name="statistics">
                             <group>
@@ -153,7 +161,6 @@
                         </page> -->
                     </notebook>
                 </sheet>
-                <chatter/>
             </form>
         </field>
     </record>

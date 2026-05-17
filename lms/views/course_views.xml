@@ -7,8 +7,8 @@
         <field name="arch" type="xml">
             <list>
                 <field name="sequence" widget="handle"/>
-                <field name="name"/>
-                <field name="description"/>
+                <field name="name" width="200px"/>
+                <field name="description" width="320px"/>
             </list>
         </field>
     </record>
@@ -97,12 +97,12 @@
                     />
                 </header>
                 <field name="state" column_invisible="1"/>
-                <field name="name"/>
-                <field name="instructor_id"/>
-                <field name="category_id"/>
-                <field name="start_date"/>
-                <field name="end_date"/>
-                <field name="enrolled_students_count"/>
+                <field name="name" width="240px"/>
+                <field name="instructor_id" width="180px"/>
+                <field name="category_id" width="150px"/>
+                <field name="start_date" width="120px"/>
+                <field name="end_date" width="120px"/>
+                <field name="enrolled_students_count" width="100px"/>
             </list>
         </field>
     </record>
@@ -152,7 +152,6 @@
                             <field name="state" readonly="is_student_course_readonly"/>
                             <field name="is_active" readonly="is_student_course_readonly"/>
                             <field name="price" string="Cost (VND)" readonly="is_student_course_readonly"/>
-                            <field name="contact_payment" readonly="is_student_course_readonly" placeholder="Phone, Zalo, Facebook, Email..."/>
                         </group>
                         <group>
                             <field name="category_id" readonly="is_student_course_readonly"/>
@@ -161,6 +160,9 @@
                             <field name="duration_hours" readonly="is_student_course_readonly"/>
                             <field name="total_lessons" readonly="is_student_course_readonly"/>
                         </group>
+                    </group>
+                    <group>
+                        <field name="contact_payment" colspan="2" readonly="is_student_course_readonly" placeholder="Phone, Zalo, Facebook, Email..."/>
                     </group>
                     <group string="Course period" name="course_period">
                         <field name="start_date" readonly="is_student_course_readonly"/>
@@ -174,14 +176,15 @@
                                     <field name="sequence" widget="handle"/>
                                     <field name="current_user_lesson_locked" column_invisible="1"/>
                                     <field name="current_user_lesson_lock_message" column_invisible="1"/>
-                                    <field name="name"/>
-                                    <field name="start_datetime"/>
-                                    <field name="end_datetime"/>
-                                    <field name="duration_minutes"/>
+                                    <field name="name" string="Lesson" width="140px"/>
+                                    <field name="start_datetime" string="Start" width="170px"/>
+                                    <field name="end_datetime" string="End" width="170px"/>
+                                    <field name="duration_minutes" string="Duration (min)" width="120px"/>
                                     <field
                                         name="current_user_lesson_progress_label"
-                                        string="Attendance Status"
+                                        string="Attendance"
                                         optional="show"
+                                        width="110px"
                                     />
                                     <button
                                         name="action_open_lesson_full"
@@ -190,16 +193,26 @@
                                         class="btn-link"
                                         icon="fa-external-link"
                                         title="Open Lesson Full Screen"
+                                        width="90px"
                                         invisible="current_user_lesson_locked"
                                     />
                                 </list>
                             </field>
                         </page>
                         <page string="Description" name="description">
-                            <field name="description" readonly="is_student_course_readonly"/>
+                            <field
+                                name="description"
+                                readonly="is_student_course_readonly"
+                                placeholder="Enter course overview, learning objectives, syllabus, and notes for students..."
+                            />
                         </page>
                         <page string="Prerequisites" name="prerequisites">
-                            <field name="prerequisite_ids" widget="many2many_tags" readonly="is_student_course_readonly"/>
+                            <field
+                                name="prerequisite_ids"
+                                widget="many2many_tags"
+                                readonly="is_student_course_readonly"
+                                placeholder="Select courses students must complete before enrolling in this course..."
+                            />
                         </page>
                         <page string="Tags" name="tags" invisible="not show_learning_content_tabs">
                             <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}" readonly="is_student_course_readonly"/>
@@ -207,7 +220,6 @@
                         
                     </notebook>
                 </sheet>
-                <chatter/>
             </form>
         </field>
     </record>

@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import random
-
 from odoo import models, fields, api
 
 
@@ -26,7 +24,7 @@ class LearningHistory(models.Model):
     )
     
     date = fields.Datetime(string='Study Date', default=fields.Datetime.now, required=True, index=True)
-    study_duration = fields.Float(string='Study Duration (hours)', digits=(16, 2), default=0.0)
+    study_duration = fields.Float(string='Study Duration (minutes)', digits=(16, 2), default=0.0)
 
     analytics_count = fields.Integer(
         string='Analytics Count',
@@ -177,8 +175,6 @@ class LearningHistory(models.Model):
                     vals = {'status': 'completed'}
                     if not sc.completion_date:
                         vals['completion_date'] = fields.Date.today()
-                    if not sc.final_score or sc.final_score <= 0:
-                        vals['final_score'] = round(random.uniform(5.5, 9.2), 2)
                     sc.write(vals)
             elif sc.progress > 0 and sc.status == 'pending':
                 sc.write({'status': 'learning'})
@@ -240,15 +236,85 @@ class LearningHistory(models.Model):
         return res
     
     @api.model
+    def migrate_study_duration_to_minutes(self):
+        """Đồng bộ lại từ tiến độ bài; chuyển các giá trị cũ lưu theo giờ (0.xx) sang phút."""
+        Progress = self.env['lms.student.lesson.progress'].sudo()
+        self.sync_from_lesson_progress(Progress.search([]))
+        for row in self.sudo().search([('study_duration', '>', 0)]):
+            val = row.study_duration
+            # Giá trị lẻ nhỏ hơn 3 thường là giờ (vd. 0.22 giờ ≈ 13 phút), không phải phút nguyên.
+            if val < 3.0 and abs(val - round(val)) > 0.009:
+                row.with_context(skip_lms_statistics_refresh=True).write(
+                    {'study_duration': round(val * 60.0, 2)}
+                )
+
+    @api.model
+    def sync_from_lesson_progress(self, progress_records):
+        """Ghi/ cập nhật lịch sử học khi sinh viên học bài (xem video, điểm danh)."""
+        for prog in progress_records:
+            if not prog.student_id or not prog.lesson_id:
+                continue
+            duration_minutes = prog.study_duration_minutes()
+            existing = self.sudo().search([
+                ('student_id', '=', prog.student_id.id),
+                ('lesson_id', '=', prog.lesson_id.id),
+            ], limit=1)
+
+            if prog.is_lesson_completed():
+                history_status = 'completed'
+            elif (prog.progress_percent or 0) > 0 or prog.face_checked_in:
+                history_status = 'in_progress'
+            else:
+                history_status = 'started'
+
+            study_date = fields.Datetime.now()
+            if history_status == 'completed' and prog.completed_at:
+                study_date = prog.completed_at
+            elif prog.face_checked_in_at:
+                study_date = prog.face_checked_in_at
+
+            vals = {
+                'student_id': prog.student_id.id,
+                'lesson_id': prog.lesson_id.id,
+                'study_duration': duration_minutes,
+                'status': history_status,
+                'date': study_date,
+            }
+            if prog.enrollment_id:
+                vals['student_course_id'] = prog.enrollment_id.id
+
+            sync_ctx = {
+                'skip_lms_statistics_refresh': True,
+                SKIP_RELINK: True,
+            }
+            if existing:
+                existing.with_context(**sync_ctx).write(vals)
+            else:
+                self.sudo().with_context(**sync_ctx).create(
+                    self._fill_student_course_in_vals(vals)
+                )
+
+    @api.model
     def create_learning_record(self, student_id, lesson_id, duration=0.0):
-        """Tạo bản ghi học tập"""
+        """API cũ: đồng bộ qua tiến độ bài học nếu có, không thì tạo dòng hoàn thành."""
+        lesson = self.env['lms.lesson'].browse(lesson_id)
+        progress = self.env['lms.student.lesson.progress'].sudo().search([
+            ('student_id', '=', student_id),
+            ('lesson_id', '=', lesson.id),
+        ], limit=1)
+        if progress:
+            progress.write({'watched_seconds': max(progress.watched_seconds, int(duration * 60))})
+            self.sync_from_lesson_progress(progress)
+            return self.sudo().search([
+                ('student_id', '=', student_id),
+                ('lesson_id', '=', lesson.id),
+            ], limit=1)
         student_course = self.env['lms.student.course'].search([
             ('student_id', '=', student_id),
-            ('course_id', '=', lesson_id.course_id.id)
+            ('course_id', '=', lesson.course_id.id),
         ], limit=1)
-        
         if not student_course:
-            course = lesson_id.course_id
+            course = lesson.course_id
             student_course = self.env['lms.student.course'].create({
                 'student_id': student_id,
                 'course_id': course.id,
@@ -256,11 +322,10 @@ class LearningHistory(models.Model):
                 'start_date': course.start_date,
                 'end_date': course.end_date,
             })
-        
         return self.create({
             'student_id': student_id,
             'student_course_id': student_course.id,
-            'lesson_id': lesson_id.id,
+            'lesson_id': lesson.id,
             'study_duration': duration,
             'status': 'completed',
         })

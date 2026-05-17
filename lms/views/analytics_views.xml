@@ -31,10 +31,10 @@
         <field name="model">lms.student.course</field>
         <field name="arch" type="xml">
             <list string="Enrollments">
-                <field name="student_id"/>
-                <field name="course_id"/>
-                <field name="enrollment_date"/>
-                <field name="status"/>
+                <field name="student_id" width="180px"/>
+                <field name="course_id" width="220px"/>
+                <field name="enrollment_date" width="120px"/>
+                <field name="status" width="120px"/>
             </list>
         </field>
     </record>

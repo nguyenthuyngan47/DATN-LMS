@@ -66,6 +66,21 @@ function toDataUrl(b64) {
     return `data:image/jpeg;base64,${b64}`;
 }
 
+function enrollPhotoCacheKey(studentId) {
+    return `lms_enroll_photo_${studentId}`;
+}
+
+function saveEnrollPhotoCache(studentId, photoB64) {
+    const dataUrl = toDataUrl(photoB64);
+    if (dataUrl && studentId) {
+        sessionStorage.setItem(enrollPhotoCacheKey(studentId), dataUrl);
+    }
+}
+
+function loadEnrollPhotoCache(studentId) {
+    return sessionStorage.getItem(enrollPhotoCacheKey(studentId));
+}
+
 function attendancePhotoCacheKey(lessonId) {
     return `lms_attend_photo_${lessonId}`;
 }
@@ -119,7 +134,7 @@ function hideSnapshot(wrap, video) {
 }
 
 function lockAttendUi(wrap, message) {
-    const btn = wrap.querySelector("button");
+    const btn = wrap.querySelector(".lms-face-capture");
     if (btn) {
         btn.disabled = true;
         btn.style.display = "none";
@@ -130,6 +145,77 @@ function lockAttendUi(wrap, message) {
         status.classList.remove("text-muted");
         status.classList.add("text-success");
     }
+}
+
+function ensureEnrollRetakeButton(wrap) {
+    const row = wrap.querySelector(".lms-face-actions");
+    if (!row) {
+        return null;
+    }
+    let retake = row.querySelector(".lms-face-retake");
+    if (!retake) {
+        retake = document.createElement("button");
+        retake.type = "button";
+        retake.className = "btn btn-secondary btn-sm lms-face-retake";
+        retake.textContent = "Re-register face template";
+        row.appendChild(retake);
+    }
+    retake.style.display = "";
+    return retake;
+}
+
+async function showEnrollmentLocked(wrap, video, studentId) {
+    const src = await resolveEnrollmentPhotoSrc(studentId);
+    if (src) {
+        showSnapshotImg(wrap, video, src);
+    } else {
+        video.style.display = "none";
+    }
+    stopStream(video._lmsStream);
+    video._lmsStream = null;
+    video.srcObject = null;
+    const captureBtn = wrap.querySelector(".lms-face-capture");
+    if (captureBtn) {
+        captureBtn.style.display = "none";
+        captureBtn.disabled = false;
+    }
+    const status = wrap.querySelector(".lms-face-status");
+    if (status) {
+        status.textContent = src
+            ? "Face template registered."
+            : "Face template registered (no photo saved — use Re-register to capture a photo).";
+        status.classList.remove("text-muted", "text-danger");
+        status.classList.add("text-success");
+    }
+    ensureEnrollRetakeButton(wrap);
+}
+
+function setupEnrollRetake(wrap, video, captureBtn, status, startCam) {
+    const retake = wrap.querySelector(".lms-face-retake");
+    if (!retake) {
+        return;
+    }
+    retake.addEventListener("click", async () => {
+        hideSnapshot(wrap, video);
+        retake.style.display = "none";
+        captureBtn.style.display = "";
+        status.textContent = "";
+        status.classList.remove("text-success", "text-danger");
+        status.classList.add("text-muted");
+        await startCam();
+    });
+}
+
+async function loadLockedEnrollment(wrap, video, studentId) {
+    const rows = await rpcCallKw("lms.student", "read", [
+        [studentId],
+        ["face_embedding_json"],
+    ]);
+    if (!rows || !rows[0] || !rows[0].face_embedding_json) {
+        return false;
+    }
+    await showEnrollmentLocked(wrap, video, studentId);
+    return true;
 }
 
 async function rpcCallKw(model, method, args, kwargs = {}) {
@@ -184,9 +270,24 @@ async function resolveAttendancePhotoUrl(uid) {
     const studentId = students && students[0] && students[0].id;
     const unique = Date.now();
     if (studentId) {
-        return `/web/image/lms.student/${studentId}/image_128?unique=${unique}`;
+        return `/web/image/lms.student/${studentId}/image_1920?unique=${unique}`;
     }
-    return `/web/image?model=res.users&id=${uid}&field=avatar_128&unique=${unique}`;
+    return `/web/image?model=res.users&id=${uid}&field=avatar_1920&unique=${unique}`;
+}
+
+async function resolveEnrollmentPhotoSrc(studentId) {
+    const cached = loadEnrollPhotoCache(studentId);
+    if (cached) {
+        return cached;
+    }
+    const rows = await rpcCallKw("lms.student", "read", [[studentId], ["image_1920"]]);
+    const imageB64 = rows && rows[0] && rows[0].image_1920;
+    if (imageB64) {
+        saveEnrollPhotoCache(studentId, imageB64);
+        return toDataUrl(imageB64);
+    }
+    const uid = await sessionUid();
+    return resolveAttendancePhotoUrl(uid);
 }
 
 async function loadLockedAttendance(wrap, video, lessonId) {
@@ -226,10 +327,10 @@ function ensureUi(el) {
     video.style.maxWidth = "320px";
     video.style.maxHeight = "240px";
     const row = document.createElement("div");
-    row.className = "d-flex gap-2 align-items-center flex-wrap";
+    row.className = "d-flex gap-2 align-items-center flex-wrap lms-face-actions";
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "btn btn-primary btn-sm";
+    btn.className = "btn btn-primary btn-sm lms-face-capture";
     const status = document.createElement("span");
     status.className = "text-muted small lms-face-status";
     row.appendChild(btn);
@@ -267,6 +368,22 @@ function ensureUi(el) {
                 }
             })
             .catch(() => startCam());
+    } else if (role === "enroll") {
+        const studentId = parseInt(el.dataset.studentId, 10);
+        const initEnroll = async () => {
+            if (el.dataset.lmsFaceRegistered === "1") {
+                await showEnrollmentLocked(wrap, video, studentId);
+                setupEnrollRetake(wrap, video, btn, status, startCam);
+                return;
+            }
+            const locked = await loadLockedEnrollment(wrap, video, studentId);
+            if (locked) {
+                setupEnrollRetake(wrap, video, btn, status, startCam);
+            } else {
+                startCam();
+            }
+        };
+        initEnroll().catch(() => startCam());
     } else {
         startCam();
     }
@@ -301,6 +418,7 @@ function ensureUi(el) {
                     photoB64 || false,
                 ]);
                 if (photoB64) {
+                    saveEnrollPhotoCache(sid, photoB64);
                     showSnapshotImg(wrap, video, photoB64);
                     stopStream(stream);
                     stream = null;

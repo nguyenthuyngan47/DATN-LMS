@@ -150,7 +150,7 @@ class Student(models.Model):
         compute='_compute_statistics',
         store=True,
     )
-    total_study_time = fields.Float(string='Total Study Time (hours)', compute='_compute_statistics', store=True, digits=(16, 2))
+    total_study_time = fields.Float(string='Total Study Time (minutes)', compute='_compute_statistics', store=True, digits=(16, 2))
     last_activity_date = fields.Date(string='Last Activity', compute='_compute_statistics', store=True, index=True)
     
     # Trạng thái
@@ -228,13 +228,15 @@ class Student(models.Model):
                 vals['name'] = user.name
         return super().create(vals_list)
 
-    @api.depends('create_date', 'write_date')
+    @api.depends('face_embedding_json', 'create_date', 'write_date')
     def _compute_face_enrollment_mount_html(self):
         for rec in self:
             if isinstance(rec.id, int) and rec.id:
+                registered = '1' if rec.face_embedding_json else '0'
                 rec.face_enrollment_mount_html = (
-                    '<div class="o_lms_student_face_root" data-lms-role="enroll" data-student-id="%s"></div>'
-                    % rec.id
+                    '<div class="o_lms_student_face_root" data-lms-role="enroll" '
+                    'data-student-id="%s" data-lms-face-registered="%s"></div>'
+                    % (rec.id, registered)
                 )
             else:
                 rec.face_enrollment_mount_html = (
@@ -599,27 +601,64 @@ class StudentCourse(models.Model):
             if message:
                 raise ValidationError(message)
 
-    progress = fields.Float(string='Progress (%)', compute='_compute_progress', store=True, digits=(16, 2))
+    progress = fields.Float(
+        string='Progress (%)',
+        compute='_compute_progress',
+        store=True,
+        digits=(16, 2),
+    )
     final_score = fields.Float(string='Final Score', digits=(16, 2))
-    
-    @api.depends('learning_history_ids', 'learning_history_ids.status', 'course_id', 'course_id.lesson_ids')
-    def _compute_progress(self):
-        for record in self:
-            if record.course_id:
-                total_lessons = len(record.course_id.lesson_ids)
-                completed_lessons = len(record.learning_history_ids.filtered(
-                    lambda h: h.lesson_id.course_id == record.course_id and h.status == 'completed'
-                ))
-                if total_lessons > 0:
-                    record.progress = (completed_lessons / total_lessons) * 100
-                else:
-                    record.progress = 0.0
-            else:
-                record.progress = 0.0
-    
+
+    lesson_progress_ids = fields.One2many(
+        'lms.student.lesson.progress',
+        'enrollment_id',
+        string='Lesson Progress',
+    )
     learning_history_ids = fields.One2many(
         'lms.learning.history', 'student_course_id', string='Learning History'
     )
+
+    @api.depends(
+        'student_id',
+        'course_id',
+        'course_id.lesson_ids',
+        'lesson_progress_ids.face_checked_in',
+        'lesson_progress_ids.progress_percent',
+        'lesson_progress_ids.watched_seconds',
+        'lesson_progress_ids.lesson_id',
+        'learning_history_ids.status',
+        'learning_history_ids.lesson_id',
+    )
+    def _compute_progress(self):
+        """Completed lessons / total lessons in course (same rules as lesson Attendance Status)."""
+        Progress = self.env['lms.student.lesson.progress'].sudo()
+        for enrollment in self:
+            student = enrollment.student_id
+            course = enrollment.course_id
+            lessons = course.lesson_ids if course else self.env['lms.lesson']
+            if not student or not lessons:
+                enrollment.progress = 0.0
+                continue
+            progress_map = {
+                row.lesson_id.id: row
+                for row in Progress.search([
+                    ('student_id', '=', student.id),
+                    ('lesson_id', 'in', lessons.ids),
+                ])
+            }
+            done_lesson_ids = {
+                lesson.id
+                for lesson in lessons
+                if progress_map.get(lesson.id) and progress_map[lesson.id].is_lesson_completed()
+            }
+            for history in enrollment.learning_history_ids:
+                if (
+                    history.status == 'completed'
+                    and history.lesson_id
+                    and history.lesson_id.id in lessons.ids
+                ):
+                    done_lesson_ids.add(history.lesson_id.id)
+            enrollment.progress = min(100.0, (len(done_lesson_ids) / len(lessons)) * 100.0)
 
     @api.model
     def _enrollment_status_counts_toward_capacity(cls, status):

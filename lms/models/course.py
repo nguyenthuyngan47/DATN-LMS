@@ -586,7 +586,7 @@ class Lesson(models.Model):
             [('student_id', '=', student.id), ('lesson_id', '=', self.id)],
             limit=1,
         )
-        return bool(progress and progress.status == 'done')
+        return bool(progress and progress.is_lesson_completed())
 
     def _previous_lesson_incomplete_message(self, student):
         """Sinh viên phải hoàn thành các bài trước (theo sequence trên khóa học)."""
@@ -615,6 +615,34 @@ class Lesson(models.Model):
             lesson.current_user_lesson_locked = bool(message)
             lesson.current_user_lesson_lock_message = message or False
 
+    def _register_lesson_session_start(self, student):
+        """Bắt đầu phiên học: đồng hồ tính từ lúc mở chi tiết bài (dùng ``started_at`` có sẵn)."""
+        self.ensure_one()
+        progress = self.env['lms.student.lesson.progress'].sudo().get_or_create_progress(student, self)
+        progress.write({'started_at': fields.Datetime.now()})
+
+    def action_register_lesson_session_start(self):
+        """RPC/JS: sinh viên mở form chi tiết bài học."""
+        self.ensure_one()
+        student = self.env['lms.student'].sudo().search([('user_id', '=', self.env.user.id)], limit=1)
+        if student:
+            self._register_lesson_session_start(student)
+        return True
+
+    def action_ping_lesson_session(self):
+        """Cập nhật thời lượng phiên học (started_at → hiện tại) vào lịch sử."""
+        self.ensure_one()
+        student = self.env['lms.student'].sudo().search([('user_id', '=', self.env.user.id)], limit=1)
+        if not student:
+            return True
+        progress = self.env['lms.student.lesson.progress'].sudo().search(
+            [('student_id', '=', student.id), ('lesson_id', '=', self.id)],
+            limit=1,
+        )
+        if progress:
+            self.env['lms.learning.history'].sync_from_lesson_progress(progress)
+        return True
+
     def action_open_lesson_full(self):
         """Mở form bài học trên cửa sổ chính (nút trên list one2many; không dùng JS)."""
         self.ensure_one()
@@ -623,6 +651,7 @@ class Lesson(models.Model):
         student = self.env['lms.student'].sudo().search([('user_id', '=', self.env.user.id)], limit=1)
         if student and self.course_form_readonly:
             self._raise_if_previous_lessons_incomplete(student)
+            self._register_lesson_session_start(student)
         return {
             'type': 'ir.actions.act_window',
             'name': _('Lesson'),
@@ -1334,6 +1363,25 @@ class StudentLessonProgress(models.Model):
             watched = max(0, rec.watched_seconds or 0)
             rec.progress_percent = min(100.0, (watched / duration_seconds) * 100.0)
 
+    def is_lesson_completed(self):
+        """Same rules as Attendance Status on the lesson form (do not read ``status`` — it is derived)."""
+        self.ensure_one()
+        lesson = self.lesson_id
+        if not lesson:
+            return False
+        if (lesson.lesson_type or 'online') == 'online':
+            return bool(self.face_checked_in)
+        return (self.progress_percent or 0.0) >= 90.0
+
+    def study_duration_minutes(self):
+        """Thời lượng phiên học (phút) = từ ``started_at`` (lúc mở chi tiết) đến hiện tại / hoàn thành."""
+        self.ensure_one()
+        if not self.started_at:
+            return 0.0
+        end_dt = self.completed_at or self.face_checked_in_at or fields.Datetime.now()
+        seconds = (end_dt - self.started_at).total_seconds()
+        return round(max(0.0, seconds) / 60.0, 2)
+
     @api.depends(
         'watched_seconds',
         'lesson_id.duration_minutes',
@@ -1344,19 +1392,12 @@ class StudentLessonProgress(models.Model):
     )
     def _compute_status(self):
         for rec in self:
-            lesson_type = rec.lesson_id.lesson_type or 'online'
-            if lesson_type == 'online':
-                # Bài online: chỉ cần điểm danh khuôn mặt thành công là hoàn thành.
-                rec.status = 'done' if rec.face_checked_in else 'not_started'
+            if rec.is_lesson_completed():
+                rec.status = 'done'
+            elif (rec.lesson_id.lesson_type or 'online') != 'online' and (rec.progress_percent or 0.0) > 0:
+                rec.status = 'in_progress'
             else:
-                pct = rec.progress_percent or 0.0
-                # Bài video: hoàn thành khi xem >= 90%.
-                if pct >= 90.0:
-                    rec.status = 'done'
-                elif pct > 0:
-                    rec.status = 'in_progress'
-                else:
-                    rec.status = 'not_started'
+                rec.status = 'not_started'
 
     @api.constrains('last_position_seconds', 'watched_seconds')
     def _check_video_positions(self):
@@ -1376,8 +1417,52 @@ class StudentLessonProgress(models.Model):
             if rec.enrollment_id.course_id != rec.lesson_id.course_id:
                 raise ValidationError(_('Enrollment does not belong to the course of the selected lesson.'))
 
+    def _enrollments_for_progress_refresh(self):
+        SC = self.env['lms.student.course'].sudo()
+        enrollments = SC.browse()
+        for row in self:
+            if not row.student_id or not row.course_id:
+                continue
+            enrollments |= SC.search([
+                ('student_id', '=', row.student_id.id),
+                ('course_id', '=', row.course_id.id),
+            ], limit=1)
+        return enrollments
+
+    def _sync_learning_history(self):
+        self.env['lms.learning.history'].sudo().sync_from_lesson_progress(self)
+
+    def _refresh_enrollment_progress(self):
+        enrollments = self._enrollments_for_progress_refresh()
+        for row in self:
+            if not row.student_id or not row.course_id:
+                continue
+            sc = enrollments.filtered(
+                lambda e, r=row: e.student_id == r.student_id and e.course_id == r.course_id
+            )[:1]
+            if sc and row.enrollment_id != sc:
+                row.sudo().with_context(lms_skip_progress_side_effects=True).write(
+                    {'enrollment_id': sc.id}
+                )
+        if enrollments:
+            enrollments._compute_progress()
+        if self.env.context.get('skip_lms_statistics_refresh'):
+            return
+        students = enrollments.mapped('student_id').filtered('id')
+        if students:
+            students.action_refresh_statistics()
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        records._sync_learning_history()
+        records._refresh_enrollment_progress()
+        return records
+
     def write(self, vals):
         res = super().write(vals)
+        if self.env.context.get('lms_skip_progress_side_effects'):
+            return res
         if self.env.context.get('skip_progress_completion_ts'):
             return res
         done_no_ts = self.filtered(lambda r: r.status == 'done' and not r.completed_at)
@@ -1385,8 +1470,32 @@ class StudentLessonProgress(models.Model):
             done_no_ts.with_context(skip_progress_completion_ts=True).write(
                 {'completed_at': fields.Datetime.now()}
             )
-        if any(key in vals for key in ('status', 'face_checked_in', 'progress_percent', 'watched_seconds')):
+        tracked = {
+            'face_checked_in',
+            'face_checked_in_at',
+            'progress_percent',
+            'watched_seconds',
+            'video_duration_seconds',
+            'started_at',
+            'completed_at',
+            'lesson_id',
+            'student_id',
+        }
+        if tracked.intersection(vals):
             self.mapped('course_id.lesson_ids').invalidate_recordset(
                 ['current_user_lesson_locked', 'current_user_lesson_lock_message']
             )
+            self._sync_learning_history()
+            self._refresh_enrollment_progress()
+        return res
+
+    def unlink(self):
+        enrollments = self._enrollments_for_progress_refresh()
+        res = super().unlink()
+        if enrollments:
+            enrollments._compute_progress()
+            if not self.env.context.get('skip_lms_statistics_refresh'):
+                students = enrollments.mapped('student_id').filtered('id')
+                if students:
+                    students.action_refresh_statistics()
         return res

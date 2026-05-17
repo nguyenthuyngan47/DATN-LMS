@@ -76,3 +76,13 @@ def post_init_hook(cr, registry=None):
             legacy.write({"face_checked_in": True})
     except Exception:  # noqa: BLE001
         pass
+
+    try:
+        env["lms.student.course"].sudo().search([])._compute_progress()
+    except Exception:  # noqa: BLE001
+        pass
+
+    try:
+        env["lms.learning.history"].migrate_study_duration_to_minutes()
+    except Exception:  # noqa: BLE001
+        pass
