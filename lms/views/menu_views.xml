@@ -82,7 +82,6 @@
     />
     <menuitem id="menu_lms_course_categories" name="Categories" parent="menu_lms_courses" action="action_lms_course_category" sequence="20"/>
     <menuitem id="menu_lms_course_levels" name="Levels" parent="menu_lms_courses" action="action_lms_course_level" sequence="30"/>
-    <menuitem id="menu_lms_course_tags" name="Tags" parent="menu_lms_courses" action="action_lms_course_tag" sequence="40"/>
 
     <!-- Instructors: top-level menu -->
     <menuitem id="menu_lms_lecturers" name="Instructors" action="action_lms_lecturer" sequence="15" web_icon="lms,static/description/icon.png"/>

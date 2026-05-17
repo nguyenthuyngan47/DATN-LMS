@@ -399,8 +399,8 @@ def import_lms_from_csv_directory(
 ) -> None:
     """
     Đọc ``lms_*.csv`` trong ``csv_dir`` và tạo bản ghi mới (ID CSV → ID Odoo mới).
-    Cần đủ: course_category, course_level, course_tag, course, course_tag_rel,
-    course_prerequisite_rel, lesson, student, student_course, learning_history.
+    Cần đủ: course_category, course_level, course, course_prerequisite_rel,
+    lesson, student, student_course, learning_history.
     Tuỳ chọn: roadmap, roadmap_course (nếu có ``lms_roadmap.csv`` / ``lms_roadmap_course.csv``).
     """
     base = Path(csv_dir)
@@ -466,28 +466,6 @@ def import_lms_from_csv_directory(
         env, "lms.course.level", "csv_course_level_", source_lev_ids, delete_missing_managed
     )
 
-    tag_rows_raw = _read_csv(f("course_tag"))
-    map_tag: dict[int, int] = {}
-    source_tag_ids: set[int] = set()
-    for r in tag_rows_raw:
-        old_id = int(r["id"])
-        source_tag_ids.add(old_id)
-        vals = {"name": (r["name"] or "")[:120], "color": int(r.get("color") or 0)}
-        if safe_upsert:
-            rec = _upsert_by_xmlid(
-                env,
-                "lms.course.tag",
-                f"csv_course_tag_{old_id}",
-                vals,
-                fallback_domain=[("name", "=", vals["name"])],
-            )
-        else:
-            rec = env["lms.course.tag"].sudo().create(vals)
-        map_tag[old_id] = rec.id
-    _delete_missing_managed_records(
-        env, "lms.course.tag", "csv_course_tag_", source_tag_ids, delete_missing_managed
-    )
-
     course_rows_raw = _read_csv(f("course"))
     category_pool = list(map_cat.values())
     level_pool = list(map_lev.values())
@@ -512,13 +490,23 @@ def import_lms_from_csv_directory(
         target_cat_id = category_pool[idx % len(category_pool)]
         # Chuẩn hóa cấp độ khóa học theo nhóm mức rõ ràng, cân bằng theo round-robin.
         target_level_id = level_pool[idx % len(level_pool)]
+        duration = _to_float(r.get("duration_hours"))
+        if duration <= 0:
+            duration = 1.0
+        start = _norm_date(r.get("start_date")) or fields.Date.today()
+        end = _norm_date(r.get("end_date")) or (fields.Date.today() + timedelta(days=90))
+        contact = (r.get("contact_payment") or "").strip()
         vals = {
             "name": (r["name"] or "")[:500],
             "description": (r.get("description") or "")[:65535] or "<p></p>",
             "category_id": target_cat_id,
             "level_id": target_level_id,
             "instructor_id": ins_id,
-            "duration_hours": _to_float(r.get("duration_hours")),
+            "duration_hours": duration,
+            "start_date": start,
+            "end_date": end,
+            "contact_payment": contact or "—",
+            "price": int(_to_float(r.get("price"))) if r.get("price") not in (None, "") else 0,
             "state": (r.get("state") or "draft").strip(),
             "is_active": _to_bool(r.get("is_active", True)),
             "average_rating": _to_float(r.get("average_rating")),
@@ -535,11 +523,6 @@ def import_lms_from_csv_directory(
             rec = Course.sudo().create(vals)
         course_new_ids.append(rec.id)
     map_course = {old: new for old, new in zip([int(r["id"]) for r in course_rows_raw], course_new_ids)}
-
-    for row in _read_csv(f("course_tag_rel")):
-        cid = map_course[int(row["course_id"])]
-        tid = map_tag[int(row["tag_id"])]
-        Course.browse(cid).sudo().write({"tag_ids": [(4, tid)]})
 
     for row in _read_csv(f("course_prerequisite_rel")):
         p0 = row.get("prerequisite_id") or row.get("prerequisite_course_id")
@@ -684,11 +667,10 @@ def import_lms_from_csv_directory(
     n_lecturers = import_lecturers_from_csv_directory(env, base)
 
     _logger.info(
-        "LMS CSV bootstrap: categories=%s levels=%s tags=%s courses=%s lessons=%s "
+        "LMS CSV bootstrap: categories=%s levels=%s courses=%s lessons=%s "
         "students=%s enrollments=%s history=%s roadmaps=%s roadmap_lines=%s lecturers=%s",
         len(map_cat),
         len(map_lev),
-        len(map_tag),
         len(course_new_ids),
         len(lesson_new_ids),
         len(st_new_ids),

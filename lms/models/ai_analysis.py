@@ -117,8 +117,7 @@ class AIAnalysis(models.Model):
         available_courses_info = []
         for course in all_courses[:50]:  # Giới hạn 50 khóa học để tránh prompt quá dài
             available_courses_info.append(
-                f"- {course.name} (Category: {course.category_id.name}, Level: {course.level_id.name}, "
-                f"Tags: {', '.join(course.tag_ids.mapped('name'))})"
+                f"- {course.name} (Category: {course.category_id.name}, Level: {course.level_id.name})"
             )
         
         prompt = f"""
@@ -191,7 +190,7 @@ Chỉ trả về JSON, không có text thêm.
     @api.model
     def content_based_filtering(self, student_id):
         """
-        Content-Based Filtering: So sánh Category, Level, Tags
+        Content-Based Filtering: So sánh Category, Level
         giữa khóa học đã học và khóa học mới
         """
         student = self.env['lms.student'].browse(student_id)
@@ -210,7 +209,6 @@ Chỉ trả về JSON, không có text thêm.
         # Lấy thông tin từ khóa học đã học
         learned_categories = completed_courses.mapped('category_id')
         learned_levels = completed_courses.mapped('level_id')
-        learned_tags = completed_courses.mapped('tag_ids')
         
         # Tìm khóa học tương tự
         all_courses = self.env['lms.course'].search([
@@ -236,13 +234,6 @@ Chỉ trả về JSON, không có text thêm.
             elif self._is_next_level(learned_levels, course.level_id):
                 similarity_score += 0.2
                 reasons.append(f"Cấp độ tiếp theo: {course.level_id.name}")
-            
-            # So sánh Tags (trọng số 0.3)
-            common_tags = course.tag_ids & learned_tags
-            if common_tags:
-                tag_score = min(0.3, len(common_tags) * 0.1)
-                similarity_score += tag_score
-                reasons.append(f"Có {len(common_tags)} nhãn tương tự: {', '.join(common_tags.mapped('name'))}")
             
             if similarity_score > 0.2:  # Ngưỡng tối thiểu
                 recommendations.append({

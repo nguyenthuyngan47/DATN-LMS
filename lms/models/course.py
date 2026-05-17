@@ -34,16 +34,6 @@ class CourseLevel(models.Model):
     course_ids = fields.One2many('lms.course', 'level_id', string='Courses')
 
 
-class CourseTag(models.Model):
-    _name = 'lms.course.tag'
-    _description = 'Course Tag'
-    _order = 'name'
-
-    name = fields.Char(string='Tag Name', required=True)
-    color = fields.Integer(string='Color')
-    course_ids = fields.Many2many('lms.course', 'course_tag_rel', 'tag_id', 'course_id', string='Courses')
-
-
 class Course(models.Model):
     _name = 'lms.course'
     _description = 'Course'
@@ -57,22 +47,21 @@ class Course(models.Model):
     # Phân loại
     category_id = fields.Many2one('lms.course.category', string='Category', required=True, tracking=True)
     level_id = fields.Many2one('lms.course.level', string='Level', required=True, tracking=True)
-    tag_ids = fields.Many2many('lms.course.tag', 'course_tag_rel', 'course_id', 'tag_id', string='Tags')
     
     # Thông tin khóa học
-    instructor_id = fields.Many2one('res.users', string='Instructor', tracking=True)
-    duration_hours = fields.Float(string='Duration (hours)', digits=(16, 2), tracking=True)
+    instructor_id = fields.Many2one('res.users', string='Instructor', required=True, tracking=True)
+    duration_hours = fields.Float(string='Duration (hours)', digits=(16, 2), required=True, tracking=True)
     max_student = fields.Integer(
         string='Max Students',
         default=15,
         help='Maximum concurrent enrollments counting pending, approved, learning, and completed '
              '(rejected/cancelled do not use a seat).',
     )
-    start_date = fields.Date(string='Start Date', tracking=True)
-    end_date = fields.Date(string='End Date', tracking=True)
+    start_date = fields.Date(string='Start Date', required=True, tracking=True)
+    end_date = fields.Date(string='End Date', required=True, tracking=True)
     # VND không dùng phần thập phân -> lưu số nguyên để tránh hiển thị 100,000.00
-    price = fields.Integer(string='Cost (VND)', default=0, tracking=True)
-    contact_payment = fields.Text(string='Instructor Contact', tracking=True)
+    price = fields.Integer(string='Cost (VND)', default=0, required=True, tracking=True)
+    contact_payment = fields.Text(string='Instructor Contact', required=True, tracking=True)
     prerequisite_ids = fields.Many2many(
         'lms.course', 'course_prerequisite_rel', 'course_id', 'prerequisite_id',
         string='Prerequisites'
@@ -107,9 +96,9 @@ class Course(models.Model):
         ('draft', 'Draft'),
         ('published', 'Published'),
         ('archived', 'Archived'),
-    ], string='Status', default='draft', tracking=True)
+    ], string='Status', default='draft', required=True, tracking=True)
     
-    is_active = fields.Boolean(string='Active', default=True)
+    is_active = fields.Boolean(string='Active', default=True, required=True)
 
     @api.model
     def default_get(self, fields_list):
@@ -150,10 +139,18 @@ class Course(models.Model):
 
     @api.constrains('duration_hours')
     def _check_duration_hours(self):
-        """Kiểm tra thời lượng khóa học không được âm"""
+        """Thời lượng khóa học phải lớn hơn 0."""
         for record in self:
-            if record.duration_hours and record.duration_hours < 0:
-                raise ValueError('Course duration cannot be negative')
+            if record.duration_hours is not None and record.duration_hours < 0:
+                raise ValidationError(_('Course duration cannot be negative.'))
+            if not record.duration_hours:
+                raise ValidationError(_('Course duration (hours) must be greater than 0.'))
+
+    @api.constrains('contact_payment')
+    def _check_contact_payment(self):
+        for record in self:
+            if not (record.contact_payment or '').strip():
+                raise ValidationError(_('Instructor contact is required.'))
 
     @api.constrains('start_date', 'end_date')
     def _check_course_start_end_dates(self):

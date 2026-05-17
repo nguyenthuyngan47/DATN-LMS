@@ -50,7 +50,6 @@
                 <field name="category_id"/>
                 <field name="level_id"/>
                 <field name="instructor_id"/>
-                <field name="tag_ids"/>
                 <filter string="Published" name="published" domain="[('state', '=', 'published')]"/>
                 <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
                 <filter string="Active" name="active" domain="[('is_active', '=', True)]"/>
@@ -214,10 +213,6 @@
                                 placeholder="Select courses students must complete before enrolling in this course..."
                             />
                         </page>
-                        <page string="Tags" name="tags" invisible="not show_learning_content_tabs">
-                            <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}" readonly="is_student_course_readonly"/>
-                        </page>
-                        
                     </notebook>
                 </sheet>
             </form>
@@ -316,23 +311,6 @@
     <record id="action_lms_course_level" model="ir.actions.act_window">
         <field name="name">Course Levels</field>
         <field name="res_model">lms.course.level</field>
-        <field name="view_mode">list,form</field>
-    </record>
-
-    <record id="view_lms_course_tag_tree" model="ir.ui.view">
-        <field name="name">lms.course.tag.list</field>
-        <field name="model">lms.course.tag</field>
-        <field name="arch" type="xml">
-            <list>
-                <field name="name"/>
-                <field name="color" widget="color_picker"/>
-            </list>
-        </field>
-    </record>
-
-    <record id="action_lms_course_tag" model="ir.actions.act_window">
-        <field name="name">Course Tags</field>
-        <field name="res_model">lms.course.tag</field>
         <field name="view_mode">list,form</field>
     </record>
 
