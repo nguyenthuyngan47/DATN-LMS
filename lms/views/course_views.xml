@@ -127,6 +127,21 @@
                         class="btn-secondary"
                         invisible="state != 'published' or not show_cancel_button"
                     />
+                    <button
+                        name="action_export_course_progress_report"
+                        string="Xuất báo cáo"
+                        type="object"
+                        class="btn-secondary"
+                        groups="lms.group_lms_manager,base.group_system"
+                    />
+                    <button
+                        name="action_export_course_progress_report"
+                        string="Xuất báo cáo"
+                        type="object"
+                        class="btn-secondary"
+                        groups="lms.group_lms_instructor"
+                        invisible="instructor_id != uid"
+                    />
                 </header>
                 <sheet>
                     <field name="is_student_course_readonly" invisible="1"/>

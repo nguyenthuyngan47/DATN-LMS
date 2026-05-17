@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from dateutil.relativedelta import relativedelta
+import base64
+import io
 import os
+import re
+import unicodedata
 
 from odoo import _, api, fields, models
 from odoo.api import NewId
@@ -518,6 +522,467 @@ class Course(models.Model):
                 'sticky': False,
                 'next': {'type': 'ir.actions.client', 'tag': 'reload'},
             },
+        }
+
+    # --- Báo cáo tiến độ (Excel, không thêm field model) ---
+
+    _REPORT_ENROLLMENT_STATUS_VI = {
+        'pending': 'Chờ duyệt',
+        'approved': 'Đã duyệt',
+        'learning': 'Đang học',
+        'completed': 'Hoàn thành',
+        'rejected': 'Từ chối',
+    }
+    _REPORT_LESSON_STATE_VI = {
+        'draft': 'Nháp',
+        'scheduled': 'Đã lên lịch',
+        'done': 'Hoàn thành',
+        'cancelled': 'Đã hủy',
+    }
+
+    @api.model
+    def _report_filename_part(self, text, max_len=60):
+        if not text:
+            return 'unknown'
+        normalized = unicodedata.normalize('NFD', str(text))
+        ascii_text = ''.join(c for c in normalized if unicodedata.category(c) != 'Mn')
+        cleaned = re.sub(r'[^\w\s-]', '', ascii_text, flags=re.UNICODE)
+        cleaned = re.sub(r'[\s_]+', '_', cleaned.strip())
+        return (cleaned[:max_len] if cleaned else 'unknown') or 'unknown'
+
+    @api.model
+    def _report_sheet_title(self, text):
+        title = self._report_filename_part(text, max_len=31)
+        return title or 'Hoc_vien'
+
+    @api.model
+    def _report_unique_sheet_name(self, base_name, used_names):
+        name = self._report_sheet_title(base_name)
+        if name not in used_names:
+            used_names.add(name)
+            return name
+        for index in range(2, 100):
+            suffix = f'_{index}'
+            candidate = f'{name[: 31 - len(suffix)]}{suffix}'
+            if candidate not in used_names:
+                used_names.add(candidate)
+                return candidate
+        fallback = f'SV_{len(used_names)}'
+        used_names.add(fallback)
+        return fallback
+
+    @staticmethod
+    def _report_format_datetime(value):
+        if not value:
+            return ''
+        dt = fields.Datetime.to_datetime(value)
+        if not dt:
+            return ''
+        return dt.strftime('%d/%m/%Y %H:%M')
+
+    @staticmethod
+    def _report_format_date(value):
+        if not value:
+            return ''
+        d = fields.Date.to_date(value)
+        if not d:
+            return ''
+        return d.strftime('%d/%m/%Y')
+
+    def _report_check_export_access(self):
+        self.ensure_one()
+        user = self.env.user
+        if user.has_group('base.group_system') or user.has_group('lms.group_lms_manager'):
+            return
+        if (
+            user.has_group('lms.group_lms_instructor')
+            and self.instructor_id
+            and self.instructor_id.id == user.id
+        ):
+            return
+        raise UserError(_('You do not have permission to export this course report.'))
+
+    def _report_client_notify(self, message, notif_type='warning'):
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Export Report'),
+                'message': message,
+                'type': notif_type,
+                'sticky': False,
+            },
+        }
+
+    def _report_lessons_ordered(self):
+        self.ensure_one()
+        return self.lesson_ids.sorted(key=lambda lesson: (lesson.sequence, lesson.id))
+
+    def _report_enrollments(self):
+        self.ensure_one()
+        return self.student_course_ids.filtered(
+            lambda enrollment: enrollment.status != 'rejected'
+        ).sorted(key=lambda enrollment: (enrollment.student_id.name or '', enrollment.id))
+
+    def _report_progress_map(self, student_ids, lesson_ids):
+        if not student_ids or not lesson_ids:
+            return {}
+        Progress = self.env['lms.student.lesson.progress'].sudo()
+        rows = Progress.search([
+            ('student_id', 'in', list(student_ids)),
+            ('lesson_id', 'in', list(lesson_ids)),
+        ])
+        return {(row.student_id.id, row.lesson_id.id): row for row in rows}
+
+    def _report_lesson_type_label(self, lesson):
+        if lesson.lesson_type == 'video':
+            return 'Video'
+        return 'Online'
+
+    def _report_progress_completed(self, progress, lesson):
+        if not progress:
+            return False
+        if (lesson.lesson_type or 'online') == 'online':
+            return bool(progress.face_checked_in)
+        return (progress.progress_percent or 0.0) >= 90.0 or progress.status == 'done'
+
+    def _report_result_label(self, progress, lesson):
+        lesson_type = lesson.lesson_type or 'online'
+        if not progress:
+            return 'Chưa học'
+        if lesson_type == 'online':
+            return 'Có' if progress.face_checked_in else 'Không'
+        percent = progress.progress_percent or 0.0
+        if percent >= 90.0 or progress.status == 'done':
+            return 'Có'
+        if percent > 0:
+            return 'Đang học'
+        return 'Chưa học'
+
+    def _report_completion_datetime(self, progress, lesson):
+        if not progress or not self._report_progress_completed(progress, lesson):
+            return False
+        if (lesson.lesson_type or 'online') == 'online':
+            return progress.face_checked_in_at
+        return progress.completed_at
+
+    def _report_study_minutes(self, progress):
+        if not progress:
+            return 0.0
+        return progress.study_duration_minutes()
+
+    def _report_student_lesson_stats(self, enrollment, lessons, progress_map):
+        student = enrollment.student_id
+        total = len(lessons)
+        completed = 0
+        online_done = 0
+        online_total = 0
+        video_done = 0
+        video_total = 0
+        for lesson in lessons:
+            progress = progress_map.get((student.id, lesson.id))
+            is_done = self._report_progress_completed(progress, lesson)
+            if is_done:
+                completed += 1
+            if lesson.lesson_type == 'video':
+                video_total += 1
+                if is_done:
+                    video_done += 1
+            else:
+                online_total += 1
+                if is_done:
+                    online_done += 1
+        percent = round((completed / total) * 100.0, 1) if total else 0.0
+        return {
+            'total': total,
+            'completed': completed,
+            'percent': percent,
+            'online_done': online_done,
+            'online_total': online_total,
+            'video_done': video_done,
+            'video_total': video_total,
+        }
+
+    def _report_course_completion_stats(self, enrollments, lessons, progress_map):
+        total_slots = len(enrollments) * len(lessons)
+        if not total_slots:
+            return 0, 0, 0.0
+        completed_slots = 0
+        for enrollment in enrollments:
+            student_id = enrollment.student_id.id
+            for lesson in lessons:
+                progress = progress_map.get((student_id, lesson.id))
+                if self._report_progress_completed(progress, lesson):
+                    completed_slots += 1
+        percent = round((completed_slots / total_slots) * 100.0, 1)
+        return completed_slots, total_slots, percent
+
+    def _report_export_filename(self):
+        self.ensure_one()
+        month_part = self.start_date.strftime('%m-%Y') if self.start_date else 'unknown'
+        course_part = self._report_filename_part(self.name)
+        instructor_part = self._report_filename_part(self.instructor_id.name if self.instructor_id else '')
+        return f'{course_part}_{instructor_part}_{month_part}.xlsx'
+
+    def _report_write_label_value_rows(self, worksheet, row_start, rows, label_fmt, value_fmt):
+        row = row_start
+        for label, value in rows:
+            worksheet.write(row, 0, label, label_fmt)
+            worksheet.write(row, 1, value, value_fmt)
+            row += 1
+        return row
+
+    def _report_student_sheet_names(self, enrollments):
+        used_names = {'Tổng quan'}
+        return [
+            self._report_unique_sheet_name(
+                enrollment.student_id.name or 'Hoc_vien',
+                used_names,
+            )
+            for enrollment in enrollments
+        ]
+
+    def _report_write_overview_sheet(self, workbook, lessons, enrollments, progress_map, sheet_names):
+        worksheet = workbook.add_worksheet('Tổng quan')
+        label_fmt = workbook.add_format({'bold': True})
+        header_fmt = workbook.add_format({'bold': True, 'bg_color': '#D9E1F2', 'border': 1})
+        cell_fmt = workbook.add_format({'border': 1})
+        percent_fmt = workbook.add_format({'border': 1, 'num_format': '0.0'})
+
+        online_count = len(lessons.filtered(lambda lesson: lesson.lesson_type != 'video'))
+        video_count = len(lessons.filtered(lambda lesson: lesson.lesson_type == 'video'))
+        completed_slots, total_slots, slots_percent = self._report_course_completion_stats(
+            enrollments, lessons, progress_map
+        )
+        export_dt = fields.Datetime.context_timestamp(self, fields.Datetime.now())
+
+        info_rows = [
+            ('Khóa học', self.name or ''),
+            ('Giảng viên', self.instructor_id.name if self.instructor_id else ''),
+            ('Danh mục', self.category_id.name if self.category_id else ''),
+            ('Trình độ', self.level_id.name if self.level_id else ''),
+            (
+                'Thời gian khóa',
+                '%s – %s'
+                % (
+                    self._report_format_date(self.start_date),
+                    self._report_format_date(self.end_date),
+                ),
+            ),
+            (
+                'Tổng số bài',
+                '%s (Online: %s · Video: %s)' % (len(lessons), online_count, video_count),
+            ),
+            (
+                'Lượt hoàn thành / Tổng lượt bài học',
+                '%s / %s (%.1f%%)' % (completed_slots, total_slots, slots_percent),
+            ),
+            ('Số học viên', len(enrollments)),
+            ('Ngày xuất báo cáo', export_dt.strftime('%d/%m/%Y %H:%M')),
+        ]
+        next_row = self._report_write_label_value_rows(
+            worksheet, 0, info_rows, label_fmt, workbook.add_format({})
+        )
+
+        table_headers = [
+            'STT',
+            'Họ tên',
+            'Email',
+            'Trạng thái ĐK',
+            'Số bài',
+            'Đã hoàn thành',
+            'Online (Có/Tổng)',
+            'Video (Có/Tổng)',
+            '% hoàn thành',
+            'Sheet chi tiết',
+        ]
+        header_row = next_row + 1
+        for col, header in enumerate(table_headers):
+            worksheet.write(header_row, col, header, header_fmt)
+
+        data_row = header_row + 1
+        for index, enrollment in enumerate(enrollments, start=1):
+            student = enrollment.student_id
+            stats = self._report_student_lesson_stats(enrollment, lessons, progress_map)
+            sheet_name = sheet_names[index - 1] if index - 1 < len(sheet_names) else ''
+            row_values = [
+                index,
+                student.name or '',
+                student.email or '',
+                self._REPORT_ENROLLMENT_STATUS_VI.get(enrollment.status, enrollment.status or ''),
+                stats['total'],
+                stats['completed'],
+                '%s/%s' % (stats['online_done'], stats['online_total']),
+                '%s/%s' % (stats['video_done'], stats['video_total']),
+                stats['percent'],
+                sheet_name,
+            ]
+            for col, value in enumerate(row_values):
+                fmt = percent_fmt if col == 8 else cell_fmt
+                worksheet.write(data_row, col, value, fmt)
+            data_row += 1
+
+        worksheet.set_column(0, 0, 6)
+        worksheet.set_column(1, 2, 24)
+        worksheet.set_column(3, 3, 14)
+        worksheet.set_column(4, 8, 16)
+        worksheet.set_column(9, 9, 18)
+
+    def _report_write_student_sheet(self, workbook, enrollment, lessons, progress_map, sheet_name):
+        worksheet = workbook.add_worksheet(sheet_name)
+        label_fmt = workbook.add_format({'bold': True})
+        header_fmt = workbook.add_format({'bold': True, 'bg_color': '#E2EFDA', 'border': 1})
+        cell_fmt = workbook.add_format({'border': 1})
+
+        student = enrollment.student_id
+        stats = self._report_student_lesson_stats(enrollment, lessons, progress_map)
+        info_rows = [
+            ('Họ tên', student.name or ''),
+            ('Email', student.email or ''),
+            ('Điện thoại', student.phone or ''),
+            ('Khóa học', self.name or ''),
+            ('Giảng viên', self.instructor_id.name if self.instructor_id else ''),
+            (
+                'Trạng thái đăng ký',
+                self._REPORT_ENROLLMENT_STATUS_VI.get(enrollment.status, enrollment.status or ''),
+            ),
+            ('Ngày ghi danh', self._report_format_date(enrollment.enrollment_date)),
+            (
+                'Tiến độ khóa',
+                '%s/%s bài (%.1f%%)' % (stats['completed'], stats['total'], stats['percent']),
+            ),
+        ]
+        next_row = self._report_write_label_value_rows(
+            worksheet, 0, info_rows, label_fmt, workbook.add_format({})
+        )
+
+        table_headers = [
+            'STT',
+            'STT bài',
+            'Tên bài học',
+            'Loại bài',
+            'Ngày/giờ bài',
+            'Trạng thái bài',
+            'Kết quả',
+            'Thời điểm',
+            'Tiến độ %',
+            'Thời lượng học (phút)',
+            'Ghi chú',
+        ]
+        header_row = next_row + 1
+        for col, header in enumerate(table_headers):
+            worksheet.write(header_row, col, header, header_fmt)
+
+        data_row = header_row + 1
+        for index, lesson in enumerate(lessons, start=1):
+            progress = progress_map.get((student.id, lesson.id))
+            result = self._report_result_label(progress, lesson)
+            completion_dt = self._report_completion_datetime(progress, lesson)
+            percent = progress.progress_percent if progress and lesson.lesson_type == 'video' else None
+            note = ''
+            if lesson.lesson_type == 'online':
+                note = 'Điểm danh khuôn mặt' if result == 'Có' else (
+                    'Chưa điểm danh' if result == 'Không' else ''
+                )
+            elif lesson.lesson_type == 'video':
+                if result == 'Có':
+                    note = 'Hoàn thành xem video'
+                elif result == 'Đang học':
+                    note = 'Chưa đủ 90%'
+            row_values = [
+                index,
+                lesson.sequence,
+                lesson.name or '',
+                self._report_lesson_type_label(lesson),
+                self._report_format_datetime(lesson.start_datetime),
+                self._REPORT_LESSON_STATE_VI.get(lesson.state, lesson.state or ''),
+                result,
+                self._report_format_datetime(completion_dt),
+                '' if percent is None else round(percent, 1),
+                self._report_study_minutes(progress),
+                note,
+            ]
+            for col, value in enumerate(row_values):
+                worksheet.write(data_row, col, value, cell_fmt)
+            data_row += 1
+
+        summary_row = data_row + 1
+        worksheet.write(summary_row, 0, 'Tổng kết', label_fmt)
+        worksheet.write(
+            summary_row,
+            1,
+            'Đã hoàn thành: %s/%s · Online: %s/%s · Video: %s/%s'
+            % (
+                stats['completed'],
+                stats['total'],
+                stats['online_done'],
+                stats['online_total'],
+                stats['video_done'],
+                stats['video_total'],
+            ),
+        )
+
+        worksheet.set_column(0, 0, 6)
+        worksheet.set_column(1, 1, 8)
+        worksheet.set_column(2, 2, 30)
+        worksheet.set_column(3, 5, 16)
+        worksheet.set_column(6, 10, 18)
+
+    def _report_build_xlsx_bytes(self):
+        self.ensure_one()
+        try:
+            import xlsxwriter
+        except ImportError as exc:
+            raise UserError(
+                _('Excel export requires the xlsxwriter library (%s)') % exc
+            ) from exc
+
+        lessons = self._report_lessons_ordered()
+        enrollments = self._report_enrollments()
+        student_ids = enrollments.mapped('student_id').ids
+        lesson_ids = lessons.ids
+        progress_map = self._report_progress_map(student_ids, lesson_ids)
+
+        buffer = io.BytesIO()
+        workbook = xlsxwriter.Workbook(buffer, {'in_memory': True})
+        sheet_names = self._report_student_sheet_names(enrollments)
+        self._report_write_overview_sheet(
+            workbook, lessons, enrollments, progress_map, sheet_names
+        )
+        for enrollment, sheet_name in zip(enrollments, sheet_names):
+            self._report_write_student_sheet(
+                workbook, enrollment, lessons, progress_map, sheet_name
+            )
+        workbook.close()
+        buffer.seek(0)
+        return buffer.read()
+
+    def action_export_course_progress_report(self):
+        """Xuất báo cáo tiến độ khóa học (Excel, nhiều sheet)."""
+        self.ensure_one()
+        self._report_check_export_access()
+        if self.state != 'published':
+            return self._report_client_notify(
+                _('Cannot export report: this course is not published yet.')
+            )
+        if not self._report_enrollments():
+            return self._report_client_notify(
+                _('Cannot export report: this course has no enrolled students yet.')
+            )
+        content = self._report_build_xlsx_bytes()
+        filename = self._report_export_filename()
+        attachment = self.env['ir.attachment'].sudo().create({
+            'name': filename,
+            'type': 'binary',
+            'datas': base64.b64encode(content),
+            'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'res_model': self._name,
+            'res_id': self.id,
+        })
+        return {
+            'type': 'ir.actions.act_url',
+            'url': '/web/content/%s?download=true' % attachment.id,
+            'target': 'self',
         }
 
 

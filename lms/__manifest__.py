@@ -35,6 +35,7 @@
     ],
     'assets': {
         'web.assets_backend': [
+            'lms/static/src/css/lms_list_tables.css',
             'lms/static/src/js/ai_roadmap_chat_bridge.js',
             'lms/static/src/js/lesson_video_progress_tracker.js',
             'lms/static/src/js/lms_face_mount.js',

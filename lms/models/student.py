@@ -128,6 +128,15 @@ class Student(models.Model):
         string='Instructor Edit Restricted',
         compute='_compute_is_instructor_restricted',
     )
+    is_current_user_account = fields.Boolean(
+        string='Current User Account',
+        compute='_compute_current_user_highlight',
+        search='_search_is_current_user_account',
+    )
+    current_user_marker = fields.Char(
+        string='Account Marker',
+        compute='_compute_current_user_highlight',
+    )
 
     # Thống kê
     total_courses = fields.Integer(string='Total Courses', compute='_compute_statistics', store=True)
@@ -160,6 +169,24 @@ class Student(models.Model):
     _sql_constraints = [
         ('student_user_unique', 'unique(user_id)', 'Each user account can only be linked to one student.'),
     ]
+
+    @api.depends('user_id')
+    def _compute_current_user_highlight(self):
+        uid = self.env.uid
+        for student in self:
+            is_self = bool(student.user_id and student.user_id.id == uid)
+            student.is_current_user_account = is_self
+            student.current_user_marker = _('You') if is_self else ''
+
+    def _search_is_current_user_account(self, operator, value):
+        if operator not in ('=', '!='):
+            raise ValidationError(_('Invalid search on current user account.'))
+        is_match = bool(value)
+        if operator == '!=':
+            is_match = not is_match
+        if is_match:
+            return [('user_id', '=', self.env.uid)]
+        return ['|', ('user_id', '=', False), ('user_id', '!=', self.env.uid)]
 
     @api.model
     def _needs_auto_student_user(self, vals):
@@ -225,7 +252,9 @@ class Student(models.Model):
             self._prepare_student_user_on_create(vals)
             if vals.get('user_id') and not (vals.get('name') or '').strip():
                 user = self.env['res.users'].browse(vals['user_id'])
-                vals['name'] = user.name
+                resolved = user._lms_resolve_person_name()
+                if resolved:
+                    vals['name'] = resolved
         return super().create(vals_list)
 
     @api.depends('face_embedding_json', 'create_date', 'write_date')

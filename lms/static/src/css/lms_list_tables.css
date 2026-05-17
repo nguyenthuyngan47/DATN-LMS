@@ -1,0 +1,21 @@
+/* LMS student / lecturer lists: use full table width, avoid huge empty gaps */
+.o_list_view .o_list_table {
+    width: 100%;
+    table-layout: auto;
+}
+
+.o_list_view .o_list_table th,
+.o_list_view .o_list_table td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 28rem;
+}
+
+.o_list_view .o_list_table th[data-name="address"],
+.o_list_view .o_list_table th[data-name="name"],
+.o_list_view .o_list_table th[data-name="full_name"],
+.o_list_view .o_list_table th[data-name="email"] {
+    max-width: none;
+    white-space: normal;
+}

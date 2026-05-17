@@ -4,14 +4,19 @@
         <field name="name">lms.lecturer.list</field>
         <field name="model">lms.lecturer</field>
         <field name="arch" type="xml">
-            <list create="0">
-                <field name="id" width="70px"/>
-                <field name="full_name" width="180px"/>
-                <field name="email" width="220px"/>
-                <field name="phone_number" width="130px"/>
-                <field name="academic_degree" width="160px"/>
-                <field name="years_of_experience" width="120px"/>
-                <field name="status" string="Status" width="120px"/>
+            <list
+                create="0"
+                decoration-info="is_current_user_account"
+                decoration-bf="is_current_user_account"
+            >
+                <field name="is_current_user_account" column_invisible="1"/>
+                <field name="id" optional="show"/>
+                <field name="full_name" optional="show"/>
+                <field name="email" optional="show"/>
+                <field name="phone_number" optional="show"/>
+                <field name="academic_degree" optional="show"/>
+                <field name="years_of_experience" optional="show"/>
+                <field name="status" string="Status" optional="show"/>
             </list>
         </field>
     </record>

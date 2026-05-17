@@ -41,6 +41,14 @@ class LmsLecturer(models.Model):
     created_at = fields.Datetime(string="Created Date", related="create_date", store=False, readonly=True)
     updated_at = fields.Datetime(string="Updated Date", related="write_date", store=False, readonly=True)
     last_login = fields.Datetime(string="Last Login", related="user_id.login_date", store=True, readonly=True)
+    is_current_user_account = fields.Boolean(
+        string="Current User Account",
+        compute="_compute_current_user_highlight",
+    )
+    current_user_marker = fields.Char(
+        string="Account Marker",
+        compute="_compute_current_user_highlight",
+    )
 
     full_name = fields.Char(string="Full Name", required=True)
     gender = fields.Selection(
@@ -99,6 +107,14 @@ class LmsLecturer(models.Model):
     _sql_constraints = [
         ("lecturer_user_unique", "unique(user_id)", "Each user account can only be linked to one lecturer."),
     ]
+
+    @api.depends("user_id")
+    def _compute_current_user_highlight(self):
+        uid = self.env.uid
+        for lecturer in self:
+            is_self = bool(lecturer.user_id and lecturer.user_id.id == uid)
+            lecturer.is_current_user_account = is_self
+            lecturer.current_user_marker = _("You") if is_self else ""
 
     @api.model
     def _needs_auto_lecturer_user(self, vals):
