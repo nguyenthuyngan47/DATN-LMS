@@ -3,6 +3,7 @@
 from dateutil.relativedelta import relativedelta
 import base64
 import io
+import logging
 import os
 import re
 import unicodedata
@@ -15,6 +16,8 @@ from odoo.tools import format_date
 from ..services import google_calendar_sync
 from . import face_embedding_utils
 from .student import ENROLLMENT_STATUSES_EXCLUDED_FROM_CAPACITY
+
+_logger = logging.getLogger(__name__)
 
 
 class CourseCategory(models.Model):
@@ -1011,6 +1014,8 @@ class Lesson(models.Model):
     _description = 'Lesson'
     _order = 'sequence, id, name'
 
+    ATTENDANCE_NOTICE_LEAD_MINUTES = 15
+
     @api.model
     def _default_end_datetime(self):
         return fields.Datetime.now() + relativedelta(hours=1)
@@ -1532,14 +1537,49 @@ class Lesson(models.Model):
         base_url = (self.get_base_url() or '').rstrip('/')
         return '%s/web#id=%s&model=lms.lesson&view_type=form' % (base_url, self.id)
 
+    def _is_due_for_attendance_notice(self):
+        """True trong cửa sổ [start - 15 phút, start) — mail gửi qua cron, không gửi sớm hơn."""
+        self.ensure_one()
+        if not self.start_datetime:
+            return False
+        now = fields.Datetime.now()
+        notify_at = self.start_datetime - relativedelta(minutes=self.ATTENDANCE_NOTICE_LEAD_MINUTES)
+        return notify_at <= now < self.start_datetime
+
+    @api.model
+    def cron_send_attendance_notices(self):
+        """Scheduled action: gửi link điểm danh ~15 phút trước giờ bắt đầu buổi online."""
+        now = fields.Datetime.now()
+        window_end = now + relativedelta(minutes=self.ATTENDANCE_NOTICE_LEAD_MINUTES)
+        lessons = self.search(
+            [
+                ('lesson_type', '=', 'online'),
+                ('state', '=', 'scheduled'),
+                ('attendance_notice_sent', '=', False),
+                ('start_datetime', '>', now),
+                ('start_datetime', '<=', window_end),
+            ]
+        )
+        if lessons:
+            lessons._notify_learning_students_for_attendance()
+        return True
+
     def _notify_learning_students_for_attendance(self):
         template = self.env.ref('lms.email_template_lesson_attendance_link', raise_if_not_found=False)
         if not template:
-            raise UserError(_('Attendance email template not found (email_template_lesson_attendance_link).'))
+            _logger.error(
+                'Attendance email template missing (lms.email_template_lesson_attendance_link).'
+            )
+            return
 
         StudentCourse = self.env['lms.student.course'].sudo()
         for lesson in self:
-            if lesson.lesson_type != 'online' or lesson.state != 'scheduled' or lesson.attendance_notice_sent:
+            if (
+                lesson.lesson_type != 'online'
+                or lesson.state != 'scheduled'
+                or lesson.attendance_notice_sent
+                or not lesson._is_due_for_attendance_notice()
+            ):
                 continue
 
             enrollments = StudentCourse.search(
@@ -1695,7 +1735,6 @@ class Lesson(models.Model):
             lessons.mapped('course_id')._renormalize_lesson_sequences()
         if not self.env.context.get('skip_google_calendar_sync'):
             lessons._google_calendar_sync_if_needed()
-            lessons._notify_learning_students_for_attendance()
         return lessons
 
     def write(self, vals):
@@ -1756,11 +1795,15 @@ class Lesson(models.Model):
             if became_unnotifiable:
                 became_unnotifiable._google_calendar_apply_updates({'attendance_notice_sent': False})
 
+        if 'start_datetime' in vals:
+            rescheduled = self.filtered('attendance_notice_sent')
+            if rescheduled:
+                rescheduled._google_calendar_apply_updates({'attendance_notice_sent': False})
+
         if status_changed or lesson_type_changed or (set(vals.keys()) & sync_relevant):
             self.filtered(
                 lambda l: l.state == 'scheduled' and l.lesson_type == 'online'
             )._google_calendar_sync_if_needed()
-        self._notify_learning_students_for_attendance()
         if not self.env.context.get('skip_lesson_sequence_renormalize') and (
             'sequence' in vals or 'course_id' in vals
         ):

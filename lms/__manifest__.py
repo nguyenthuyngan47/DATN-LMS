@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Learning Management System (LMS)',
-    'version': '18.0.1.0.55',
+    'version': '18.0.1.0.15',
     'category': 'Education',
     'summary': 'Hệ thống quản lý học tập với AI đề xuất khóa học',
     # Giữ description dạng plain text để tránh docutils/RST parse lỗi.
@@ -18,6 +18,7 @@
         'security/ir.model.access.csv',
         'security/lms_security.xml',
         'data/mail_template_data.xml',
+        'data/lesson_attendance_mail_cron.xml',
         'data/mail_server_data.xml',
         'views/student_views.xml',
         'views/student_ai_chat_views.xml',
